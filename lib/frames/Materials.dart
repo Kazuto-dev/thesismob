@@ -1,25 +1,25 @@
 // ignore: file_names
-// ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors, duplicate_ignore, empty_statements
+// ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors, duplicate_ignore, empty_statements, camel_case_types
 
 import 'package:flutter/material.dart';
 
 List<String> materialNames = [
   "CHB",
-  "PLYWOOD",
-  "STEEL",
-  "BOX",
-  "LAPTOP",
-  "COMPUTER",
-  "MOUSE",
-  "ID",
+  "Plywood",
+  "Tiles",
+  "Roof",
+  "Bulb",
+  "Socket",
+  "Hose/Conduit",
+  "Paint",
   "SNACKS",
   "LOTION",
   "IPAD",
   "IPHONE",
 ];
 
-class SecondPage extends StatelessWidget {
-  const SecondPage({Key? key}) : super(key: key);
+class materialPage extends StatelessWidget {
+  const materialPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -38,25 +38,25 @@ class SecondPage extends StatelessWidget {
               case "CHB":
                 Navigator.pushNamed(context, '/chb');
                 break;
-              case "PLYWOOD":
+              case "Plywood":
                 Navigator.pushNamed(context, '/ply');
                 break;
-              case "STEEL":
-                Navigator.pushNamed(context, '/steel');
+              case "Tiles":
+                Navigator.pushNamed(context, '/tiles');
                 break;
-              case "BOX":
+              case "Roof":
                 Navigator.pushNamed(context, '/box');
                 break;
-              case "LAPTOP":
+              case "Bulb":
                 Navigator.pushNamed(context, '/laptop');
                 break;
-              case "COMPUTER":
+              case "Socket":
                 Navigator.pushNamed(context, '/computer');
                 break;
-              case "MOUSE":
+              case "Hose/Conduit":
                 Navigator.pushNamed(context, '/mouse');
                 break;
-              case "ID":
+              case "Paint":
                 Navigator.pushNamed(context, '/id');
                 break;
               case "SNACKS":
@@ -86,30 +86,6 @@ class SecondPage extends StatelessWidget {
             ),
           ),
         ),
-      ),
-
-      // ignore: prefer_const_constructors
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          //home
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "Home",
-            backgroundColor: Colors.blue,
-          ),
-          //profile
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "Profile",
-            backgroundColor: Colors.blue,
-          ),
-          //settings
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: "Settings",
-            backgroundColor: Colors.blue,
-          ),
-        ],
       ),
     );
   }

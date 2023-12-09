@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 
 // ignore: camel_case_types
-class test1 extends StatelessWidget {
-  const test1({super.key});
+class chb extends StatelessWidget {
+  const chb({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -45,9 +45,9 @@ class test1 extends StatelessWidget {
         onTap: (index) {
           // Handle the tap for each item
           if (index == 1) {
-            Navigator.pushNamed(context, '/fifth');
+            Navigator.pushNamed(context, '/solution');
           } else if (index == 2) {
-            Navigator.pushNamed(context, '/sixth');
+            Navigator.pushNamed(context, '/definition');
           }
         },
       ),
