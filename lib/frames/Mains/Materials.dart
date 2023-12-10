@@ -72,9 +72,12 @@ class materialPage extends StatelessWidget {
             ;
           },
           child: Container(
-            color: Colors.blue,
             margin: EdgeInsets.all(5.0),
-            height: 150.0, // Adjust the height as needed
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 87, 148, 239),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            height: 150.0, // Adjust the height as needed,
             width: 150.0, // Adjust the width as needed
             child: Center(
               child: Text(

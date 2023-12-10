@@ -1,8 +1,8 @@
 // ignore_for_file: prefer_const_constructors, duplicate_ignore, unused_import
 
 import 'package:flutter/material.dart';
-import 'package:thesismob/frames/MainMenu.dart';
-import 'package:thesismob/frames/Materials.dart';
+import 'package:thesismob/frames/Mains/MainMenu.dart';
+import 'package:thesismob/frames/Mains/Materials.dart';
 import 'package:thesismob/frames/CHB/CHB.dart';
 import 'package:thesismob/frames/Plywood/Plywood.dart';
 import 'package:thesismob/frames/CHB/Solutions.dart';
@@ -12,6 +12,12 @@ import 'package:thesismob/frames/Plywood/DoF.dart';
 import 'package:thesismob/frames/Tiles/DoFTiles.dart';
 import 'package:thesismob/frames/Tiles/SolutionTiles.dart';
 import 'package:thesismob/frames/Tiles/tiles.dart';
+import 'package:thesismob/frames/Mains/overAllDoF.dart';
+import 'package:thesismob/frames/Mains/overAllSolution.dart';
+import 'package:thesismob/frames/Mains/Architectural.dart';
+import 'package:thesismob/frames/Mains/Electrical.dart';
+import 'package:thesismob/frames/Mains/Plumbing.dart';
+import 'package:thesismob/frames/Mains/Structural.dart';
 
 void main() {
   runApp(const MyApp());
@@ -41,6 +47,12 @@ class MyApp extends StatelessWidget {
         '/solutiontiles': (context) => SolutionsTiles(),
         '/definitiontiles': (context) => DoFTiles(),
         '/tiles': (context) => tiles(),
+        '/DefenitionBox': (context) => DOF(),
+        '/SolutionBox': (context) => SOLUTION(),
+        '/arch': (context) => architectural(),
+        '/struc': (context) => structural(),
+        '/plumb': (context) => plumbing(),
+        '/elec': (context) => electrical(),
       },
     );
   }

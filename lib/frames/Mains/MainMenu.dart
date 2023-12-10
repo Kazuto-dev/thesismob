@@ -18,7 +18,7 @@ class FirstPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Image.asset(
-          'lib/assets/logo3.png', // Replace with the path to your image asset
+          'lib/assets/logos/Logo3.png', // Replace with the path to your image asset
           height: 100,
           width: 500, // Adjust the height as needed
         ),
@@ -35,12 +35,15 @@ class FirstPage extends StatelessWidget {
         backgroundColor: Color.fromARGB(255, 96, 62, 142),
         child: ListView(
           children: [
-            DrawerHeader(
-              child: Text(
-                "History",
-                style: TextStyle(
-                  fontSize: 30,
-                  color: Color.fromARGB(255, 226, 226, 226),
+            Align(
+              alignment: Alignment.topCenter,
+              child: DrawerHeader(
+                child: Text(
+                  "History",
+                  style: TextStyle(
+                    fontSize: 30,
+                    color: Color.fromARGB(255, 226, 226, 226),
+                  ),
                 ),
               ),
             ),
@@ -48,6 +51,7 @@ class FirstPage extends StatelessWidget {
           ],
         ),
       ),
+
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -74,7 +78,7 @@ class FirstPage extends StatelessWidget {
                   onTap: () {
                     switch (types[index]) {
                       case "Structural":
-                        Navigator.pushNamed(context, '/struct');
+                        Navigator.pushNamed(context, '/struc');
                         break;
                       case "Architectural":
                         Navigator.pushNamed(context, '/arch');
@@ -89,7 +93,10 @@ class FirstPage extends StatelessWidget {
                   },
                   child: Center(
                     child: Container(
-                      color: const Color.fromARGB(255, 131, 95, 194),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Color.fromARGB(255, 148, 87, 239),
+                      ),
                       margin: EdgeInsets.all(7.0),
                       height: 200.0,
                       width: 200.0,
@@ -129,9 +136,9 @@ class FirstPage extends StatelessWidget {
         onTap: (index) {
           // Handle the tap for each item
           if (index == 0) {
-            Navigator.pushNamed(context, '/solution');
+            Navigator.pushNamed(context, '/SolutionBox');
           } else if (index == 1) {
-            Navigator.pushNamed(context, '/definition');
+            Navigator.pushNamed(context, '/DefenitionBox');
           }
         },
       ),
