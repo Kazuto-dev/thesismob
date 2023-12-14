@@ -22,7 +22,7 @@ class structural extends StatelessWidget {
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.of(context).pop();
+            Navigator.pushNamed(context, '/menu');
           },
         ),
       ),

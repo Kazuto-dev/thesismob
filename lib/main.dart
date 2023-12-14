@@ -1,6 +1,13 @@
 // ignore_for_file: prefer_const_constructors, duplicate_ignore, unused_import
 
+//main components
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
+//Pages
+import 'package:thesismob/frames/CHB/Output.dart';
 import 'package:thesismob/frames/Mains/MainMenu.dart';
 import 'package:thesismob/frames/Mains/Materials.dart';
 import 'package:thesismob/frames/CHB/CHB.dart';
@@ -18,8 +25,13 @@ import 'package:thesismob/frames/Mains/Architectural.dart';
 import 'package:thesismob/frames/Mains/Electrical.dart';
 import 'package:thesismob/frames/Mains/Plumbing.dart';
 import 'package:thesismob/frames/Mains/Structural.dart';
+import 'package:thesismob/frames/Mains/login.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
@@ -36,9 +48,11 @@ class MyApp extends StatelessWidget {
       routes: {
         // ignore: prefer_const_constructors
         '/menu': (context) => FirstPage(),
+        '/login': (context) => login(),
         // ignore: prefer_const_constructors
         '/materials': (context) => materialPage(),
-        '/chb': (context) => chb(),
+        '/chb': (context) => CHB(),
+        '/CHBoutput': (context) => chbOutput(),
         '/ply': (context) => plywood(),
         '/solution': (context) => Solutions(),
         '/definition': (context) => DoF(),

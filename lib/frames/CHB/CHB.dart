@@ -1,19 +1,19 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, unused_import, duplicate_ignore, no_logic_in_create_state, camel_case_types
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, unused_import, duplicate_ignore, no_logic_in_create_state, camel_case_types, avoid_print, unused_local_variable, sized_box_for_whitespace
 
 import 'package:flutter/material.dart';
 
-// ignore: camel_case_types
-class chb extends StatefulWidget {
-  const chb({Key? key}) : super(key: key);
+class CHB extends StatefulWidget {
+  const CHB({Key? key}) : super(key: key);
 
   @override
-  State<chb> createState() => _chbState();
+  State<CHB> createState() => _CHBState();
 }
 
-class _chbState extends State<chb> {
-  TextEditingController meController = TextEditingController();
-  TextEditingController secondController = TextEditingController();
-  String selectedOption = 'Default';
+class _CHBState extends State<CHB> {
+  TextEditingController lengthController = TextEditingController();
+  TextEditingController widthController = TextEditingController();
+  String selectedWastage = 'Default';
+  String selectedSize = 'Default';
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +24,7 @@ class _chbState extends State<chb> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.of(context).pop();
+            Navigator.pushNamed(context, '/struc');
           },
         ),
       ),
@@ -45,102 +45,183 @@ class _chbState extends State<chb> {
                   children: [
                     Expanded(
                       child: TextField(
-                        controller: meController,
+                        controller: lengthController,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
                           labelText: 'Length in meters',
-                          hintText: "length in Meters",
+                          hintText: "Enter length in meters",
                         ),
                       ),
                     ),
                     SizedBox(width: 10),
                     Expanded(
                       child: TextField(
-                        controller: secondController,
+                        controller: widthController,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
                           labelText: 'Width in meters',
-                          hintText: "Enter width in Meters",
+                          hintText: "Enter width in meters",
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              Padding(
+              Container(
                 padding: EdgeInsets.all(15.0),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Text(
-                      'Select an option: ',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    SizedBox(width: 10),
-                    Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black),
-                        borderRadius: BorderRadius.circular(5.0),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: selectedOption,
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              selectedOption = newValue!;
-                            });
-                          },
-                          items: [
-                            DropdownMenuItem<String>(
-                              value: 'Default',
-                              child: Text('Default'),
-                            ),
-                            ...[
-                              ' 30 Option = 1',
-                              '20 Option = 2.23',
-                              '60 Option = 1.343',
-                              'Option = 4'
-                            ].map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                          ],
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Wastage:',
+                          style: TextStyle(fontSize: 16),
                         ),
-                      ),
+                        SizedBox(height: 10),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 12.0, vertical: 4.0),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black),
+                            borderRadius: BorderRadius.circular(5.0),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: selectedWastage,
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  selectedWastage = newValue!;
+                                });
+                              },
+                              items: [
+                                DropdownMenuItem<String>(
+                                  value: 'Default',
+                                  child: Text('Default'),
+                                ),
+                                ...[
+                                  '5% Wastage',
+                                  '10% Wastage',
+                                  '15% Wastage'
+                                ].map<DropdownMenuItem<String>>((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  );
+                                }).toList(),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'CHB Size: ',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        SizedBox(height: 10),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 12.0, vertical: 4.0),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black),
+                            borderRadius: BorderRadius.circular(5.0),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: selectedSize,
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  selectedSize = newValue!;
+                                });
+                              },
+                              items: [
+                                DropdownMenuItem<String>(
+                                  value: 'Default',
+                                  child: Text('Default'),
+                                ),
+                                ...[
+                                  '.40m x .20m',
+                                  '.30m x .20m'
+                                ].map<DropdownMenuItem<String>>((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  );
+                                }).toList(),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  // Implement your Calculate button functionality
-                },
-                child: Container(
-                  width: double.infinity,
-                  child: Center(
-                    child: Text(
-                      'Calculate',
-                      style: TextStyle(
-                        fontSize: 18.0,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  // Implement your Insert Sheet button functionality
-                },
-                child: Container(
-                  width: double.infinity,
-                  child: Center(
-                    child: Text(
-                      'Insert Sheet',
-                      style: TextStyle(
-                        fontSize: 18.0,
+              Container(
+                margin: EdgeInsets.only(top: 50.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    double calculate() {
+                      // ... (your existing calculation code)
+                      double wastagePercentage = 0.0;
+                      double chbSize = 0.0;
+                      double length = double.parse(lengthController.text);
+                      double width = double.parse(widthController.text);
+
+                      if (selectedWastage == '5% Wastage') {
+                        wastagePercentage = 0.05;
+                      } else if (selectedWastage == '10% Wastage') {
+                        wastagePercentage = 0.1;
+                      } else if (selectedWastage == '15% Wastage') {
+                        wastagePercentage = 0.15;
+                      }
+
+                      if (selectedSize == '.40m x .20m') {
+                        chbSize = 0.08;
+                      } else if (selectedSize == '.30m x .20m') {
+                        chbSize = 0.06;
+                      }
+
+                      double area = length * width;
+                      print("Area: $area");
+
+                      // Round up to the nearest whole number for the CHB needed
+                      int chbNeed = (area / chbSize).ceil();
+                      print("CHB Needed: $chbNeed");
+
+                      // Calculate wastage and round up to the nearest whole number
+                      int wastage =
+                          (wastagePercentage * chbNeed).ceil().toInt();
+                      print("Wastage: $wastage");
+
+                      int totalCHB = chbNeed + wastage;
+
+                      // Navigate to the output page with the calculated values
+                      Navigator.pushNamed(
+                        context,
+                        '/CHBoutput',
+                        arguments: {'area': area, 'totalCHB': totalCHB},
+                      );
+
+                      return area;
+                    }
+
+                    // Call the calculate function
+                    calculate();
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    child: Center(
+                      child: Text(
+                        'Calculate',
+                        style: TextStyle(
+                          fontSize: 18.0,
+                        ),
                       ),
                     ),
                   ),

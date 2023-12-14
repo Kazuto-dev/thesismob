@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1046970313626",
+    "project_id": "thesismob",
+    "storage_bucket": "thesismob.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1046970313626:android:7edd8ede658b771c5a6823",
+        "android_client_info": {
+          "package_name": "com.example.thesismob"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC44T6eCGjEl58RIdlblAprStELooGjLNI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
