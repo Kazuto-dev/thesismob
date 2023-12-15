@@ -1,6 +1,7 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+// ignore_for_file: file_names, use_super_parameters, unused_import, prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
+import 'package:thesismob/frames/Mains/login.dart';
 
 List<String> types = [
   "Structural",
@@ -9,9 +10,10 @@ List<String> types = [
   "Plumbing",
 ];
 
-// ignore: camel_case_types
 class FirstPage extends StatelessWidget {
-  const FirstPage({Key? key}) : super(key: key);
+  final String? displayName;
+
+  const FirstPage({Key? key, this.displayName}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +41,7 @@ class FirstPage extends StatelessWidget {
               alignment: Alignment.topCenter,
               child: DrawerHeader(
                 child: Text(
-                  "History",
+                  "Hi $displayName",
                   style: TextStyle(
                     fontSize: 30,
                     color: Color.fromARGB(255, 226, 226, 226),
@@ -132,6 +134,11 @@ class FirstPage extends StatelessWidget {
             label: "Definition of Terms",
             backgroundColor: Colors.blue,
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: "Profile",
+            backgroundColor: Colors.blue,
+          )
         ],
         onTap: (index) {
           // Handle the tap for each item
@@ -139,6 +146,8 @@ class FirstPage extends StatelessWidget {
             Navigator.pushNamed(context, '/SolutionBox');
           } else if (index == 1) {
             Navigator.pushNamed(context, '/DefenitionBox');
+          } else if (index == 2) {
+            Navigator.pushNamed(context, '/profilepage');
           }
         },
       ),
