@@ -45,6 +45,8 @@ dependencies:
   path_provider: ^2.1.1
   equatable: ^2.0.5
   firebase_auth: ^4.15.3
+  gsheets: ^0.5.0
+  googleapis: ^11.4.0
 
 dev_dependencies:
   flutter_test:
