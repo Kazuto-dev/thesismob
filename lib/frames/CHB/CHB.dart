@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, unused_import, duplicate_ignore, no_logic_in_create_state, camel_case_types, avoid_print, unused_local_variable, sized_box_for_whitespace
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, unused_import, no_logic_in_create_state, camel_case_types, avoid_print, unused_local_variable, sized_box_for_whitespace
 
 import 'package:flutter/material.dart';
 
@@ -35,8 +35,8 @@ class _CHBState extends State<CHB> {
             children: [
               Image.asset(
                 'lib/assets/logos/Logo4.png',
-                width: 250,
-                height: 250,
+                width: 300,
+                height: 300,
                 fit: BoxFit.cover,
               ),
               Padding(
@@ -46,10 +46,11 @@ class _CHBState extends State<CHB> {
                     Expanded(
                       child: TextField(
                         controller: lengthController,
+                        keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: 'Length in meters',
-                          hintText: "Enter length in meters",
+                          labelText: 'Length (m)',
+                          hintText: "Enter Length (m)",
                         ),
                       ),
                     ),
@@ -57,10 +58,11 @@ class _CHBState extends State<CHB> {
                     Expanded(
                       child: TextField(
                         controller: widthController,
+                        keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: 'Width in meters',
-                          hintText: "Enter width in meters",
+                          labelText: "Width (m)",
+                          hintText: "Enter Width (m)",
                         ),
                       ),
                     ),
@@ -100,16 +102,15 @@ class _CHBState extends State<CHB> {
                                   value: 'Default',
                                   child: Text('Default'),
                                 ),
-                                ...[
-                                  '5% Wastage',
-                                  '10% Wastage',
-                                  '15% Wastage'
-                                ].map<DropdownMenuItem<String>>((String value) {
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Text(value),
-                                  );
-                                }).toList(),
+                                ...['5% Wastage', '10% Wastage', '15% Wastage']
+                                    .map<DropdownMenuItem<String>>(
+                                      (String value) =>
+                                          DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(value),
+                                      ),
+                                    )
+                                    .toList(),
                               ],
                             ),
                           ),
@@ -144,15 +145,15 @@ class _CHBState extends State<CHB> {
                                   value: 'Default',
                                   child: Text('Default'),
                                 ),
-                                ...[
-                                  '.40m x .20m',
-                                  '.30m x .20m'
-                                ].map<DropdownMenuItem<String>>((String value) {
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Text(value),
-                                  );
-                                }).toList(),
+                                ...['.40m x .20m', '.30m x .20m']
+                                    .map<DropdownMenuItem<String>>(
+                                      (String value) =>
+                                          DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(value),
+                                      ),
+                                    )
+                                    .toList(),
                               ],
                             ),
                           ),
@@ -173,7 +174,9 @@ class _CHBState extends State<CHB> {
                       double length = double.parse(lengthController.text);
                       double width = double.parse(widthController.text);
 
-                      if (selectedWastage == '5% Wastage') {
+                      if (selectedWastage == "Default") {
+                        wastagePercentage = 0.0;
+                      } else if (selectedWastage == '5% Wastage') {
                         wastagePercentage = 0.05;
                       } else if (selectedWastage == '10% Wastage') {
                         wastagePercentage = 0.1;
@@ -234,12 +237,12 @@ class _CHBState extends State<CHB> {
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.numbers),
+            icon: Icon(Icons.calculate), // Corrected icon
             label: "Calculator",
             backgroundColor: Colors.blue,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.question_mark),
+            icon: Icon(Icons.question_mark_rounded), // Corrected icon
             label: "Solution",
             backgroundColor: Colors.blue,
           ),

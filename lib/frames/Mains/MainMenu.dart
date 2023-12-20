@@ -1,7 +1,6 @@
 // ignore_for_file: file_names, use_super_parameters, unused_import, prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
-import 'package:thesismob/frames/Mains/login.dart';
 
 List<String> types = [
   "Structural",

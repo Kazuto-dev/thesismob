@@ -11,21 +11,18 @@ import 'package:thesismob/frames/CHB/Output.dart';
 import 'package:thesismob/frames/Mains/MainMenu.dart';
 import 'package:thesismob/frames/Mains/Materials.dart';
 import 'package:thesismob/frames/CHB/CHB.dart';
-import 'package:thesismob/frames/Plywood/Plywood.dart';
 import 'package:thesismob/frames/CHB/Solutions.dart';
 import 'package:thesismob/frames/CHB/DoF.dart';
-import 'package:thesismob/frames/Plywood/Solutions.dart';
-import 'package:thesismob/frames/Plywood/DoF.dart';
 import 'package:thesismob/frames/Tiles/DoFTiles.dart';
 import 'package:thesismob/frames/Tiles/SolutionTiles.dart';
 import 'package:thesismob/frames/Tiles/tiles.dart';
+import 'package:thesismob/frames/Tiles/tilesOutput.dart';
 import 'package:thesismob/frames/Mains/overAllDoF.dart';
 import 'package:thesismob/frames/Mains/overAllSolution.dart';
 import 'package:thesismob/frames/Mains/Architectural.dart';
 import 'package:thesismob/frames/Mains/Electrical.dart';
 import 'package:thesismob/frames/Mains/Plumbing.dart';
 import 'package:thesismob/frames/Mains/Structural.dart';
-import 'package:thesismob/frames/Mains/login.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,18 +45,16 @@ class MyApp extends StatelessWidget {
       routes: {
         // ignore: prefer_const_constructors
         '/menu': (context) => FirstPage(),
-        '/login': (context) => login(),
+
         // ignore: prefer_const_constructors
         '/materials': (context) => materialPage(),
         '/chb': (context) => CHB(),
         '/CHBoutput': (context) => chbOutput(),
-        '/ply': (context) => plywood(),
         '/solution': (context) => Solutions(),
         '/definition': (context) => DoF(),
-        '/solutionply': (context) => SolutionsPly(),
-        '/definitionply': (context) => DoFPly(),
         '/solutiontiles': (context) => SolutionsTiles(),
         '/definitiontiles': (context) => DoFTiles(),
+        '/outputTiles': (context) => tilesOutput(),
         '/tiles': (context) => tiles(),
         '/DefenitionBox': (context) => DOF(),
         '/SolutionBox': (context) => SOLUTION(),
