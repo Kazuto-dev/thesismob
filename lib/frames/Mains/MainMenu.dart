@@ -146,7 +146,7 @@ class FirstPage extends StatelessWidget {
           } else if (index == 1) {
             Navigator.pushNamed(context, '/DefenitionBox');
           } else if (index == 2) {
-            Navigator.pushNamed(context, '/sheetform');
+            Navigator.pushNamed(context, '/');
           }
         },
       ),
