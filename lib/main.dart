@@ -6,6 +6,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:provider/provider.dart';
+import 'package:thesismob/frames/Mains/sheetProvider.dart';
+import 'package:thesismob/frames/Mains/sheetForm.dart';
 
 //Pages
 import 'package:thesismob/frames/CHB/Output.dart';
@@ -24,13 +26,22 @@ import 'package:thesismob/frames/Mains/Architectural.dart';
 import 'package:thesismob/frames/Mains/Electrical.dart';
 import 'package:thesismob/frames/Mains/Plumbing.dart';
 import 'package:thesismob/frames/Mains/Structural.dart';
+import 'package:thesismob/frames/Plywood/DOFPlywood.dart';
+import 'package:thesismob/frames/Plywood/SolutionPly.dart';
+import 'package:thesismob/frames/Plywood/plywood.dart';
+import 'package:thesismob/frames/Plywood/OutputPly.dart';
+import 'package:thesismob/frames/Roof/roof.dart';
+import 'package:thesismob/frames/Roof/roofOutput.dart';
+import 'package:thesismob/frames/Roof/roofDoF.dart';
+import 'package:thesismob/frames/Roof/roofSolution.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+void main() {
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => SheetInfoProvider(),
+      child: MyApp(),
+    ),
   );
-  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -46,6 +57,7 @@ class MyApp extends StatelessWidget {
       routes: {
         // ignore: prefer_const_constructors
         '/menu': (context) => FirstPage(),
+        '/sheetform': (context) => SheetInfoInput(),
 
         // ignore: prefer_const_constructors
         '/materials': (context) => materialPage(),
@@ -63,6 +75,10 @@ class MyApp extends StatelessWidget {
         '/struc': (context) => structural(),
         '/plumb': (context) => plumbing(),
         '/elec': (context) => electrical(),
+        '/plywood': (context) => wood(),
+        '/outputPly': (context) => plywoodOutput(),
+        '/roof': (context) => roof(),
+        '/roofOutput': (context) => roofOutput(),
       },
     );
   }

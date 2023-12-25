@@ -38,13 +38,14 @@ class structural extends StatelessWidget {
                     Navigator.pushNamed(context, '/chb');
                     break;
                   case "Plywood":
+                    Navigator.pushNamed(context, '/plywood');
                     //
                     break;
                   case "Tiles":
                     Navigator.pushNamed(context, '/tiles');
                     break;
                   case "Roof":
-                    Navigator.pushNamed(context, '/box');
+                    Navigator.pushNamed(context, '/roof');
                     break;
                 }
               },

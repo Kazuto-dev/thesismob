@@ -25,7 +25,7 @@ class _tilesState extends State<tiles> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.of(context).pop();
+            Navigator.pushNamed(context, '/struc');
           },
         ),
       ),
