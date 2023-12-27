@@ -34,6 +34,7 @@ import 'package:thesismob/frames/Roof/roof.dart';
 import 'package:thesismob/frames/Roof/roofOutput.dart';
 import 'package:thesismob/frames/Roof/roofDoF.dart';
 import 'package:thesismob/frames/Roof/roofSolution.dart';
+import 'package:thesismob/frames/Paint/paint.dart';
 
 void main() {
   runApp(
@@ -79,6 +80,7 @@ class MyApp extends StatelessWidget {
         '/outputPly': (context) => plywoodOutput(),
         '/roof': (context) => roof(),
         '/roofOutput': (context) => roofOutput(),
+        '/paint': (context) => paint(),
       },
     );
   }
