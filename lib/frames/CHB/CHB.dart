@@ -40,7 +40,7 @@ class _CHBState extends State<CHB> {
                 fit: BoxFit.cover,
               ),
               Padding(
-                padding: EdgeInsets.all(15.0),
+                padding: EdgeInsets.all(10.0),
                 child: Row(
                   children: [
                     Expanded(
@@ -69,96 +69,63 @@ class _CHBState extends State<CHB> {
                   ],
                 ),
               ),
-              Container(
-                padding: EdgeInsets.all(15.0),
+              Padding(
+                padding: EdgeInsets.all(10.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Wastage:',
-                          style: TextStyle(fontSize: 16),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: selectedWastage, // Use windowSize here
+                        onChanged: (String? newValue) {
+                          // Handle the selection
+
+                          setState(() {
+                            selectedWastage = newValue!;
+                          });
+                        },
+                        items: <String>[
+                          'Default',
+                          '5% Wastage',
+                          '10% Wastage',
+                          '15% Wastage',
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: "CHB Wastage",
                         ),
-                        SizedBox(height: 10),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 12.0, vertical: 4.0),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black),
-                            borderRadius: BorderRadius.circular(5.0),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: selectedWastage,
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  selectedWastage = newValue!;
-                                });
-                              },
-                              items: [
-                                DropdownMenuItem<String>(
-                                  value: 'Default',
-                                  child: Text('Default'),
-                                ),
-                                ...['5% Wastage', '10% Wastage', '15% Wastage']
-                                    .map<DropdownMenuItem<String>>(
-                                      (String value) =>
-                                          DropdownMenuItem<String>(
-                                        value: value,
-                                        child: Text(value),
-                                      ),
-                                    )
-                                    .toList(),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'CHB Size: ',
-                          style: TextStyle(fontSize: 16),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: selectedSize, // Use doorSize here
+                        onChanged: (String? newValue) {
+                          // Handle the selection
+                          setState(() {
+                            selectedSize = newValue!;
+                            // Update doorSize here
+                          });
+                        },
+                        items: <String>[
+                          'Default',
+                          '.40m x .20m',
+                          '.30m x .20m',
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: "CHB Size",
                         ),
-                        SizedBox(height: 10),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 12.0, vertical: 4.0),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black),
-                            borderRadius: BorderRadius.circular(5.0),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: selectedSize,
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  selectedSize = newValue!;
-                                });
-                              },
-                              items: [
-                                DropdownMenuItem<String>(
-                                  value: 'Default',
-                                  child: Text('Default'),
-                                ),
-                                ...['.40m x .20m', '.30m x .20m']
-                                    .map<DropdownMenuItem<String>>(
-                                      (String value) =>
-                                          DropdownMenuItem<String>(
-                                        value: value,
-                                        child: Text(value),
-                                      ),
-                                    )
-                                    .toList(),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),

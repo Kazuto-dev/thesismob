@@ -71,105 +71,68 @@ class _tilesState extends State<tiles> {
                   ],
                 ),
               ),
-              Container(
-                padding: EdgeInsets.all(15.0),
+              Padding(
+                padding: EdgeInsets.all(10.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Wastage:',
-                          style: TextStyle(fontSize: 16),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: selectedtileWastage, // Use windowSize here
+                        onChanged: (String? newValue) {
+                          // Handle the selection
+
+                          setState(() {
+                            selectedtileWastage = newValue!;
+                          });
+                        },
+                        items: <String>[
+                          'Default',
+                          '5% Wastage',
+                          '10% Wastage',
+                          '15% Wastage',
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: "Tile Wastage",
                         ),
-                        SizedBox(height: 10),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 12.0, vertical: 4.0),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black),
-                            borderRadius: BorderRadius.circular(5.0),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: selectedtileWastage,
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  selectedtileWastage = newValue!;
-                                });
-                              },
-                              items: [
-                                DropdownMenuItem<String>(
-                                  value: 'Default',
-                                  child: Text('Default'),
-                                ),
-                                ...['5% Wastage', '10% Wastage', '15% Wastage']
-                                    .map<DropdownMenuItem<String>>(
-                                      (String value) =>
-                                          DropdownMenuItem<String>(
-                                        value: value,
-                                        child: Text(value),
-                                      ),
-                                    )
-                                    .toList(),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Tile Size: ',
-                          style: TextStyle(fontSize: 16),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: selectedtileSize, // Use doorSize here
+                        onChanged: (String? newValue) {
+                          // Handle the selection
+                          setState(() {
+                            selectedtileSize = newValue!;
+                          });
+                        },
+                        items: <String>[
+                          'Default',
+                          '5.08 x 5.08cm',
+                          '10.16 x 10.16cm',
+                          '15.24 x 15.24cm',
+                          '20.32 x 20.32cm',
+                          '30.48 x 30.48cm',
+                          '40.64 x 40.64cm',
+                          '45.72 x 45.72cm',
+                          '60.96 x 60.96cm',
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: "Tile Size",
                         ),
-                        SizedBox(height: 10),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 12.0, vertical: 4.0),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black),
-                            borderRadius: BorderRadius.circular(5.0),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: selectedtileSize,
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  selectedtileSize = newValue!;
-                                });
-                              },
-                              items: [
-                                DropdownMenuItem<String>(
-                                  value: 'Default',
-                                  child: Text('Default'),
-                                ),
-                                ...[
-                                  '5.08cm x 5.08cm',
-                                  '10.16cm x 10.16cm',
-                                  '15.24cm x 15.24cm',
-                                  '20.32cm x 20.32cm',
-                                  '30.48cm x 30.48cm',
-                                  '40.64cm x 40.64cm',
-                                  '45.72cm x 45.72cm',
-                                  '60.96cm x 60.96cm'
-                                ]
-                                    .map<DropdownMenuItem<String>>(
-                                      (String value) =>
-                                          DropdownMenuItem<String>(
-                                        value: value,
-                                        child: Text(value),
-                                      ),
-                                    )
-                                    .toList(),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
@@ -195,21 +158,23 @@ class _tilesState extends State<tiles> {
                         wastagePercentage = 0.15;
                       }
 
-                      if (selectedtileSize == '5.08cm x 5.08cm') {
+                      if (selectedtileSize == 'Default') {
+                        tileSize = 0.0;
+                      } else if (selectedtileSize == '5.08 x 5.08cm') {
                         tileSize = 0.0508;
-                      } else if (selectedtileSize == '10.16cm x 10.16cm') {
+                      } else if (selectedtileSize == '10.16 x 10.16cm') {
                         tileSize = 0.1016;
-                      } else if (selectedtileSize == '15.24cm x 15.24cm') {
+                      } else if (selectedtileSize == '15.24 x 15.24cm') {
                         tileSize = 0.1524;
-                      } else if (selectedtileSize == '20.32cm x 20.32cm') {
+                      } else if (selectedtileSize == '20.32 x 20.32cm') {
                         tileSize = 0.2032;
-                      } else if (selectedtileSize == '30.48cm x 30.48cm') {
+                      } else if (selectedtileSize == '30.48 x 30.48cm') {
                         tileSize = 0.3048;
-                      } else if (selectedtileSize == '40.64cm x 40.64cm') {
+                      } else if (selectedtileSize == '40.64 x 40.64cm') {
                         tileSize = 0.4064;
-                      } else if (selectedtileSize == '45.72cm x 45.72cm') {
+                      } else if (selectedtileSize == '45.72 x 45.72cm') {
                         tileSize = 0.4572;
-                      } else if (selectedtileSize == '60.96cm x 60.96cm') {
+                      } else if (selectedtileSize == '60.96 x 60.96cm') {
                         tileSize = 0.6096;
                       }
 

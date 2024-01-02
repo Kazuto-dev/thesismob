@@ -12,8 +12,8 @@ class roof extends StatefulWidget {
 class RoofState extends State<roof> {
   TextEditingController _lengthController = TextEditingController();
   TextEditingController _widthController = TextEditingController();
-  String selectedWoodWidth = 'Default';
-  String selectedWoodLength = 'Default';
+  String selectedRoofWidth = 'Default';
+  String selectedRoofLength = 'Default';
   String selectedCorrugation = 'Default';
 
   @override
@@ -70,158 +70,102 @@ class RoofState extends State<roof> {
                   ],
                 ),
               ),
-              Container(
-                padding: EdgeInsets.all(5.0),
-                child: Column(
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Sheet Width:',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            SizedBox(height: 1),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 12.0, vertical: 4.0),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.black),
-                                borderRadius: BorderRadius.circular(5.0),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: selectedWoodWidth,
-                                  onChanged: (String? newValue) {
-                                    setState(() {
-                                      selectedWoodWidth = newValue!;
-                                    });
-                                  },
-                                  items: [
-                                    DropdownMenuItem<String>(
-                                      value: 'Default',
-                                      child: Text('Default'),
-                                    ),
-                                    ...['0.8m', '0.9m', '1.0m', '1.2mm']
-                                        .map<DropdownMenuItem<String>>(
-                                          (String value) =>
-                                              DropdownMenuItem<String>(
-                                            value: value,
-                                            child: Text(value),
-                                          ),
-                                        )
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: selectedRoofWidth, // Use windowSize here
+                        onChanged: (String? newValue) {
+                          // Handle the selection
+
+                          setState(() {
+                            selectedRoofWidth = newValue!;
+                          });
+                        },
+                        items: <String>[
+                          'Default',
+                          '0.8m',
+                          '0.9m',
+                          '1.0m',
+                          '1.2mm',
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: "Sheet Width (m)",
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Sheet Length: ',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            SizedBox(height: 1),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 12.0, vertical: 4.0),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.black),
-                                borderRadius: BorderRadius.circular(5.0),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: selectedWoodLength,
-                                  onChanged: (String? newValue) {
-                                    setState(() {
-                                      selectedWoodLength = newValue!;
-                                    });
-                                  },
-                                  items: [
-                                    DropdownMenuItem<String>(
-                                      value: 'Default',
-                                      child: Text('Default'),
-                                    ),
-                                    ...[
-                                      '5FT',
-                                      '6FT',
-                                      '7FT',
-                                      '8FT',
-                                      '9FT',
-                                      '10FT',
-                                      '12FT'
-                                    ]
-                                        .map<DropdownMenuItem<String>>(
-                                          (String value) =>
-                                              DropdownMenuItem<String>(
-                                            value: value,
-                                            child: Text(value),
-                                          ),
-                                        )
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                      ),
                     ),
-                    SizedBox(
-                        height: 1), // Add some spacing between the dropdowns
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Corrugation:',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            SizedBox(height: 1),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 12.0, vertical: 4.0),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.black),
-                                borderRadius: BorderRadius.circular(5.0),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: selectedCorrugation,
-                                  onChanged: (String? newValue) {
-                                    setState(() {
-                                      selectedCorrugation = newValue!;
-                                    });
-                                  },
-                                  items: [
-                                    DropdownMenuItem<String>(
-                                      value: 'Default',
-                                      child: Text('Default'),
-                                    ),
-                                    ...['1.5 Corrugation', '2.5 Corrugation']
-                                        .map<DropdownMenuItem<String>>(
-                                          (String value) =>
-                                              DropdownMenuItem<String>(
-                                            value: value,
-                                            child: Text(value),
-                                          ),
-                                        )
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: selectedRoofLength, // Use doorSize here
+                        onChanged: (String? newValue) {
+                          // Handle the selection
+                          setState(() {
+                            selectedRoofLength = newValue!;
+                            // Update doorSize here
+                          });
+                        },
+                        items: <String>[
+                          'Default',
+                          '5FT',
+                          '6FT',
+                          '7FT',
+                          '8FT',
+                          '9FT',
+                          '10FT',
+                          '12FT',
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: "Sheet Length (ft))",
                         ),
-                      ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: selectedCorrugation, // Use windowSize here
+                        onChanged: (String? newValue) {
+                          // Handle the selection
+
+                          setState(() {
+                            selectedCorrugation = newValue!;
+                          });
+                        },
+                        items: <String>[
+                          'Default',
+                          '1.5 Corrugation',
+                          '2.5 Corrugation',
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: "Corrugation",
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -237,33 +181,33 @@ class RoofState extends State<roof> {
                       double length = double.parse(_lengthController.text);
                       double width = double.parse(_widthController.text);
 
-                      if (selectedWoodWidth == "Default") {
+                      if (selectedRoofWidth == "Default") {
                         roofSizeW = 0.0;
-                      } else if (selectedWoodWidth == '0.8m') {
+                      } else if (selectedRoofWidth == '0.8m') {
                         roofSizeW = 0.8;
-                      } else if (selectedWoodWidth == '0.9m') {
+                      } else if (selectedRoofWidth == '0.9m') {
                         roofSizeW = 0.9;
-                      } else if (selectedWoodWidth == '1.0m') {
+                      } else if (selectedRoofWidth == '1.0m') {
                         roofSizeW = 1.0;
-                      } else if (selectedWoodWidth == '1.2m') {
+                      } else if (selectedRoofWidth == '1.2m') {
                         roofSizeW = 1.2;
                       }
 
-                      if (selectedWoodLength == 'Default') {
+                      if (selectedRoofLength == 'Default') {
                         roofSizeL = 0.0;
-                      } else if (selectedWoodLength == '5FT') {
+                      } else if (selectedRoofLength == '5FT') {
                         roofSizeL = 1.524;
-                      } else if (selectedWoodLength == '6FT') {
+                      } else if (selectedRoofLength == '6FT') {
                         roofSizeL = 1.829;
-                      } else if (selectedWoodLength == '7FT') {
+                      } else if (selectedRoofLength == '7FT') {
                         roofSizeL = 2.134;
-                      } else if (selectedWoodLength == '8FT') {
+                      } else if (selectedRoofLength == '8FT') {
                         roofSizeL = 2.438;
-                      } else if (selectedWoodLength == '9FT') {
+                      } else if (selectedRoofLength == '9FT') {
                         roofSizeL = 2.743;
-                      } else if (selectedWoodLength == '10FT') {
+                      } else if (selectedRoofLength == '10FT') {
                         roofSizeL = 3.048;
-                      } else if (selectedWoodLength == '12FT') {
+                      } else if (selectedRoofLength == '12FT') {
                         roofSizeL = 3.657;
                       }
 
@@ -274,14 +218,23 @@ class RoofState extends State<roof> {
                       } else if (selectedCorrugation == '2.5 Corrugation') {
                         corrugation = 1.829;
                       }
-
                       double area = length * width;
                       print("Area: $area");
 
                       double effectW = roofSizeW / corrugation;
                       double sheetArea = effectW * roofSizeL;
                       double sheetsNeeded = area / sheetArea;
-                      int sheetsNeededRounded = sheetsNeeded.ceil();
+
+                      int sheetsNeededRounded;
+
+                      if (sheetsNeeded.isFinite) {
+                        sheetsNeededRounded = sheetsNeeded.ceil();
+                      } else {
+                        // Handle the case where sheetsNeeded is Infinity or NaN
+                        sheetsNeededRounded =
+                            0; // You can set a default value or handle it according to your application logic
+                      }
+
                       print("Sheets Needed: $sheetsNeededRounded");
 
                       Navigator.pushNamed(

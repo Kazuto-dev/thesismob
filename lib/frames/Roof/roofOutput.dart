@@ -47,7 +47,7 @@ class _roofOutputState extends State<roofOutput> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset(
-                'lib/assets/images/roof(noBG).png',
+                'lib/assets/images/Roof(noBG).png',
                 width: 300,
                 height: 250,
                 fit: BoxFit.cover,

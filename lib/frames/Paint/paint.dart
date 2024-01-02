@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors, camel_case_types, use_super_parameters, library_private_types_in_public_api, prefer_final_fields, avoid_print, sized_box_for_whitespace
+// ignore_for_file: prefer_const_constructors, camel_case_types, use_super_parameters, library_private_types_in_public_api, prefer_final_fields, avoid_print, sized_box_for_whitespace, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
 
@@ -148,14 +148,12 @@ class _paintState extends State<paint> {
                             windowSize = newValue!;
                             print(
                                 "Window Size before calculation: $windowSize");
-// Update windowSize here
                           });
                         },
                         items: <String>[
                           'Default',
                           '24 x 24 = 0.38m²',
                           '24 x 48 = 0.74m²',
-                          '36 x 36 = 0.83m²',
                           '24 x 60 = 0.93m²',
                           '42 x 42 = 1.14 m²',
                           '14 x 29 = 0.26m²',
@@ -250,7 +248,8 @@ class _paintState extends State<paint> {
                       double totalLiters = area / paintCoverage;
                       double totalLitersWithCoat = totalLiters * coat;
 
-                      double doorWin = (window * windowSize1) + (door * doorSize1);
+                      double doorWin =
+                          (window * windowSize1) + (door * doorSize1);
 
                       double totalArea = area - doorWin;
 
@@ -261,6 +260,11 @@ class _paintState extends State<paint> {
                       print("Door + Window Area: $doorWin");
                       print(
                           "Total Area after deducting Door + Window Area: $totalArea");
+
+                      Navigator.pushNamed(context, '/paintOutput', arguments: {
+                        'area': totalArea,
+                        'paintNeeded': totalLitersWithCoat,
+                      });
 
                       return area;
                     }
@@ -284,6 +288,32 @@ class _paintState extends State<paint> {
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calculate), // Corrected icon
+            label: "Calculator",
+            backgroundColor: Colors.blue,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.question_mark_rounded), // Corrected icon
+            label: "Solution",
+            backgroundColor: Colors.blue,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.book),
+            label: "Definition of Terms",
+            backgroundColor: Colors.blue,
+          ),
+        ],
+        onTap: (index) {
+          if (index == 1) {
+            Navigator.pushNamed(context, '/paintSolution');
+          } else if (index == 2) {
+            Navigator.pushNamed(context, '/paintDef');
+          }
+        },
       ),
     );
   }

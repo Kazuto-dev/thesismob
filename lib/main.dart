@@ -35,6 +35,15 @@ import 'package:thesismob/frames/Roof/roofOutput.dart';
 import 'package:thesismob/frames/Roof/roofDoF.dart';
 import 'package:thesismob/frames/Roof/roofSolution.dart';
 import 'package:thesismob/frames/Paint/paint.dart';
+import 'package:thesismob/frames/Paint/paintOutput.dart';
+import 'package:thesismob/frames/Bullb/bulb.dart';
+import 'package:thesismob/frames/Bullb/bulbOutput.dart';
+import 'package:thesismob/frames/PVC/pvc.dart';
+import 'package:thesismob/frames/PVC/pvcOutput.dart';
+import 'package:thesismob/frames/PVC/pcvDef.dart';
+import 'package:thesismob/frames/PVC/pvcSolution.dart';
+import 'package:thesismob/frames/insulation/insulation.dart';
+import 'package:thesismob/frames/insulation/insulationOutput.dart';
 
 void main() {
   runApp(
@@ -62,25 +71,33 @@ class MyApp extends StatelessWidget {
 
         // ignore: prefer_const_constructors
         '/materials': (context) => materialPage(),
+
         '/chb': (context) => CHB(),
+        '/arch': (context) => architectural(),
+        '/struc': (context) => structural(),
+        '/plumb': (context) => plumbing(),
+        '/elec': (context) => electrical(),
+
         '/CHBoutput': (context) => chbOutput(),
+        '/DefenitionBox': (context) => DOF(),
+        '/SolutionBox': (context) => SOLUTION(),
         '/solution': (context) => Solutions(),
         '/definition': (context) => DoF(),
         '/solutiontiles': (context) => SolutionsTiles(),
         '/definitiontiles': (context) => DoFTiles(),
         '/outputTiles': (context) => tilesOutput(),
         '/tiles': (context) => tiles(),
-        '/DefenitionBox': (context) => DOF(),
-        '/SolutionBox': (context) => SOLUTION(),
-        '/arch': (context) => architectural(),
-        '/struc': (context) => structural(),
-        '/plumb': (context) => plumbing(),
-        '/elec': (context) => electrical(),
         '/plywood': (context) => wood(),
         '/outputPly': (context) => plywoodOutput(),
         '/roof': (context) => roof(),
         '/roofOutput': (context) => roofOutput(),
         '/paint': (context) => paint(),
+        '/paintOutput': (context) => paintOutput(),
+        '/bulb': (context) => bulb(),
+        '/bulbOutput': (context) => bulbOutput(),
+        '/pvc': (context) => pipe(),
+        '/insulation': (context) => insulation(),
+        '/insulationOutput': (context) => insulationOutput(),
       },
     );
   }
