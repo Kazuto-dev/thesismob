@@ -22,7 +22,7 @@ class electrical extends StatelessWidget {
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.of(context).pop();
+            Navigator.pushNamed(context, '/menu');
           },
         ),
       ),
@@ -35,7 +35,7 @@ class electrical extends StatelessWidget {
           onTap: () {
             switch (electricalMaterials[index]) {
               case "Bulb":
-                Navigator.pushNamed(context, '/bulb');
+                Navigator.pushNamed(context, '/bulbPages');
                 break;
               case "Plywood":
                 Navigator.pushNamed(context, '/plywood');

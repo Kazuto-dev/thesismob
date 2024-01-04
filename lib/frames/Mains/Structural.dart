@@ -35,17 +35,17 @@ class structural extends StatelessWidget {
               onTap: () {
                 switch (structuralMaterials[index]) {
                   case "CHB":
-                    Navigator.pushNamed(context, '/chb');
+                    Navigator.pushNamed(context, '/CHBpages');
                     break;
                   case "Plywood":
-                    Navigator.pushNamed(context, '/plywood');
+                    Navigator.pushNamed(context, '/plywoodPages');
                     //
                     break;
                   case "Tiles":
-                    Navigator.pushNamed(context, '/tiles');
+                    Navigator.pushNamed(context, '/tilesPages');
                     break;
                   case "Roof":
-                    Navigator.pushNamed(context, '/roof');
+                    Navigator.pushNamed(context, '/roofPages');
                     break;
                 }
               },

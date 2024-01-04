@@ -35,10 +35,10 @@ class architectural extends StatelessWidget {
           onTap: () {
             switch (architecturalMaterials[index]) {
               case "Paint":
-                Navigator.pushNamed(context, '/paint');
+                Navigator.pushNamed(context, '/paintPages');
                 break;
               case "Foam Insulation":
-                Navigator.pushNamed(context, '/insulation');
+                Navigator.pushNamed(context, '/insulationPages');
                 //
                 break;
               case "Tiles":

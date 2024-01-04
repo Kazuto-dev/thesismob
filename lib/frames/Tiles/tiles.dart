@@ -29,7 +29,6 @@ class _tilesState extends State<tiles> {
           },
         ),
       ),
-
       body: SingleChildScrollView(
         child: Center(
           child: Column(
@@ -72,7 +71,7 @@ class _tilesState extends State<tiles> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.all(10.0),
+                padding: EdgeInsets.all(15.0),
                 child: Row(
                   children: [
                     Expanded(
@@ -102,6 +101,13 @@ class _tilesState extends State<tiles> {
                         ),
                       ),
                     ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Row(
+                  children: [
                     SizedBox(width: 10),
                     Expanded(
                       child: DropdownButtonFormField<String>(
@@ -217,38 +223,6 @@ class _tilesState extends State<tiles> {
             ],
           ),
         ),
-      ),
-
-      // ignore: prefer_const_constructors
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          //home
-          BottomNavigationBarItem(
-            icon: Icon(Icons.numbers),
-            label: "Calculator",
-            backgroundColor: Colors.blue,
-          ),
-          //profile
-          BottomNavigationBarItem(
-            icon: Icon(Icons.question_mark),
-            label: "Solution",
-            backgroundColor: Colors.blue,
-          ),
-          //settings
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: "Definition of Terms",
-            backgroundColor: Colors.blue,
-          ),
-        ],
-        onTap: (index) {
-          // Handle the tap for each item
-          if (index == 1) {
-            Navigator.pushNamed(context, '/solutiontiles');
-          } else if (index == 2) {
-            Navigator.pushNamed(context, '/definitiontiles');
-          }
-        },
       ),
     );
   }

@@ -13,37 +13,59 @@ import 'package:thesismob/frames/Mains/sheetForm.dart';
 import 'package:thesismob/frames/CHB/Output.dart';
 import 'package:thesismob/frames/Mains/MainMenu.dart';
 import 'package:thesismob/frames/Mains/Materials.dart';
+import 'package:thesismob/frames/CHB/CHBpages.dart';
 import 'package:thesismob/frames/CHB/CHB.dart';
 import 'package:thesismob/frames/CHB/Solutions.dart';
 import 'package:thesismob/frames/CHB/DoF.dart';
+
 import 'package:thesismob/frames/Tiles/DoFTiles.dart';
 import 'package:thesismob/frames/Tiles/SolutionTiles.dart';
 import 'package:thesismob/frames/Tiles/tiles.dart';
 import 'package:thesismob/frames/Tiles/tilesOutput.dart';
+import 'package:thesismob/frames/Tiles/tilesPages.dart';
+
 import 'package:thesismob/frames/Mains/overAllDoF.dart';
 import 'package:thesismob/frames/Mains/overAllSolution.dart';
 import 'package:thesismob/frames/Mains/Architectural.dart';
 import 'package:thesismob/frames/Mains/Electrical.dart';
 import 'package:thesismob/frames/Mains/Plumbing.dart';
 import 'package:thesismob/frames/Mains/Structural.dart';
-import 'package:thesismob/frames/Plywood/DOFPlywood.dart';
-import 'package:thesismob/frames/Plywood/SolutionPly.dart';
+
+import 'package:thesismob/frames/Plywood/plywoodDef.dart';
+import 'package:thesismob/frames/Plywood/PlywoodSolution.dart';
 import 'package:thesismob/frames/Plywood/plywood.dart';
-import 'package:thesismob/frames/Plywood/OutputPly.dart';
+import 'package:thesismob/frames/Plywood/plywoodPages.dart';
+import 'package:thesismob/frames/Plywood/plywoodOutput.dart';
+
 import 'package:thesismob/frames/Roof/roof.dart';
 import 'package:thesismob/frames/Roof/roofOutput.dart';
-import 'package:thesismob/frames/Roof/roofDoF.dart';
+import 'package:thesismob/frames/Roof/roofDef.dart';
 import 'package:thesismob/frames/Roof/roofSolution.dart';
+import 'package:thesismob/frames/Roof/roofPages.dart';
+
 import 'package:thesismob/frames/Paint/paint.dart';
+import 'package:thesismob/frames/Paint/paintpages.dart';
+import 'package:thesismob/frames/Paint/paintDef.dart';
+import 'package:thesismob/frames/Paint/paintSolution.dart';
 import 'package:thesismob/frames/Paint/paintOutput.dart';
+
 import 'package:thesismob/frames/Bullb/bulb.dart';
 import 'package:thesismob/frames/Bullb/bulbOutput.dart';
+import 'package:thesismob/frames/Bullb/bulbDOF.dart';
+import 'package:thesismob/frames/Bullb/bulbSolution.dart';
+import 'package:thesismob/frames/Bullb/bulbPages.dart';
+
 import 'package:thesismob/frames/PVC/pvc.dart';
 import 'package:thesismob/frames/PVC/pvcOutput.dart';
 import 'package:thesismob/frames/PVC/pcvDef.dart';
 import 'package:thesismob/frames/PVC/pvcSolution.dart';
+import 'package:thesismob/frames/PVC/pvcPages.dart';
+
 import 'package:thesismob/frames/insulation/insulation.dart';
 import 'package:thesismob/frames/insulation/insulationOutput.dart';
+import 'package:thesismob/frames/insulation/insulationPages.dart';
+import 'package:thesismob/frames/insulation/insulationDef.dart';
+import 'package:thesismob/frames/insulation/insulationSolution.dart';
 
 void main() {
   runApp(
@@ -72,32 +94,60 @@ class MyApp extends StatelessWidget {
         // ignore: prefer_const_constructors
         '/materials': (context) => materialPage(),
 
-        '/chb': (context) => CHB(),
         '/arch': (context) => architectural(),
         '/struc': (context) => structural(),
         '/plumb': (context) => plumbing(),
         '/elec': (context) => electrical(),
 
+        '/CHBpages': (context) => pages(),
+        '/chb': (context) => CHB(),
         '/CHBoutput': (context) => chbOutput(),
-        '/DefenitionBox': (context) => DOF(),
+        '/CHBDef': (context) => DoF(),
+        '/CHBSol': (context) => Solutions(),
+
+        '/DefinitionBox': (context) => DOF(),
         '/SolutionBox': (context) => SOLUTION(),
-        '/solution': (context) => Solutions(),
-        '/definition': (context) => DoF(),
+
         '/solutiontiles': (context) => SolutionsTiles(),
         '/definitiontiles': (context) => DoFTiles(),
         '/outputTiles': (context) => tilesOutput(),
         '/tiles': (context) => tiles(),
+        '/tilesPages': (context) => Tilepages(),
+
         '/plywood': (context) => wood(),
         '/outputPly': (context) => plywoodOutput(),
+        '/plywoodPages': (context) => plywoodpages(),
+        '/plywoodDef': (context) => plywoodDef(),
+        '/plywoodSolution': (context) => plywoodSol(),
+
         '/roof': (context) => roof(),
         '/roofOutput': (context) => roofOutput(),
+        '/roofDef': (context) => roofDef(),
+        '/roofSolution': (context) => roofSol(),
+        '/roofPages': (context) => roofpages(),
+
         '/paint': (context) => paint(),
         '/paintOutput': (context) => paintOutput(),
+        '/paintDef': (context) => paintDef(),
+        '/paintSolution': (context) => paintSol(),
+        '/paintPages': (context) => paintpages(),
+
         '/bulb': (context) => bulb(),
         '/bulbOutput': (context) => bulbOutput(),
+        '/bulbDef': (context) => bulbDef(),
+        '/bulbSol': (context) => bulbSol(),
+        '/bulbPages': (context) => bulbpages(),
+
         '/pvc': (context) => pipe(),
+        '/pvcDef': (context) => pipeDef(),
+        '/pvcSolution': (context) => pipeSol(),
+        '/pvcpages': (context) => pvcpages(),
+
         '/insulation': (context) => insulation(),
         '/insulationOutput': (context) => insulationOutput(),
+        '/insulationPages': (context) => insulationpages(),
+        '/insulationDef': (context) => insulationDef(),
+        '/insulationSolution': (context) => insulationSol(),
       },
     );
   }

@@ -1,6 +1,7 @@
-// ignore_for_file: prefer_const_constructors
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
 
 // ignore: camel_case_types
 class DoF extends StatelessWidget {
@@ -12,6 +13,12 @@ class DoF extends StatelessWidget {
       appBar: AppBar(
         title: Text("Definition of Terms"),
         centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushNamed(context, '/struc');
+          },
+        ),
       ),
     );
   }

@@ -145,32 +145,6 @@ class pipeState extends State<pipe> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calculate), // Corrected icon
-            label: "Calculator",
-            backgroundColor: Colors.blue,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.question_mark_rounded), // Corrected icon
-            label: "Solution",
-            backgroundColor: Colors.blue,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: "Definition of Terms",
-            backgroundColor: Colors.blue,
-          ),
-        ],
-        onTap: (index) {
-          if (index == 1) {
-            Navigator.pushNamed(context, '/pvcSolution');
-          } else if (index == 2) {
-            Navigator.pushNamed(context, '/pvcDef');
-          }
-        },
-      ),
     );
   }
 }

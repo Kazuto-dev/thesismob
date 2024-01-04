@@ -41,7 +41,7 @@ class _paintState extends State<paint> {
               Image.asset(
                 'lib/assets/images/Paint(noBG).png',
                 width: 300,
-                height: 250,
+                height: 235,
                 fit: BoxFit.cover,
               ),
               Padding(
@@ -152,12 +152,12 @@ class _paintState extends State<paint> {
                         },
                         items: <String>[
                           'Default',
-                          '24 x 24 = 0.38m²',
-                          '24 x 48 = 0.74m²',
-                          '24 x 60 = 0.93m²',
-                          '42 x 42 = 1.14 m²',
-                          '14 x 29 = 0.26m²',
-                          '36 x 36 = 0.83m²',
+                          '24x24 =0.38m²',
+                          '24x48 =0.74m²',
+                          '24x60 =0.93m²',
+                          '42x42 =1.14 m²',
+                          '14x29 =0.26m²',
+                          '36x36 =0.83m²',
                         ].map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -184,8 +184,8 @@ class _paintState extends State<paint> {
                         },
                         items: <String>[
                           'Default',
-                          '80 x 36 = 1.85m²',
-                          '80 x 43 = 2.17m²',
+                          '80x36 = 1.85m²',
+                          '80x43 = 2.17m²',
                         ].map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -288,32 +288,6 @@ class _paintState extends State<paint> {
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calculate), // Corrected icon
-            label: "Calculator",
-            backgroundColor: Colors.blue,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.question_mark_rounded), // Corrected icon
-            label: "Solution",
-            backgroundColor: Colors.blue,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: "Definition of Terms",
-            backgroundColor: Colors.blue,
-          ),
-        ],
-        onTap: (index) {
-          if (index == 1) {
-            Navigator.pushNamed(context, '/paintSolution');
-          } else if (index == 2) {
-            Navigator.pushNamed(context, '/paintDef');
-          }
-        },
       ),
     );
   }

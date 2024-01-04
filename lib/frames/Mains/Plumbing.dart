@@ -35,7 +35,7 @@ class plumbing extends StatelessWidget {
           onTap: () {
             switch (architecturalMaterials[index]) {
               case "PVC Pipes":
-                Navigator.pushNamed(context, '/pvc');
+                Navigator.pushNamed(context, '/pvcpages');
                 break;
               case "Plywood":
                 Navigator.pushNamed(context, '/lavatorySink');

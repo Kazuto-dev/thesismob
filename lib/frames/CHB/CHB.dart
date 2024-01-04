@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, unused_import, no_logic_in_create_state, camel_case_types, avoid_print, unused_local_variable, sized_box_for_whitespace
 
 import 'package:flutter/material.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
 
 class CHB extends StatefulWidget {
   const CHB({Key? key}) : super(key: key);
@@ -28,7 +29,8 @@ class _CHBState extends State<CHB> {
           },
         ),
       ),
-      body: SingleChildScrollView(
+      body:
+       SingleChildScrollView(
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -200,32 +202,6 @@ class _CHBState extends State<CHB> {
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calculate), // Corrected icon
-            label: "Calculator",
-            backgroundColor: Colors.blue,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.question_mark_rounded), // Corrected icon
-            label: "Solution",
-            backgroundColor: Colors.blue,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: "Definition of Terms",
-            backgroundColor: Colors.blue,
-          ),
-        ],
-        onTap: (index) {
-          if (index == 1) {
-            Navigator.pushNamed(context, '/solution');
-          } else if (index == 2) {
-            Navigator.pushNamed(context, '/definition');
-          }
-        },
       ),
     );
   }

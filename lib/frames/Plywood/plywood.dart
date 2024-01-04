@@ -13,7 +13,7 @@ class wood extends StatefulWidget {
 class woodState extends State<wood> {
   TextEditingController _lengthController = TextEditingController();
   TextEditingController _widthController = TextEditingController();
-  String selectedtileWastage = 'Default';
+  String selectedwoodWastage = 'Default';
   String selectedwoodSize = 'Default';
 
   @override
@@ -70,96 +70,62 @@ class woodState extends State<wood> {
                   ],
                 ),
               ),
-              Container(
-                padding: EdgeInsets.all(15.0),
+              Padding(
+                padding: EdgeInsets.all(10.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Wastage:',
-                          style: TextStyle(fontSize: 16),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: selectedwoodWastage, // Use windowSize here
+                        onChanged: (String? newValue) {
+                          // Handle the selection
+
+                          setState(() {
+                            selectedwoodWastage = newValue!;
+                          });
+                        },
+                        items: <String>[
+                          'Default',
+                          '5% Wastage',
+                          '10% Wastage',
+                          '15% Wastage',
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: "Wastage",
                         ),
-                        SizedBox(height: 10),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 12.0, vertical: 4.0),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black),
-                            borderRadius: BorderRadius.circular(5.0),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: selectedtileWastage,
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  selectedtileWastage = newValue!;
-                                });
-                              },
-                              items: [
-                                DropdownMenuItem<String>(
-                                  value: 'Default',
-                                  child: Text('Default'),
-                                ),
-                                ...['5% Wastage', '10% Wastage', '15% Wastage']
-                                    .map<DropdownMenuItem<String>>(
-                                      (String value) =>
-                                          DropdownMenuItem<String>(
-                                        value: value,
-                                        child: Text(value),
-                                      ),
-                                    )
-                                    .toList(),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Tile Size: ',
-                          style: TextStyle(fontSize: 16),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: selectedwoodSize, // Use doorSize here
+                        onChanged: (String? newValue) {
+                          // Handle the selection
+                          setState(() {
+                            selectedwoodSize = newValue!;
+                            // Update doorSize here
+                          });
+                        },
+                        items: <String>[
+                          'Default',
+                          '4\' x 8\'',
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: "PlyWood Size",
                         ),
-                        SizedBox(height: 10),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 12.0, vertical: 4.0),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black),
-                            borderRadius: BorderRadius.circular(5.0),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: selectedwoodSize,
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  selectedwoodSize = newValue!;
-                                });
-                              },
-                              items: [
-                                DropdownMenuItem<String>(
-                                  value: 'Default',
-                                  child: Text('Default'),
-                                ),
-                                ...['4\' x 8\'']
-                                    .map<DropdownMenuItem<String>>(
-                                      (String value) =>
-                                          DropdownMenuItem<String>(
-                                        value: value,
-                                        child: Text(value),
-                                      ),
-                                    )
-                                    .toList(),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
@@ -169,19 +135,18 @@ class woodState extends State<wood> {
                 child: ElevatedButton(
                   onPressed: () {
                     double calculate() {
-                      // ... (your existing calculation code)
                       double wastagePercentage = 0.0;
                       double tileSize = 0.0;
                       double length = double.parse(_lengthController.text);
                       double width = double.parse(_widthController.text);
 
-                      if (selectedtileWastage == "Default") {
+                      if (selectedwoodWastage == "Default") {
                         wastagePercentage = 0.0;
-                      } else if (selectedtileWastage == '5% Wastage') {
+                      } else if (selectedwoodWastage == '5% Wastage') {
                         wastagePercentage = 0.05;
-                      } else if (selectedtileWastage == '10% Wastage') {
+                      } else if (selectedwoodWastage == '10% Wastage') {
                         wastagePercentage = 0.1;
-                      } else if (selectedtileWastage == '15% Wastage') {
+                      } else if (selectedwoodWastage == '15% Wastage') {
                         wastagePercentage = 0.15;
                       }
 
@@ -194,8 +159,18 @@ class woodState extends State<wood> {
                       double area = length * width;
                       print("Area: $area");
                       int woodneeded = (area / tileSize).ceil();
-                      int wastage =
-                          (woodneeded * wastagePercentage).ceil().toInt();
+
+                      int wastage;
+
+                      if (wastagePercentage.isFinite) {
+                        wastage =
+                            (woodneeded * wastagePercentage).ceil().toInt();
+                      } else {
+                        // Handle the case where wastagePercentage is Infinity or NaN
+                        wastage =
+                            0; // Set a default value or handle it according to your application logic
+                      }
+
                       int total = woodneeded + wastage;
                       print("Total plywood: $total");
 
@@ -230,36 +205,6 @@ class woodState extends State<wood> {
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          //home
-          BottomNavigationBarItem(
-            icon: Icon(Icons.numbers),
-            label: "Calculator",
-            backgroundColor: Colors.blue,
-          ),
-          //profile
-          BottomNavigationBarItem(
-            icon: Icon(Icons.question_mark),
-            label: "Solution",
-            backgroundColor: Colors.blue,
-          ),
-          //settings
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: "Definition of Terms",
-            backgroundColor: Colors.blue,
-          ),
-        ],
-        onTap: (index) {
-          // Handle the tap for each item
-          if (index == 1) {
-            Navigator.pushNamed(context, '/solutiontiles');
-          } else if (index == 2) {
-            Navigator.pushNamed(context, '/definitiontiles');
-          }
-        },
       ),
     );
   }

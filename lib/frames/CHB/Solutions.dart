@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
 
 // ignore: camel_case_types
 class Solutions extends StatelessWidget {
@@ -12,32 +13,12 @@ class Solutions extends StatelessWidget {
       appBar: AppBar(
         title: Text("Solution"),
         centerTitle: true,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calculate), // Corrected icon
-            label: "Calculator",
-            backgroundColor: Colors.blue,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.question_mark_rounded), // Corrected icon
-            label: "Solution",
-            backgroundColor: Colors.blue,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: "Definition of Terms",
-            backgroundColor: Colors.blue,
-          ),
-        ],
-        onTap: (index) {
-          if (index == 1) {
-            Navigator.pushNamed(context, '/CHBSolution');
-          } else if (index == 2) {
-            Navigator.pushNamed(context, '/CHBDef');
-          }
-        },
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushNamed(context, '/struc');
+          },
+        ),
       ),
     );
   }
