@@ -33,57 +33,74 @@ class _SheetInfoInputState extends State<SheetInfoInput> {
       ),
       // The rest of your Scaffold body goes here
 
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'lib/assets/logos/icons8-google-sheets-300.png',
-              width: 250,
-              height: 250,
-              fit: BoxFit.cover,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  TextField(
-                    controller: sheetIdController,
-                    decoration: InputDecoration(labelText: 'Enter Sheet ID'),
-                  ),
-                  SizedBox(height: 20),
-                  TextField(
-                    controller: sheetNameController,
-                    decoration: InputDecoration(labelText: 'Enter Sheet Name'),
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      final String sheetId = sheetIdController.text;
-                      final String sheetName = sheetNameController.text;
-
-                      if (sheetId.isNotEmpty && sheetName.isNotEmpty) {
-                        // Use the provider to set the sheet info
-                        Provider.of<SheetInfoProvider>(context, listen: false)
-                            .setSheetInfo(sheetId, sheetName);
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Credentials added successfully!'),
-                            duration: Duration(seconds: 5),
-                          ),
-                        );
-                      } else {
-                        print('Please enter both Sheet ID and Sheet Name');
-                      }
-                    },
-                    child: Text('Submit'),
-                  ),
-                ],
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                'lib/assets/logos/icons8-google-sheets-300.png',
+                width: 250,
+                height: 250,
+                fit: BoxFit.cover,
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextField(
+                      controller: sheetIdController,
+                      decoration: InputDecoration(labelText: 'Enter Sheet ID'),
+                    ),
+                    SizedBox(height: 20),
+                    TextField(
+                      controller: sheetNameController,
+                      decoration:
+                          InputDecoration(labelText: 'Enter Sheet Name'),
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        final String sheetId = sheetIdController.text;
+                        final String sheetName = sheetNameController.text;
+
+                        if (sheetId.isNotEmpty && sheetName.isNotEmpty) {
+                          // Use the provider to set the sheet info
+                          Provider.of<SheetInfoProvider>(context, listen: false)
+                              .setSheetInfo(sheetId, sheetName);
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Credentials added successfully!'),
+                              duration: Duration(seconds: 5),
+                            ),
+                          );
+                        } else {
+                          print('Please enter both Sheet ID and Sheet Name');
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        primary:
+                            Color.fromARGB(255, 0, 149, 0), // Background color
+                        onPrimary: Colors.white, // Text color
+                        padding: EdgeInsets.all(12), // Button padding
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ), // Button shape with rounded corners
+                        minimumSize: Size(double.infinity,
+                            50), // Set minimum width and height
+                      ),
+                      child: Text(
+                        'Submit',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

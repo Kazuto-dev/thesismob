@@ -9,11 +9,16 @@ List<String> types = [
   "Plumbing",
 ];
 
-class FirstPage extends StatelessWidget {
+class FirstPage extends StatefulWidget {
   final String? displayName;
 
   const FirstPage({Key? key, this.displayName}) : super(key: key);
 
+  @override
+  State<FirstPage> createState() => _FirstPageState();
+}
+
+class _FirstPageState extends State<FirstPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,30 +28,51 @@ class FirstPage extends StatelessWidget {
           height: 100,
           width: 500, // Adjust the height as needed
         ),
-        leading: IconButton(
-          icon: Icon(Icons.home),
-          onPressed: () {
-            Navigator.pushNamed(context, '/materials');
-          },
-        ),
         centerTitle: true,
       ),
       // The rest of your widget tree
       endDrawer: Drawer(
-        backgroundColor: Color.fromARGB(255, 96, 62, 142),
+        backgroundColor: Color.fromARGB(255, 3, 124, 9),
         child: ListView(
           children: [
             Align(
               alignment: Alignment.topCenter,
               child: DrawerHeader(
                 child: Text(
-                  "Hi $displayName",
+                  "History",
                   style: TextStyle(
                     fontSize: 30,
                     color: Color.fromARGB(255, 226, 226, 226),
                   ),
                 ),
               ),
+            ),
+            ListTile(
+              title: Text(
+                "January 1, 2023",
+                style: TextStyle(color: Colors.white),
+              ),
+              onTap: () {
+                // Handle the tap on January 1, 2023
+              },
+            ),
+            ListTile(
+              title: Text(
+                "February 15, 2023",
+                style: TextStyle(color: Colors.white),
+              ),
+              onTap: () {
+                // Handle the tap on February 15, 2023
+              },
+            ),
+            ListTile(
+              title: Text(
+                "March 30, 2023",
+                style: TextStyle(color: Colors.white),
+              ),
+              onTap: () {
+                // Handle the tap on March 30, 2023
+              },
             ),
             // Add other ListTile items as needed
           ],
@@ -117,38 +143,6 @@ class FirstPage extends StatelessWidget {
             ),
           ),
         ],
-      ),
-
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          //home
-          BottomNavigationBarItem(
-            icon: Icon(Icons.question_mark),
-            label: "Solution",
-            backgroundColor: Colors.blue,
-          ),
-          //settings
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: "Definition of Terms",
-            backgroundColor: Colors.blue,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "Profile",
-            backgroundColor: Colors.blue,
-          )
-        ],
-        onTap: (index) {
-          // Handle the tap for each item
-          if (index == 0) {
-            Navigator.pushNamed(context, '/SolutionBox');
-          } else if (index == 1) {
-            Navigator.pushNamed(context, '/DefenitionBox');
-          } else if (index == 2) {
-            Navigator.pushNamed(context, '/sheetform');
-          }
-        },
       ),
     );
   }

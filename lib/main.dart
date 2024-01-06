@@ -2,12 +2,10 @@
 
 //main components
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'package:thesismob/frames/Mains/sheetProvider.dart';
 import 'package:thesismob/frames/Mains/sheetForm.dart';
+import 'package:thesismob/frames/Mains/mainpage.dart';
 
 //Pages
 import 'package:thesismob/frames/CHB/Output.dart';
@@ -85,7 +83,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       // ignore: prefer_const_constructors
-      home: FirstPage(),
+      home: mainpage(),
       routes: {
         // ignore: prefer_const_constructors
         '/menu': (context) => FirstPage(),
