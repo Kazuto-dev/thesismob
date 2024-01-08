@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, unused_import, no_logic_in_create_state, camel_case_types, avoid_print, unused_local_variable, sized_box_for_whitespace
 
 import 'package:flutter/material.dart';
+import 'package:thesismob/frames/Mains/history.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 
 class CHB extends StatefulWidget {
@@ -16,6 +17,8 @@ class _CHBState extends State<CHB> {
   String selectedWastage = 'Default';
   String selectedSize = 'Default';
 
+  List<Map<String, dynamic>> calculationHistory = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,8 +32,7 @@ class _CHBState extends State<CHB> {
           },
         ),
       ),
-      body:
-       SingleChildScrollView(
+      body: SingleChildScrollView(
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -166,12 +168,23 @@ class _CHBState extends State<CHB> {
                       int chbNeed = (area / chbSize).ceil();
                       print("CHB Needed: $chbNeed");
 
+                      List<String> numbers = ["1", "2", "3", "4", "5"];
+
                       // Calculate wastage and round up to the nearest whole number
                       int wastage =
                           (wastagePercentage * chbNeed).ceil().toInt();
                       print("Wastage: $wastage");
 
                       int totalCHB = chbNeed + wastage;
+
+                      Calculation calculation = Calculation(
+                        calculatorType: "Concrete Hollow Blocks" + numbers[2],
+                        area: area,
+                        totalCHB: totalCHB,
+                        date: DateTime.now(),
+                      );
+
+                      HistoryManager().addCalculation(calculation);
 
                       // Navigate to the output page with the calculated values
                       Navigator.pushNamed(
@@ -205,4 +218,18 @@ class _CHBState extends State<CHB> {
       ),
     );
   }
+}
+
+class Calculation {
+  String calculatorType;
+  double area;
+  int totalCHB;
+  DateTime date;
+
+  Calculation({
+    required this.calculatorType,
+    required this.area,
+    required this.totalCHB,
+    required this.date,
+  });
 }

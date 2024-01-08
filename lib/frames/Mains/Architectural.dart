@@ -22,7 +22,7 @@ class architectural extends StatelessWidget {
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pushNamed(context, '/menu');
+            Navigator.pushNamed(context, '/mainpage');
           },
         ),
       ),

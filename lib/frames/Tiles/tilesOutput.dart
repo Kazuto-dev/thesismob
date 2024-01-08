@@ -37,7 +37,6 @@ class _tilesOutputState extends State<tilesOutput> {
       // Extract values
       final double area = args['area'];
       final int totalTiles = args['total'];
-      String material = "Tiles";
 
       return Scaffold(
         appBar: AppBar(

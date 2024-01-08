@@ -10,7 +10,7 @@ import 'package:thesismob/frames/Mains/mainpage.dart';
 //Pages
 import 'package:thesismob/frames/CHB/Output.dart';
 import 'package:thesismob/frames/Mains/MainMenu.dart';
-import 'package:thesismob/frames/Mains/Materials.dart';
+import 'package:thesismob/frames/Mains/Instructions.dart';
 import 'package:thesismob/frames/CHB/CHBpages.dart';
 import 'package:thesismob/frames/CHB/CHB.dart';
 import 'package:thesismob/frames/CHB/Solutions.dart';
@@ -86,11 +86,11 @@ class MyApp extends StatelessWidget {
       home: mainpage(),
       routes: {
         // ignore: prefer_const_constructors
-        '/menu': (context) => FirstPage(),
+        '/mainpage': (context) => mainpage(),
         '/sheetform': (context) => SheetInfoInput(),
 
         // ignore: prefer_const_constructors
-        '/materials': (context) => materialPage(),
+        '/instructions': (context) => instructions(),
 
         '/arch': (context) => architectural(),
         '/struc': (context) => structural(),

@@ -13,6 +13,7 @@ class paintSol extends StatelessWidget {
         title: Text("Solution"),
         centerTitle: true,
       ),
+      
     );
   }
 }
