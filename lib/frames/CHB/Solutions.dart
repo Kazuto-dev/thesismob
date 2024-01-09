@@ -41,7 +41,11 @@ class Solutions extends StatelessWidget {
             SizedBox(height: 8.0),
             Text(
               "wall size = wall height × wall width",
-              style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+              style: TextStyle(
+                  fontSize: 16,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.blueAccent,
+                  fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16.0),
             Text(
@@ -51,7 +55,11 @@ class Solutions extends StatelessWidget {
             SizedBox(height: 8.0),
             Text(
               "number of blocks needed = wall area / block area",
-              style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+              style: TextStyle(
+                  fontSize: 16,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.blueAccent,
+                  fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16.0),
             Text(
@@ -66,7 +74,11 @@ class Solutions extends StatelessWidget {
             SizedBox(height: 8.0),
             Text(
               "concrete block costs = price per block × number of blocks",
-              style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+              style: TextStyle(
+                  fontSize: 16,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.blueAccent,
+                  fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16.0),
             Text(
@@ -76,7 +88,11 @@ class Solutions extends StatelessWidget {
             SizedBox(height: 8.0),
             Text(
               "mortar bags estimation = number of blocks needed / 33.3",
-              style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+              style: TextStyle(
+                  fontSize: 16,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.blueAccent,
+                  fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16.0),
             Text(

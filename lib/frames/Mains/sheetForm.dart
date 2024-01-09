@@ -18,6 +18,12 @@ class _SheetInfoInputState extends State<SheetInfoInput> {
     return Scaffold(
       appBar: AppBar(
         title: Center(child: Text('Sheet Form')),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushNamed(context, '/mainpage');
+          },
+        ),
         actions: [
           // Any existing action buttons go here, if applicable
           IconButton(

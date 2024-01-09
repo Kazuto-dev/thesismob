@@ -10,8 +10,16 @@ class instructions extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       // ignore: prefer_const_constructors
-      appBar:
-          AppBar(title: Text("BuildQuantify Instructions"), centerTitle: true),
+      appBar: AppBar(
+        title: Text("BuildQuantify Instructions"),
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushNamed(context, '/mainpage');
+          },
+        ),
+      ),
     );
   }
 }

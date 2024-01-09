@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:thesismob/frames/Mains/Instructions.dart';
 import 'package:thesismob/frames/Mains/MainMenu.dart';
 import 'package:thesismob/frames/Mains/overAllDoF.dart';
 import 'package:thesismob/frames/Mains/sheetForm.dart';
@@ -24,7 +25,7 @@ class _pagesState extends State<mainpage> {
 
   final List<Widget> pages = [
     FirstPage(),
-    DOF(),
+    instructions(),
     SheetInfoInput(),
   ];
 
@@ -50,7 +51,7 @@ class _pagesState extends State<mainpage> {
             padding: EdgeInsets.all(16),
             tabs: [
               GButton(icon: Icons.calculate, text: 'Caculators'),
-              GButton(icon: Icons.article, text: 'Definitions'),
+              GButton(icon: Icons.book, text: 'Instructions'),
               GButton(icon: Icons.key, text: 'Sheet Key'),
             ],
           ),
