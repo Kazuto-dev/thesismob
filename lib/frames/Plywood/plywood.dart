@@ -1,6 +1,8 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'package:flutter/material.dart';
+import 'package:thesismob/frames/Mains/calculationHistory.dart';
+import 'package:thesismob/frames/Mains/historyClass.dart';
 
 // ignore: camel_case_types
 class wood extends StatefulWidget {
@@ -136,7 +138,7 @@ class woodState extends State<wood> {
                   onPressed: () {
                     double calculate() {
                       double wastagePercentage = 0.0;
-                      double tileSize = 0.0;
+                      double woodSize = 0.0;
                       double length = double.parse(_lengthController.text);
                       double width = double.parse(_widthController.text);
 
@@ -151,14 +153,14 @@ class woodState extends State<wood> {
                       }
 
                       if (selectedwoodSize == 'Default') {
-                        tileSize = 0.0;
+                        woodSize = 0.0;
                       } else if (selectedwoodSize == '4\' x 8\'') {
-                        tileSize = 2.97;
+                        woodSize = 2.97;
                       }
 
                       double area = length * width;
                       print("Area: $area");
-                      int woodneeded = (area / tileSize).ceil();
+                      int woodneeded = (area / woodSize).ceil();
 
                       int wastage;
 
@@ -173,6 +175,16 @@ class woodState extends State<wood> {
 
                       int total = woodneeded + wastage;
                       print("Total plywood: $total");
+
+                      CalculationHistoryEntry entry = CalculationHistoryEntry(
+                        date: DateTime.now(),
+                        calculatorType: "Plywood Estimator",
+                        material: "Plywood $selectedwoodSize",
+                        area: area,
+                        quantity: total,
+                      );
+
+                      CalculationHistory.addEntry(entry);
 
                       Navigator.pushNamed(
                         context,

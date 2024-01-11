@@ -1,6 +1,8 @@
 // ignore_for_file: prefer_const_constructors, camel_case_types, use_super_parameters, library_private_types_in_public_api, prefer_final_fields, avoid_print, sized_box_for_whitespace, unused_import, use_key_in_widget_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
+import 'package:thesismob/frames/Mains/calculationHistory.dart';
+import 'package:thesismob/frames/Mains/historyClass.dart';
 
 class bulb extends StatefulWidget {
   @override
@@ -212,6 +214,16 @@ class _bulbState extends State<bulb> {
                       print("Watts: $watts");
                       print("Watts per bulb: $wperbulb");
                       print("Bulb Quantity: $bulbQuantity");
+
+                      CalculationHistoryEntry entry = CalculationHistoryEntry(
+                        date: DateTime.now(),
+                        calculatorType: "Bulb Estimator",
+                        material: "Bulb + $bulbType" + wperbulb.toString(),
+                        area: area,
+                        quantity: bulbQuantity,
+                      );
+
+                      CalculationHistory.addEntry(entry);
 
                       Navigator.pushNamed(context, '/bulbOutput', arguments: {
                         'area': area,

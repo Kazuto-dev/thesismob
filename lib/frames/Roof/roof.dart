@@ -1,6 +1,8 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
+import 'package:thesismob/frames/Mains/calculationHistory.dart';
+import 'package:thesismob/frames/Mains/historyClass.dart';
 
 class roof extends StatefulWidget {
   const roof({Key? key}) : super(key: key);
@@ -236,6 +238,16 @@ class RoofState extends State<roof> {
                       }
 
                       print("Sheets Needed: $sheetsNeededRounded");
+
+                      CalculationHistoryEntry entry = CalculationHistoryEntry(
+                        date: DateTime.now(),
+                        calculatorType: "Roof Estimator",
+                        material: "Roof",
+                        area: area,
+                        quantity: sheetsNeededRounded,
+                      );
+
+                      CalculationHistory.addEntry(entry);
 
                       Navigator.pushNamed(
                         context,

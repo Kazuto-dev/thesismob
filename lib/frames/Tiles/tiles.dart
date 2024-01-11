@@ -1,6 +1,8 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, unused_import, duplicate_ignore, unused_local_variable, prefer_final_fields
 
 import 'package:flutter/material.dart';
+import 'package:thesismob/frames/Mains/calculationHistory.dart';
+import 'package:thesismob/frames/Mains/historyClass.dart';
 
 // ignore: camel_case_types
 class tiles extends StatefulWidget {
@@ -192,6 +194,16 @@ class _tilesState extends State<tiles> {
                       int total = tileneeded + wastage;
                       print("Total tiles: $total");
 
+                      CalculationHistoryEntry entry = CalculationHistoryEntry(
+                        date: DateTime.now(),
+                        calculatorType: "Tile Estimator",
+                        material: "Tiles",
+                        area: area,
+                        quantity: total,
+                      );
+
+                      CalculationHistory.addEntry(entry);
+
                       Navigator.pushNamed(
                         context,
                         '/outputTiles',
@@ -226,4 +238,5 @@ class _tilesState extends State<tiles> {
       ),
     );
   }
-} // Add closing parenthesis here
+}
+ // Add closing parenthesis here

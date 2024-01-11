@@ -1,6 +1,8 @@
 // ignore_for_file: prefer_const_constructors, camel_case_types, use_super_parameters, library_private_types_in_public_api, prefer_final_fields, avoid_print, sized_box_for_whitespace, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
+import 'package:thesismob/frames/Mains/calculationHistory.dart';
+import 'package:thesismob/frames/Mains/historyClass.dart';
 
 class paint extends StatefulWidget {
   const paint({Key? key}) : super(key: key);
@@ -260,6 +262,16 @@ class _paintState extends State<paint> {
                       print("Door + Window Area: $doorWin");
                       print(
                           "Total Area after deducting Door + Window Area: $totalArea");
+
+                      CalculationHistoryEntry entry = CalculationHistoryEntry(
+                        date: DateTime.now(),
+                        calculatorType: "Paint Estimator",
+                        material: "Paint $coat Coats",
+                        area: area,
+                        quantity: totalLitersWithCoat.toInt(),
+                      );
+
+                      CalculationHistory.addEntry(entry);
 
                       Navigator.pushNamed(context, '/paintOutput', arguments: {
                         'area': totalArea,

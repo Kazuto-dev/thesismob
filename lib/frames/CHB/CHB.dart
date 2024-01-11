@@ -1,8 +1,9 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, unused_import, no_logic_in_create_state, camel_case_types, avoid_print, unused_local_variable, sized_box_for_whitespace
 
 import 'package:flutter/material.dart';
-import 'package:thesismob/frames/Mains/history.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:thesismob/frames/Mains/calculationHistory.dart';
+import 'package:thesismob/frames/Mains/historyClass.dart';
 
 class CHB extends StatefulWidget {
   const CHB({Key? key}) : super(key: key);
@@ -168,8 +169,6 @@ class _CHBState extends State<CHB> {
                       int chbNeed = (area / chbSize).ceil();
                       print("CHB Needed: $chbNeed");
 
-                      List<String> numbers = ["1", "2", "3", "4", "5"];
-
                       // Calculate wastage and round up to the nearest whole number
                       int wastage =
                           (wastagePercentage * chbNeed).ceil().toInt();
@@ -177,14 +176,15 @@ class _CHBState extends State<CHB> {
 
                       int totalCHB = chbNeed + wastage;
 
-                      Calculation calculation = Calculation(
-                        calculatorType: "Concrete Hollow Blocks" + numbers[2],
-                        area: area,
-                        totalCHB: totalCHB,
+                      CalculationHistoryEntry entry = CalculationHistoryEntry(
                         date: DateTime.now(),
+                        calculatorType: "CHB Estimator",
+                        material: "Concrete Hollow Blocks",
+                        area: area,
+                        quantity: totalCHB,
                       );
 
-                      HistoryManager().addCalculation(calculation);
+                      CalculationHistory.addEntry(entry);
 
                       // Navigate to the output page with the calculated values
                       Navigator.pushNamed(
@@ -218,18 +218,4 @@ class _CHBState extends State<CHB> {
       ),
     );
   }
-}
-
-class Calculation {
-  String calculatorType;
-  double area;
-  int totalCHB;
-  DateTime date;
-
-  Calculation({
-    required this.calculatorType,
-    required this.area,
-    required this.totalCHB,
-    required this.date,
-  });
 }

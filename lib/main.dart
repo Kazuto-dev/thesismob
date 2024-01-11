@@ -6,6 +6,9 @@ import 'package:provider/provider.dart';
 import 'package:thesismob/frames/Mains/sheetProvider.dart';
 import 'package:thesismob/frames/Mains/sheetForm.dart';
 import 'package:thesismob/frames/Mains/mainpage.dart';
+import 'package:thesismob/frames/Mains/historyClass.dart';
+import 'package:thesismob/frames/Mains/calculationHistory.dart';
+import 'package:thesismob/frames/Mains/DisplayHistory.dart';
 
 //Pages
 import 'package:thesismob/frames/CHB/Output.dart';
@@ -88,6 +91,7 @@ class MyApp extends StatelessWidget {
         // ignore: prefer_const_constructors
         '/mainpage': (context) => mainpage(),
         '/sheetform': (context) => SheetInfoInput(),
+        '/history': (context) => HistoryScreen(),
 
         // ignore: prefer_const_constructors
         '/instructions': (context) => instructions(),

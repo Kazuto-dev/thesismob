@@ -1,7 +1,5 @@
 // ignore_for_file: file_names, use_super_parameters, unused_import, prefer_const_constructors, prefer_const_literals_to_create_immutables
 import 'package:flutter/material.dart';
-import 'package:thesismob/frames/Mains/history.dart';
-import 'package:thesismob/frames/CHB/CHB.dart';
 
 class FirstPage extends StatefulWidget {
   final String? displayName;
@@ -22,94 +20,6 @@ class _FirstPageState extends State<FirstPage> {
 
   @override
   Widget build(BuildContext context) {
-    List<DateTime> _getUniqueDates() {
-      // Extract unique dates from the calculations
-      return HistoryManager()
-          .calculations
-          .map((calculation) => calculation.date)
-          .toSet()
-          .toList();
-    }
-
-    String _formattedDate(DateTime date) {
-      // Format the date to a readable string
-      return "${date.month}/${date.day}/${date.year}";
-    }
-
-    void _showCalculationsByDate(BuildContext context, DateTime date) {
-      // Retrieve calculations for the specified date
-      List<Calculation> calculations =
-          HistoryManager().getCalculationsByDate(date);
-
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text("Calculations on ${_formattedDate(date)}"),
-            content: Container(
-              width: double.minPositive,
-              child: DropdownButton<Calculation>(
-                isExpanded: true,
-                value: null, // Initially, no calculation is selected
-                onChanged: (Calculation? selectedCalculation) {
-                  // Handle the selected calculation
-                  if (selectedCalculation != null) {
-                    // Show a dialog with details of the selected calculation
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: Text("Details for the selected calculation"),
-                          content: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                  "Material: ${selectedCalculation.calculatorType}"),
-                              Text("Area: ${selectedCalculation.area}"),
-                              Text(
-                                  "Total CHB: ${selectedCalculation.totalCHB}"),
-                              Text(
-                                  "Date: ${_formattedDate(selectedCalculation.date)}"),
-                            ],
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop(); // Close the dialog
-                              },
-                              child: Text('Close'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  }
-                },
-
-                items: calculations.map((calculation) {
-                  return DropdownMenuItem<Calculation>(
-                    value: calculation,
-                    child: Text(
-                      "Concrete Hollow Blocks",
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // Close the dialog
-                },
-                child: Text('Close'),
-              ),
-            ],
-          );
-        },
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: Image.asset(
@@ -118,46 +28,15 @@ class _FirstPageState extends State<FirstPage> {
           width: 500, // Adjust the height as needed
         ),
         leading: IconButton(
-          icon: Icon(Icons.book),
+          icon: Icon(Icons.history),
           onPressed: () {
-            Navigator.pushNamed(context, '/instructions');
+            Navigator.pushNamed(context, '/history');
           },
         ),
         centerTitle: true,
       ),
       // The rest of your widget tree
       // Inside your Drawer:
-      endDrawer: Drawer(
-        backgroundColor: Color.fromARGB(255, 3, 124, 9),
-        child: ListView(
-          children: [
-            Align(
-              alignment: Alignment.topCenter,
-              child: DrawerHeader(
-                child: Text(
-                  "History",
-                  style: TextStyle(
-                    fontSize: 30,
-                    color: Color.fromARGB(255, 226, 226, 226),
-                  ),
-                ),
-              ),
-            ),
-            // Add ListTile for each date in the history
-            ..._getUniqueDates().map((date) {
-              return ListTile(
-                title: Text(
-                  "${_formattedDate(date)}",
-                  style: TextStyle(color: Colors.white),
-                ),
-                onTap: () {
-                  _showCalculationsByDate(context, date);
-                },
-              );
-            }).toList(),
-          ],
-        ),
-      ),
 
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,

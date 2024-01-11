@@ -1,6 +1,8 @@
 // ignore_for_file: prefer_const_constructors, camel_case_types, use_super_parameters, library_private_types_in_public_api, prefer_final_fields, avoid_print, sized_box_for_whitespace, unused_import, use_key_in_widget_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
+import 'package:thesismob/frames/Mains/calculationHistory.dart';
+import 'package:thesismob/frames/Mains/historyClass.dart';
 
 class insulation extends StatefulWidget {
   @override
@@ -236,6 +238,16 @@ class insulationState extends State<insulation> {
                       print('size: $size1(m)');
                       print('type: $type1');
                       print('insulationNeed: $insulationNeed');
+
+                      CalculationHistoryEntry entry = CalculationHistoryEntry(
+                        date: DateTime.now(),
+                        calculatorType: "PE FOAM Insulation Estimator",
+                        material: "Insulation $type1 $thickness1(m) $size1(m)",
+                        area: area,
+                        quantity: insulationNeed,
+                      );
+
+                      CalculationHistory.addEntry(entry);
 
                       Navigator.pushNamed(context, '/insulationOutput',
                           arguments: {
