@@ -219,27 +219,27 @@ class _paintState extends State<paint> {
 
                       if (windowSize == 'Default') {
                         windowSize1 = 0.0;
-                      } else if (windowSize == '24 x 24 = 0.38m²') {
+                      } else if (windowSize == '24x24 =0.38m²') {
                         windowSize1 = 0.38;
-                      } else if (windowSize == '24 x 48 = 0.74m²') {
+                      } else if (windowSize == '24x48 =0.74m²') {
                         windowSize1 = 0.74;
-                      } else if (windowSize == '36 x 36 = 0.83m²') {
+                      } else if (windowSize == '36x36 =0.83m²') {
                         windowSize1 = 0.83;
-                      } else if (windowSize == '24 x 60 = 0.93m²') {
+                      } else if (windowSize == '24x60 =0.93m²') {
                         windowSize1 = 0.93;
-                      } else if (windowSize == '42 x 42 = 1.14 m²') {
+                      } else if (windowSize == '42x42 =1.14 m²') {
                         windowSize1 = 1.14;
-                      } else if (windowSize == '14 x 29 = 0.26m²') {
+                      } else if (windowSize == '14x29 =0.26m²') {
                         windowSize1 = 0.26;
-                      } else if (windowSize == '36 x 36 = 0.83m²') {
+                      } else if (windowSize == '36x36 =0.83m²') {
                         windowSize1 = 0.83;
                       }
 
                       if (doorSize == 'Default') {
                         doorSize1 = 0.0;
-                      } else if (doorSize == '80 x 36 = 1.85m²') {
+                      } else if (doorSize == '80x36 = 1.85m²') {
                         doorSize1 = 1.85;
-                      } else if (doorSize == '80 x 43 = 2.17m²') {
+                      } else if (doorSize == '80x43 = 2.17m²') {
                         doorSize1 = 2.17;
                       }
 
@@ -266,9 +266,9 @@ class _paintState extends State<paint> {
                       CalculationHistoryEntry entry = CalculationHistoryEntry(
                         date: DateTime.now(),
                         calculatorType: "Paint Estimator",
-                        material: "Paint $coat Coats",
-                        area: area,
-                        quantity: totalLitersWithCoat.toInt(),
+                        material: "Paint $coat coat",
+                        area: totalArea.toString() + "m²",
+                        quantity: totalLitersWithCoat.toString() + "L",
                       );
 
                       CalculationHistory.addEntry(entry);

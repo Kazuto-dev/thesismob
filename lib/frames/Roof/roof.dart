@@ -243,8 +243,8 @@ class RoofState extends State<roof> {
                         date: DateTime.now(),
                         calculatorType: "Roof Estimator",
                         material: "Roof",
-                        area: area,
-                        quantity: sheetsNeededRounded,
+                        area: area.toString() + "m²",
+                        quantity: sheetsNeededRounded.toString() + "pcs",
                       );
 
                       CalculationHistory.addEntry(entry);

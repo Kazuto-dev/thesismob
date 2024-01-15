@@ -180,8 +180,8 @@ class _CHBState extends State<CHB> {
                         date: DateTime.now(),
                         calculatorType: "CHB Estimator",
                         material: "Concrete Hollow Blocks",
-                        area: area,
-                        quantity: totalCHB,
+                        area: area.toString() + "m²",
+                        quantity: totalCHB.toString() + "pcs",
                       );
 
                       CalculationHistory.addEntry(entry);

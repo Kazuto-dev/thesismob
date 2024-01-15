@@ -180,8 +180,8 @@ class woodState extends State<wood> {
                         date: DateTime.now(),
                         calculatorType: "Plywood Estimator",
                         material: "Plywood $selectedwoodSize",
-                        area: area,
-                        quantity: total,
+                        area: area.toString() + "m²",
+                        quantity: total.toString() + "pcs",
                       );
 
                       CalculationHistory.addEntry(entry);

@@ -198,8 +198,8 @@ class _tilesState extends State<tiles> {
                         date: DateTime.now(),
                         calculatorType: "Tile Estimator",
                         material: "Tiles",
-                        area: area,
-                        quantity: total,
+                        area: area.toString() + "m²",
+                        quantity: total.toString() + "pcs",
                       );
 
                       CalculationHistory.addEntry(entry);

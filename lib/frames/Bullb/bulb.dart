@@ -218,9 +218,10 @@ class _bulbState extends State<bulb> {
                       CalculationHistoryEntry entry = CalculationHistoryEntry(
                         date: DateTime.now(),
                         calculatorType: "Bulb Estimator",
-                        material: "Bulb + $bulbType" + wperbulb.toString(),
-                        area: area,
-                        quantity: bulbQuantity,
+                        material:
+                            "Bulb $bulbType " + wperbulb.toString() + "watts",
+                        area: area.toString() + "m²",
+                        quantity: bulbQuantity.toString() + "pcs",
                       );
 
                       CalculationHistory.addEntry(entry);

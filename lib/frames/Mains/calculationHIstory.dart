@@ -1,8 +1,8 @@
 class CalculationHistoryEntry {
   final String calculatorType;
   final String material;
-  final double area;
-  final int quantity;
+  final String area;
+  final String quantity;
   final DateTime date;
 
   CalculationHistoryEntry({

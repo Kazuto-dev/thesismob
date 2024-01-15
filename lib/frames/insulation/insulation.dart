@@ -242,9 +242,11 @@ class insulationState extends State<insulation> {
                       CalculationHistoryEntry entry = CalculationHistoryEntry(
                         date: DateTime.now(),
                         calculatorType: "PE FOAM Insulation Estimator",
-                        material: "Insulation $type1 $thickness1(m) $size1(m)",
-                        area: area,
-                        quantity: insulationNeed,
+                        material: "Insulation $type1\n" +
+                            "Thickness: $thickness1(m)\n" +
+                            "Size: $size1(m)",
+                        area: area.toString() + "m²",
+                        quantity: insulationNeed.toString() + "pcs",
                       );
 
                       CalculationHistory.addEntry(entry);
