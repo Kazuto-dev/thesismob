@@ -68,6 +68,12 @@ import 'package:thesismob/frames/insulation/insulationPages.dart';
 import 'package:thesismob/frames/insulation/insulationDef.dart';
 import 'package:thesismob/frames/insulation/insulationSolution.dart';
 
+import 'package:thesismob/frames/woodFloor/woodfloor.dart';
+import 'package:thesismob/frames/woodFloor/woodfloorOutput.dart';
+import 'package:thesismob/frames/woodFloor/woodfloorPages.dart';
+import 'package:thesismob/frames/woodFloor/woodfloorDef.dart';
+import 'package:thesismob/frames/woodFloor/woodfloorSol.dart';
+
 void main() {
   runApp(
     ChangeNotifierProvider(
@@ -150,6 +156,12 @@ class MyApp extends StatelessWidget {
         '/insulationPages': (context) => insulationpages(),
         '/insulationDef': (context) => insulationDef(),
         '/insulationSolution': (context) => insulationSol(),
+
+        '/woodfloor': (context) => woodFloor(),
+        '/woodfloorPages': (context) => woodFloorPages(),
+        '/woodfloorDef': (context) => woodFloorDef(),
+        '/woodfloorSol': (context) => woodFloorSol(),
+        '/woodfloorOutput': (context) => woodFloorOutput(),
       },
     );
   }

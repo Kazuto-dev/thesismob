@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 List<String> architecturalMaterials = [
   "Paint",
   "Foam Insulation",
-  "Material 3",
+  "Wood Floor",
   "Material 4",
 ];
 
@@ -41,8 +41,8 @@ class architectural extends StatelessWidget {
                 Navigator.pushNamed(context, '/insulationPages');
                 //
                 break;
-              case "Tiles":
-                Navigator.pushNamed(context, '/tiles');
+              case "Wood Floor":
+                Navigator.pushNamed(context, '/woodfloorPages');
                 break;
               case "Roof":
                 Navigator.pushNamed(context, '/roof');
