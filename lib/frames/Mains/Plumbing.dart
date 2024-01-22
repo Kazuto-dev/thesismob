@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 List<String> architecturalMaterials = [
   "PVC Pipes",
-  "Lavatory Sink",
+  "Lavatory Sink", 
   "Toilet",
   "Material 4",
 ];

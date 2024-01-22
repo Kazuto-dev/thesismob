@@ -6,7 +6,7 @@ List<String> architecturalMaterials = [
   "Paint",
   "Foam Insulation",
   "Wood Floor",
-  "Material 4",
+  "Marble",
 ];
 
 // ignore: camel_case_types
@@ -44,8 +44,8 @@ class architectural extends StatelessWidget {
               case "Wood Floor":
                 Navigator.pushNamed(context, '/woodfloorPages');
                 break;
-              case "Roof":
-                Navigator.pushNamed(context, '/roof');
+              case "Marble":
+                Navigator.pushNamed(context, '/marblePages');
                 break;
             }
           },

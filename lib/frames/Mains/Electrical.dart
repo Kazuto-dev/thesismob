@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 
 List<String> electricalMaterials = [
   "Bulb",
-  "Material 2",
-  "Material 3",
+  "Switch",
+  "Conjunction \nBox",
   "Material 4",
 ];
 
@@ -37,15 +37,15 @@ class electrical extends StatelessWidget {
               case "Bulb":
                 Navigator.pushNamed(context, '/bulbPages');
                 break;
-              case "Plywood":
-                Navigator.pushNamed(context, '/plywood');
+              case "Switch":
+                Navigator.pushNamed(context, '/switchPages');
                 //
                 break;
-              case "Tiles":
-                Navigator.pushNamed(context, '/tiles');
+              case "Conjunction \nBox":
+                Navigator.pushNamed(context, '/cbPages');
                 break;
               case "Roof":
-                Navigator.pushNamed(context, '/roof');
+                Navigator.pushNamed(context, '/');
                 break;
             }
           },

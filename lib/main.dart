@@ -9,21 +9,23 @@ import 'package:thesismob/frames/Mains/mainpage.dart';
 import 'package:thesismob/frames/Mains/historyClass.dart';
 import 'package:thesismob/frames/Mains/calculationHistory.dart';
 import 'package:thesismob/frames/Mains/DisplayHistory.dart';
+import 'package:thesismob/frames/Mains/TableSummary.dart';
 
 //Pages
-import 'package:thesismob/frames/CHB/Output.dart';
 import 'package:thesismob/frames/Mains/MainMenu.dart';
 import 'package:thesismob/frames/Mains/Instructions.dart';
-import 'package:thesismob/frames/CHB/CHBpages.dart';
-import 'package:thesismob/frames/CHB/CHB.dart';
-import 'package:thesismob/frames/CHB/Solutions.dart';
-import 'package:thesismob/frames/CHB/DoF.dart';
 
-import 'package:thesismob/frames/Tiles/DoFTiles.dart';
-import 'package:thesismob/frames/Tiles/SolutionTiles.dart';
-import 'package:thesismob/frames/Tiles/tiles.dart';
-import 'package:thesismob/frames/Tiles/tilesOutput.dart';
-import 'package:thesismob/frames/Tiles/tilesPages.dart';
+import 'package:thesismob/frames/Materials/CHB/CHBpages.dart';
+import 'package:thesismob/frames/Materials/CHB/CHB.dart';
+import 'package:thesismob/frames/Materials/CHB/Solutions.dart';
+import 'package:thesismob/frames/Materials/CHB/DoF.dart';
+import 'package:thesismob/frames/Materials/CHB/Output.dart';
+
+import 'package:thesismob/frames/Materials/Tiles/DoFTiles.dart';
+import 'package:thesismob/frames/Materials/Tiles/SolutionTiles.dart';
+import 'package:thesismob/frames/Materials/Tiles/tiles.dart';
+import 'package:thesismob/frames/Materials/Tiles/tilesOutput.dart';
+import 'package:thesismob/frames/Materials/Tiles/tilesPages.dart';
 
 import 'package:thesismob/frames/Mains/overAllDoF.dart';
 import 'package:thesismob/frames/Mains/overAllSolution.dart';
@@ -32,47 +34,71 @@ import 'package:thesismob/frames/Mains/Electrical.dart';
 import 'package:thesismob/frames/Mains/Plumbing.dart';
 import 'package:thesismob/frames/Mains/Structural.dart';
 
-import 'package:thesismob/frames/Plywood/plywoodDef.dart';
-import 'package:thesismob/frames/Plywood/PlywoodSolution.dart';
-import 'package:thesismob/frames/Plywood/plywood.dart';
-import 'package:thesismob/frames/Plywood/plywoodPages.dart';
-import 'package:thesismob/frames/Plywood/plywoodOutput.dart';
+import 'package:thesismob/frames/Materials/Plywood/plywoodDef.dart';
+import 'package:thesismob/frames/Materials/Plywood/PlywoodSolution.dart';
+import 'package:thesismob/frames/Materials/Plywood/plywood.dart';
+import 'package:thesismob/frames/Materials/Plywood/plywoodPages.dart';
+import 'package:thesismob/frames/Materials/Plywood/plywoodOutput.dart';
 
-import 'package:thesismob/frames/Roof/roof.dart';
-import 'package:thesismob/frames/Roof/roofOutput.dart';
-import 'package:thesismob/frames/Roof/roofDef.dart';
-import 'package:thesismob/frames/Roof/roofSolution.dart';
-import 'package:thesismob/frames/Roof/roofPages.dart';
+import 'package:thesismob/frames/Materials/Roof/roof.dart';
+import 'package:thesismob/frames/Materials/Roof/roofOutput.dart';
+import 'package:thesismob/frames/Materials/Roof/roofDef.dart';
+import 'package:thesismob/frames/Materials/Roof/roofSolution.dart';
+import 'package:thesismob/frames/Materials/Roof/roofPages.dart';
 
-import 'package:thesismob/frames/Paint/paint.dart';
-import 'package:thesismob/frames/Paint/paintpages.dart';
-import 'package:thesismob/frames/Paint/paintDef.dart';
-import 'package:thesismob/frames/Paint/paintSolution.dart';
-import 'package:thesismob/frames/Paint/paintOutput.dart';
+import 'package:thesismob/frames/Materials/Paint/paint.dart';
+import 'package:thesismob/frames/Materials/Paint/paintpages.dart';
+import 'package:thesismob/frames/Materials/Paint/paintDef.dart';
+import 'package:thesismob/frames/Materials/Paint/paintSolution.dart';
+import 'package:thesismob/frames/Materials/Paint/paintOutput.dart';
 
-import 'package:thesismob/frames/Bullb/bulb.dart';
-import 'package:thesismob/frames/Bullb/bulbOutput.dart';
-import 'package:thesismob/frames/Bullb/bulbDOF.dart';
-import 'package:thesismob/frames/Bullb/bulbSolution.dart';
-import 'package:thesismob/frames/Bullb/bulbPages.dart';
+import 'package:thesismob/frames/Materials/Bullb/bulb.dart';
+import 'package:thesismob/frames/Materials/Bullb/bulbOutput.dart';
+import 'package:thesismob/frames/Materials/Bullb/bulbDOF.dart';
+import 'package:thesismob/frames/Materials/Bullb/bulbSolution.dart';
+import 'package:thesismob/frames/Materials/Bullb/bulbPages.dart';
 
-import 'package:thesismob/frames/PVC/pvc.dart';
-import 'package:thesismob/frames/PVC/pvcOutput.dart';
-import 'package:thesismob/frames/PVC/pcvDef.dart';
-import 'package:thesismob/frames/PVC/pvcSolution.dart';
-import 'package:thesismob/frames/PVC/pvcPages.dart';
+import 'package:thesismob/frames/Materials/PVC/pvc.dart';
+import 'package:thesismob/frames/Materials/PVC/pvcOutput.dart';
+import 'package:thesismob/frames/Materials/PVC/pcvDef.dart';
+import 'package:thesismob/frames/Materials/PVC/pvcSolution.dart';
+import 'package:thesismob/frames/Materials/PVC/pvcPages.dart';
 
-import 'package:thesismob/frames/insulation/insulation.dart';
-import 'package:thesismob/frames/insulation/insulationOutput.dart';
-import 'package:thesismob/frames/insulation/insulationPages.dart';
-import 'package:thesismob/frames/insulation/insulationDef.dart';
-import 'package:thesismob/frames/insulation/insulationSolution.dart';
+import 'package:thesismob/frames/Materials/insulation/insulation.dart';
+import 'package:thesismob/frames/Materials/insulation/insulationOutput.dart';
+import 'package:thesismob/frames/Materials/insulation/insulationPages.dart';
+import 'package:thesismob/frames/Materials/insulation/insulationDef.dart';
+import 'package:thesismob/frames/Materials/insulation/insulationSolution.dart';
 
-import 'package:thesismob/frames/woodFloor/woodfloor.dart';
-import 'package:thesismob/frames/woodFloor/woodfloorOutput.dart';
-import 'package:thesismob/frames/woodFloor/woodfloorPages.dart';
-import 'package:thesismob/frames/woodFloor/woodfloorDef.dart';
-import 'package:thesismob/frames/woodFloor/woodfloorSol.dart';
+import 'package:thesismob/frames/Materials/woodFloor/woodfloor.dart';
+import 'package:thesismob/frames/Materials/woodFloor/woodfloorOutput.dart';
+import 'package:thesismob/frames/Materials/woodFloor/woodfloorPages.dart';
+import 'package:thesismob/frames/Materials/woodFloor/woodfloorDef.dart';
+import 'package:thesismob/frames/Materials/woodFloor/woodfloorSol.dart';
+
+import 'package:thesismob/frames/Materials/SteelPlate/steelPlate.dart';
+import 'package:thesismob/frames/Materials/SteelPlate/steelPlatePages.dart';
+import 'package:thesismob/frames/Materials/SteelPlate/steelPlateDef.dart';
+import 'package:thesismob/frames/Materials/SteelPlate/SteelPlateOutput.dart';
+import 'package:thesismob/frames/Materials/SteelPlate/SteelPlateSol.dart';
+
+import 'package:thesismob/frames/Materials/Marble/marble.dart';
+import 'package:thesismob/frames/Materials/Marble/marblePages.dart';
+import 'package:thesismob/frames/Materials/Marble/marbleDef.dart';
+import 'package:thesismob/frames/Materials/Marble/marbleSol.dart';
+import 'package:thesismob/frames/Materials/Marble/marbleOutput.dart';
+
+import 'package:thesismob/frames/Materials/ConjunctionBox/cb.dart';
+import 'package:thesismob/frames/Materials/ConjunctionBox/cbPages.dart';
+import 'package:thesismob/frames/Materials/ConjunctionBox/cbDef.dart';
+import 'package:thesismob/frames/Materials/ConjunctionBox/cbSol.dart';
+import 'package:thesismob/frames/Materials/ConjunctionBox/cbOutput.dart';
+
+import 'package:thesismob/frames/Materials/switch/switch.dart';
+import 'package:thesismob/frames/Materials/switch/switchPages.dart';
+import 'package:thesismob/frames/Materials/Switch/switchDef.dart';
+import 'package:thesismob/frames/Materials/Switch/switchOutput.dart';
+import 'package:thesismob/frames/Materials/Switch/switchSol.dart';
 
 void main() {
   runApp(
@@ -101,6 +127,7 @@ class MyApp extends StatelessWidget {
 
         // ignore: prefer_const_constructors
         '/instructions': (context) => instructions(),
+        '/summary': (context) => summary(),
 
         '/arch': (context) => architectural(),
         '/struc': (context) => structural(),
@@ -162,6 +189,30 @@ class MyApp extends StatelessWidget {
         '/woodfloorDef': (context) => woodFloorDef(),
         '/woodfloorSol': (context) => woodFloorSol(),
         '/woodfloorOutput': (context) => woodFloorOutput(),
+
+        '/steelPlate': (context) => steelPlate(),
+        '/steelPlatePages': (context) => SPpages(),
+        '/steelPlateDef': (context) => steelPlateDef(),
+        '/steelPlateSol': (context) => steelPlateSol(),
+        '/steelPlateOutput': (context) => steelPlateOutput(),
+
+        '/marble': (context) => marble(),
+        '/marblePages': (context) => marblePages(),
+        '/marbleDef': (context) => marbleDef(),
+        '/marbleSol': (context) => marbleSol(),
+        '/marbleOutput': (context) => marbleOutput(),
+
+        '/cb': (context) => cBox(),
+        '/cbPages': (context) => cBoxpages(),
+        '/cbDef': (context) => cBoxDef(),
+        '/cbSol': (context) => cBoxSol(),
+        '/cbOutput': (context) => cBoxOutput(),
+
+        '/switch': (context) => MySwitch(),
+        '/switchPages': (context) => switchPages(),
+        '/switchDef': (context) => switchDef(),
+        '/switchSol': (context) => switchSol(),
+        '/switchOutput': (context) => switchOutput(),
       },
     );
   }

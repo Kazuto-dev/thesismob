@@ -16,8 +16,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
       appBar: AppBar(
         title: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Center(child: Text("Calculation History")),
+          child: Text("Calculation History"),
         ),
+        centerTitle: true,
       ),
       body: ListView.builder(
         itemCount: CalculationHistory.history.length,

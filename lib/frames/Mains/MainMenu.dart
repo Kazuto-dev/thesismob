@@ -33,6 +33,14 @@ class _FirstPageState extends State<FirstPage> {
             Navigator.pushNamed(context, '/history');
           },
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.summarize),
+            onPressed: () {
+              Navigator.pushNamed(context, '/summary');
+            },
+          ),
+        ],
         centerTitle: true,
       ),
       // The rest of your widget tree
