@@ -34,6 +34,7 @@ class _roofOutputState extends State<roofOutput> {
     if (args != null) {
       final double area = args['area'];
       final int totalSheets = args['sheetsNeeded'];
+      final double totalcost = args['totalcost'];
       String material = "Roof";
 
       return Scaffold(
@@ -72,6 +73,14 @@ class _roofOutputState extends State<roofOutput> {
                 child: Text(
                   "Total Plywood Sheets: $totalSheets",
                   style: TextStyle(fontSize: 20),
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.only(bottom: 10),
+                child: Text(
+                  "Total Amount: $totalcost",
+                  style:
+                      TextStyle(fontSize: 20), // Adjust the font size as needed
                 ),
               ),
               ElevatedButton(

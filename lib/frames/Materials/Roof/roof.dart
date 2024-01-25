@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:thesismob/frames/Mains/calculationHistory.dart';
 import 'package:thesismob/frames/Mains/historyClass.dart';
+import 'package:thesismob/frames/Mains/summaryClass.dart';
+import 'package:thesismob/frames/Mains/summaryHistory.dart';
 
 class roof extends StatefulWidget {
   const roof({Key? key}) : super(key: key);
@@ -14,6 +16,7 @@ class roof extends StatefulWidget {
 class RoofState extends State<roof> {
   TextEditingController _lengthController = TextEditingController();
   TextEditingController _widthController = TextEditingController();
+  TextEditingController costController = TextEditingController();
   String selectedRoofWidth = 'Default';
   String selectedRoofLength = 'Default';
   String selectedCorrugation = 'Default';
@@ -22,7 +25,7 @@ class RoofState extends State<roof> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Roof Estimator"),
+        title: Text("Rib Roof Estimator"),
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
@@ -172,6 +175,24 @@ class RoofState extends State<roof> {
                   ],
                 ),
               ),
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: costController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Price per Piece',
+                          hintText: "Enter Price (₱)",
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Container(
                 margin: EdgeInsets.only(top: 5.0),
                 child: ElevatedButton(
@@ -180,6 +201,7 @@ class RoofState extends State<roof> {
                       double roofSizeW = 0.0;
                       double roofSizeL = 0.0;
                       double corrugation = 0.0;
+                      double cost = double.parse(costController.text);
                       double length = double.parse(_lengthController.text);
                       double width = double.parse(_widthController.text);
 
@@ -239,15 +261,26 @@ class RoofState extends State<roof> {
 
                       print("Sheets Needed: $sheetsNeededRounded");
 
+                      double totalcost = sheetsNeededRounded * cost;
+                      print("Total Cost: $totalcost");
+
                       CalculationHistoryEntry entry = CalculationHistoryEntry(
                         date: DateTime.now(),
                         calculatorType: "Roof Estimator",
                         material: "Roof",
                         area: area.toString() + "m²",
                         quantity: sheetsNeededRounded.toString() + "pcs",
+                        totalamount: totalcost.toString() + "₱",
+                      );
+
+                      CalculationSummaryEntry summary = CalculationSummaryEntry(
+                        materialName: "Roof",
+                        quantity: sheetsNeededRounded.toString() + "pcs",
+                        totalamount: "₱" + totalcost.toString(),
                       );
 
                       CalculationHistory.addEntry(entry);
+                      CalculationSummary.addEntry(summary);
 
                       Navigator.pushNamed(
                         context,
@@ -255,6 +288,7 @@ class RoofState extends State<roof> {
                         arguments: {
                           'area': area,
                           'sheetsNeeded': sheetsNeededRounded,
+                          'totalcost': totalcost
                         },
                       );
 

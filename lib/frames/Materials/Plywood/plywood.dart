@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:thesismob/frames/Mains/calculationHistory.dart';
 import 'package:thesismob/frames/Mains/historyClass.dart';
+import 'package:thesismob/frames/Mains/summaryClass.dart';
+import 'package:thesismob/frames/Mains/summaryHistory.dart';
 
 // ignore: camel_case_types
 class wood extends StatefulWidget {
@@ -15,6 +17,7 @@ class wood extends StatefulWidget {
 class woodState extends State<wood> {
   TextEditingController _lengthController = TextEditingController();
   TextEditingController _widthController = TextEditingController();
+  TextEditingController costController = TextEditingController();
   String selectedwoodWastage = 'Default';
   String selectedwoodSize = 'Default';
 
@@ -132,6 +135,24 @@ class woodState extends State<wood> {
                   ],
                 ),
               ),
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: costController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Price per Piece',
+                          hintText: "Enter Price (₱)",
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Container(
                 margin: EdgeInsets.only(top: 50.0),
                 child: ElevatedButton(
@@ -139,6 +160,7 @@ class woodState extends State<wood> {
                     double calculate() {
                       double wastagePercentage = 0.0;
                       double woodSize = 0.0;
+                      double cost = double.parse(costController.text);
                       double length = double.parse(_lengthController.text);
                       double width = double.parse(_widthController.text);
 
@@ -176,15 +198,26 @@ class woodState extends State<wood> {
                       int total = woodneeded + wastage;
                       print("Total plywood: $total");
 
+                      double totalcost = total * cost;
+                      print("Total Cost: $totalcost");
+
                       CalculationHistoryEntry entry = CalculationHistoryEntry(
                         date: DateTime.now(),
                         calculatorType: "Plywood Estimator",
                         material: "Plywood $selectedwoodSize",
                         area: area.toString() + "m²",
                         quantity: total.toString() + "pcs",
+                        totalamount: totalcost.toString() + "₱",
+                      );
+
+                      CalculationSummaryEntry summary = CalculationSummaryEntry(
+                        materialName: "Plywood",
+                        quantity: total.toString() + "pcs",
+                        totalamount: "₱" + totalcost.toString(),
                       );
 
                       CalculationHistory.addEntry(entry);
+                      CalculationSummary.addEntry(summary);
 
                       Navigator.pushNamed(
                         context,
@@ -192,6 +225,7 @@ class woodState extends State<wood> {
                         arguments: {
                           'area': area,
                           'total': total,
+                          'totalcost': totalcost
                         },
                       );
 

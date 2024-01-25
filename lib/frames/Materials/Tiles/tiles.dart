@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:thesismob/frames/Mains/calculationHistory.dart';
 import 'package:thesismob/frames/Mains/historyClass.dart';
+import 'package:thesismob/frames/Mains/summaryClass.dart';
+import 'package:thesismob/frames/Mains/summaryHistory.dart';
 
 // ignore: camel_case_types
 class tiles extends StatefulWidget {
@@ -15,6 +17,8 @@ class tiles extends StatefulWidget {
 class _tilesState extends State<tiles> {
   TextEditingController _lengthController = TextEditingController();
   TextEditingController _widthController = TextEditingController();
+  TextEditingController _costController = TextEditingController();
+
   String selectedtileWastage = 'Default';
   String selectedtileSize = 'Default';
 
@@ -122,14 +126,14 @@ class _tilesState extends State<tiles> {
                         },
                         items: <String>[
                           'Default',
-                          '5.08 x 5.08cm',
-                          '10.16 x 10.16cm',
-                          '15.24 x 15.24cm',
-                          '20.32 x 20.32cm',
-                          '30.48 x 30.48cm',
-                          '40.64 x 40.64cm',
-                          '45.72 x 45.72cm',
-                          '60.96 x 60.96cm',
+                          '20 x 20 (0.04m)',
+                          '20 x 30 (0.06m)',
+                          '20 x 90 (0.17m)',
+                          '30 x 30 (0.09m)',
+                          '30 x 60 (0.18m)',
+                          '40 x 40 (0.16m)',
+                          '60 x 60 (0.36m)',
+                          '60 x 120 (0.72m)',
                         ].map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -139,6 +143,24 @@ class _tilesState extends State<tiles> {
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
                           labelText: "Tile Size",
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(15.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _costController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Price per Piece',
+                          hintText: "Enter Price (₱)",
                         ),
                       ),
                     ),
@@ -155,6 +177,7 @@ class _tilesState extends State<tiles> {
                       double tileSize = 0.0;
                       double length = double.parse(_lengthController.text);
                       double width = double.parse(_widthController.text);
+                      double cost = double.parse(_costController.text);
 
                       if (selectedtileWastage == "Default") {
                         wastagePercentage = 0.0;
@@ -168,22 +191,22 @@ class _tilesState extends State<tiles> {
 
                       if (selectedtileSize == 'Default') {
                         tileSize = 0.0;
-                      } else if (selectedtileSize == '5.08 x 5.08cm') {
-                        tileSize = 0.0508;
-                      } else if (selectedtileSize == '10.16 x 10.16cm') {
-                        tileSize = 0.1016;
-                      } else if (selectedtileSize == '15.24 x 15.24cm') {
-                        tileSize = 0.1524;
-                      } else if (selectedtileSize == '20.32 x 20.32cm') {
-                        tileSize = 0.2032;
-                      } else if (selectedtileSize == '30.48 x 30.48cm') {
-                        tileSize = 0.3048;
-                      } else if (selectedtileSize == '40.64 x 40.64cm') {
-                        tileSize = 0.4064;
-                      } else if (selectedtileSize == '45.72 x 45.72cm') {
-                        tileSize = 0.4572;
-                      } else if (selectedtileSize == '60.96 x 60.96cm') {
-                        tileSize = 0.6096;
+                      } else if (selectedtileSize == '20 x 20 (0.04m)') {
+                        tileSize = 0.04;
+                      } else if (selectedtileSize == '20 x 30 (0.06m)') {
+                        tileSize = 0.06;
+                      } else if (selectedtileSize == '20 x 90 (0.17m)') {
+                        tileSize = 0.17;
+                      } else if (selectedtileSize == '30 x 30 (0.09m)') {
+                        tileSize = 0.09;
+                      } else if (selectedtileSize == '30 x 60 (0.18m)') {
+                        tileSize = 0.18;
+                      } else if (selectedtileSize == '40 x 40 (0.16m)') {
+                        tileSize = 0.16;
+                      } else if (selectedtileSize == '60 x 60 (0.36m)') {
+                        tileSize = 0.36;
+                      } else if (selectedtileSize == '60 x 120 (0.72m)') {
+                        tileSize = 0.72;
                       }
 
                       double area = length * width;
@@ -193,6 +216,8 @@ class _tilesState extends State<tiles> {
                           (tileneeded * wastagePercentage).ceil().toInt();
                       int total = tileneeded + wastage;
                       print("Total tiles: $total");
+                      double totalcost = total * cost;
+                      print("Total Cost: $totalcost");
 
                       CalculationHistoryEntry entry = CalculationHistoryEntry(
                         date: DateTime.now(),
@@ -200,9 +225,17 @@ class _tilesState extends State<tiles> {
                         material: "Tiles",
                         area: area.toString() + "m²",
                         quantity: total.toString() + "pcs",
+                        totalamount: totalcost.toString() + "₱",
+                      );
+
+                      CalculationSummaryEntry summary = CalculationSummaryEntry(
+                        materialName: "Tiles",
+                        quantity: total.toString() + "pcs",
+                        totalamount: totalcost.toString() + "₱",
                       );
 
                       CalculationHistory.addEntry(entry);
+                      CalculationSummary.addEntry(summary);
 
                       Navigator.pushNamed(
                         context,
@@ -210,6 +243,7 @@ class _tilesState extends State<tiles> {
                         arguments: {
                           'area': area,
                           'total': total,
+                          'totalcost': totalcost,
                         },
                       );
 

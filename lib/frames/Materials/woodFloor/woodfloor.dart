@@ -78,8 +78,8 @@ class _woodFloorState extends State<woodFloor> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: 'Cost (₱)',
-                          hintText: "Enter Cost (₱)",
+                          labelText: 'Price per Piece',
+                          hintText: "Enter Price  (₱)",
                         ),
                       ),
                     ),
@@ -103,12 +103,12 @@ class _woodFloorState extends State<woodFloor> {
                       print("Area: $totalcost");
 
                       CalculationHistoryEntry entry = CalculationHistoryEntry(
-                        date: DateTime.now(),
-                        calculatorType: "Flooring Estimator",
-                        material: "Wood Flooring",
-                        area: area.toString() + "m²",
-                        quantity: totalcost.toString() + "₱",
-                      );
+                          date: DateTime.now(),
+                          calculatorType: "Flooring Estimator",
+                          material: "Wood Flooring",
+                          area: area.toString() + "m²",
+                          quantity: totalcost.toString() + "₱",
+                          totalamount: totalcost.toString());
 
                       CalculationHistory.addEntry(entry);
 

@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:thesismob/frames/Mains/calculationHistory.dart';
 import 'package:thesismob/frames/Mains/historyClass.dart';
+import 'package:thesismob/frames/Mains/summaryClass.dart';
+import 'package:thesismob/frames/Mains/summaryHistory.dart';
 
 class paint extends StatefulWidget {
   const paint({Key? key}) : super(key: key);
@@ -18,6 +20,7 @@ class _paintState extends State<paint> {
   TextEditingController _windowQty = TextEditingController();
   TextEditingController _coat = TextEditingController();
   TextEditingController _paintCoverage = TextEditingController();
+  TextEditingController costController = TextEditingController();
 
   String windowSize = 'Default';
   String doorSize = 'Default';
@@ -203,6 +206,24 @@ class _paintState extends State<paint> {
                   ],
                 ),
               ),
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: costController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Price per Piece',
+                          hintText: "Enter Price (₱)",
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Container(
                 margin: EdgeInsets.only(top: 5.0),
                 child: ElevatedButton(
@@ -213,6 +234,7 @@ class _paintState extends State<paint> {
                       double door = double.parse(_doorQty.text);
                       double window = double.parse(_windowQty.text);
                       double coat = double.parse(_coat.text);
+                      double cost = double.parse(costController.text);
                       double paintCoverage = double.parse(_paintCoverage.text);
                       double windowSize1 = 0.0;
                       double doorSize1 = 0.0;
@@ -254,14 +276,12 @@ class _paintState extends State<paint> {
                           (window * windowSize1) + (door * doorSize1);
 
                       double totalArea = area - doorWin;
+                      double totalcost = totalLiters * cost;
 
-                      // Display the result or use it as needed
-                      print("Area: $area");
-                      print("Total Liters: $totalLiters");
-                      print("Total Liters with Coat: $totalLitersWithCoat");
-                      print("Door + Window Area: $doorWin");
-                      print(
-                          "Total Area after deducting Door + Window Area: $totalArea");
+                      totalArea = double.parse(totalArea.toStringAsFixed(2));
+                      totalLitersWithCoat =
+                          double.parse(totalLitersWithCoat.toStringAsFixed(2));
+                      totalcost = double.parse(totalcost.toStringAsFixed(2));
 
                       CalculationHistoryEntry entry = CalculationHistoryEntry(
                         date: DateTime.now(),
@@ -269,13 +289,22 @@ class _paintState extends State<paint> {
                         material: "Paint $coat coat",
                         area: totalArea.toString() + "m²",
                         quantity: totalLitersWithCoat.toString() + "L",
+                        totalamount: "₱" + totalcost.toString(),
+                      );
+
+                      CalculationSummaryEntry summary = CalculationSummaryEntry(
+                        materialName: "Paint",
+                        quantity: totalLitersWithCoat.toString() + "L",
+                        totalamount: "₱" + totalcost.toString(),
                       );
 
                       CalculationHistory.addEntry(entry);
+                      CalculationSummary.addEntry(summary);
 
                       Navigator.pushNamed(context, '/paintOutput', arguments: {
                         'area': totalArea,
                         'paintNeeded': totalLitersWithCoat,
+                        'totalcost': totalcost
                       });
 
                       return area;

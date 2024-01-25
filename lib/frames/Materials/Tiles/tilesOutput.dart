@@ -29,149 +29,143 @@ class _tilesOutputState extends State<tilesOutput> {
   Widget build(BuildContext context) {
     final sheetInfo = Provider.of<SheetInfoProvider>(context).sheetInfo;
     // Retrieve arguments passed by Navigator
-    final Map<String, dynamic>? args =
-        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
+    final Map<String, dynamic> args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
 
-    // Check if args is not null before extracting values
-    if (args != null) {
-      // Extract values
-      final double area = args['area'];
-      final int totalTiles = args['total'];
+    // Extract values
+    final double area = args['area'];
+    final int totalTiles = args['total'];
+    final double totalamount = args['totalcost'];
 
-      return Scaffold(
-        appBar: AppBar(
-          title: Text('Output'),
-          centerTitle: true,
-          actions: [
-            IconButton(
-              icon: Icon(Icons.history),
-              onPressed: () {
-                Navigator.pushNamed(context, '/history');
-              },
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Output'),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.history),
+            onPressed: () {
+              Navigator.pushNamed(context, '/history');
+            },
+          ),
+        ],
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'lib/assets/images/Tiles(noBG).png',
+              width: 250,
+              height: 250,
+              fit: BoxFit.cover,
             ),
-          ],
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'lib/assets/images/Tiles(noBG).png',
-                width: 250,
-                height: 250,
-                fit: BoxFit.cover,
+            SizedBox(height: 20),
+            Container(
+              margin: EdgeInsets.only(bottom: 10),
+              child: Text(
+                "Area: $area",
+                style: TextStyle(fontSize: 20),
               ),
-              SizedBox(height: 20),
-              Container(
-                margin: EdgeInsets.only(bottom: 10),
-                child: Text(
-                  "Area: $area",
-                  style: TextStyle(fontSize: 20),
-                ),
+            ),
+            Container(
+              margin: EdgeInsets.only(bottom: 10),
+              child: Text(
+                "Total Tiles: $totalTiles",
+                style: TextStyle(fontSize: 20),
               ),
-              Container(
-                margin: EdgeInsets.only(bottom: 10),
-                child: Text(
-                  "Total Tiles: $totalTiles",
-                  style: TextStyle(fontSize: 20),
-                ),
+            ),
+            Container(
+              margin: EdgeInsets.only(bottom: 10),
+              child: Text(
+                "Total amount: $totalamount",
+                style:
+                    TextStyle(fontSize: 20), // Adjust the font size as needed
               ),
-              ElevatedButton(
-                onPressed: () async {
-                  try {
-                    final gsheets = GSheets(creds);
-                    final ss =
-                        await gsheets.spreadsheet('${sheetInfo?.sheetId}');
-                    final sheetName = '${sheetInfo?.sheetName}';
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  final gsheets = GSheets(creds);
+                  final ss = await gsheets.spreadsheet('${sheetInfo?.sheetId}');
+                  final sheetName = '${sheetInfo?.sheetName}';
 
-                    // Check if the sheet exists
-                    bool sheetExists = false;
-                    for (var sheet in ss.sheets) {
-                      if (sheet.title == sheetName) {
-                        sheetExists = true;
-                        break;
-                      }
+                  // Check if the sheet exists
+                  bool sheetExists = false;
+                  for (var sheet in ss.sheets) {
+                    if (sheet.title == sheetName) {
+                      sheetExists = true;
+                      break;
                     }
-                    // Display an error snackbar if the sheet doesn't exist
-                    if (!sheetExists) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Sheet "$sheetName" does not exist!'),
-                          duration: Duration(seconds: 5),
-                        ),
-                      );
-
-                      // Print a message to the console
-                      print('Sheet "$sheetName" does not exist!');
-
-                      return; // Stop execution if the sheet doesn't exist
-                    }
-
-                    final sheet = ss.worksheetByTitle(sheetName);
-
-                    // Fetch all values in the sheet
-                    final allValues = await sheet?.values.allRows();
-
-                    // Check if the sheet is empty
-                    if (allValues == null || allValues.isEmpty) {
-                      // Add the header row at row 1
-                      print('Adding header row...');
-                      await sheet?.values
-                          .insertRow(1, ['Material', 'Area(m²)', 'Quantity']);
-                      print('Header row added!');
-                    } else {
-                      print(
-                          'Sheet is not empty. Row count: ${allValues.length}');
-                    }
-
-                    // Append the data row
-                    final index = await sheet?.values
-                        .appendRow(['Tiles', area, totalTiles]);
-                    print('Updated at $index');
-
+                  }
+                  // Display an error snackbar if the sheet doesn't exist
+                  if (!sheetExists) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Data added successfully!'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  } catch (e) {
-                    print('Error updating data: $e');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Data Insertion unsuccessful!'),
+                        content: Text('Sheet "$sheetName" does not exist!'),
                         duration: Duration(seconds: 5),
                       ),
                     );
-                    // Handle the error as needed
+
+                    // Print a message to the console
+                    print('Sheet "$sheetName" does not exist!');
+
+                    return; // Stop execution if the sheet doesn't exist
                   }
-                },
-                child: Container(
-                  width: double.infinity,
-                  child: Center(
-                    child: Text(
-                      'INSERT SHEET',
-                      style: TextStyle(
-                        fontSize: 18.0,
-                      ),
+
+                  final sheet = ss.worksheetByTitle(sheetName);
+
+                  // Fetch all values in the sheet
+                  final allValues = await sheet?.values.allRows();
+
+                  // Check if the sheet is empty
+                  if (allValues == null || allValues.isEmpty) {
+                    // Add the header row at row 1
+                    print('Adding header row...');
+                    await sheet?.values
+                        .insertRow(1, ['Material', 'Area(m²)', 'Quantity']);
+                    print('Header row added!');
+                  } else {
+                    print('Sheet is not empty. Row count: ${allValues.length}');
+                  }
+
+                  // Append the data row
+                  final index = await sheet?.values
+                      .appendRow(['Tiles', area, totalTiles]);
+                  print('Updated at $index');
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Data added successfully!'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                } catch (e) {
+                  print('Error updating data: $e');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Data Insertion unsuccessful!'),
+                      duration: Duration(seconds: 5),
+                    ),
+                  );
+                  // Handle the error as needed
+                }
+              },
+              child: Container(
+                width: double.infinity,
+                child: Center(
+                  child: Text(
+                    'INSERT SHEET',
+                    style: TextStyle(
+                      fontSize: 18.0,
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      );
-    } else {
-      // Handle the case where arguments is null
-      return Scaffold(
-        body: Center(
-          child: Text(
-            "Error: Missing arguments",
-            style: TextStyle(fontSize: 18),
-          ),
-        ),
-      );
-    }
+      ),
+    );
   }
 }

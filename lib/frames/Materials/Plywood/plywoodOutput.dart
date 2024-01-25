@@ -34,6 +34,7 @@ class _plywoodOutputState extends State<plywoodOutput> {
     if (args != null) {
       final double area = args['area'];
       final int totalPly = args['total'];
+      final double totalcost = args['totalcost'];
       String material = "Plywood";
 
       return Scaffold(
@@ -72,6 +73,14 @@ class _plywoodOutputState extends State<plywoodOutput> {
                 child: Text(
                   "Total Plywood Sheets: $totalPly",
                   style: TextStyle(fontSize: 20),
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.only(bottom: 10),
+                child: Text(
+                  "Total Cost: $totalcost",
+                  style:
+                      TextStyle(fontSize: 20), // Adjust the font size as needed
                 ),
               ),
               ElevatedButton(

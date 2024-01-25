@@ -10,6 +10,8 @@ import 'package:thesismob/frames/Mains/historyClass.dart';
 import 'package:thesismob/frames/Mains/calculationHistory.dart';
 import 'package:thesismob/frames/Mains/DisplayHistory.dart';
 import 'package:thesismob/frames/Mains/TableSummary.dart';
+import 'package:thesismob/frames/Mains/summaryClass.dart';
+import 'package:thesismob/frames/Mains/summaryHistory.dart';
 
 //Pages
 import 'package:thesismob/frames/Mains/MainMenu.dart';
@@ -127,7 +129,7 @@ class MyApp extends StatelessWidget {
 
         // ignore: prefer_const_constructors
         '/instructions': (context) => instructions(),
-        '/summary': (context) => summary(),
+        '/summary': (context) => Summary(),
 
         '/arch': (context) => architectural(),
         '/struc': (context) => structural(),

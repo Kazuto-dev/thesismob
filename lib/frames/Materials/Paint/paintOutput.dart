@@ -35,6 +35,7 @@ class _paintOutputState extends State<paintOutput> {
     if (args != null) {
       final double area = args['area'];
       final double totalLiters = args['paintNeeded'];
+      final double totalcost = args['totalcost'];
       String material = "Paint";
 
       return Scaffold(
@@ -73,6 +74,14 @@ class _paintOutputState extends State<paintOutput> {
                 child: Text(
                   "Total Paint Needed: $totalLiters",
                   style: TextStyle(fontSize: 20),
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.only(bottom: 10),
+                child: Text(
+                  "Total Cost: $totalcost",
+                  style:
+                      TextStyle(fontSize: 20), // Adjust the font size as needed
                 ),
               ),
               ElevatedButton(

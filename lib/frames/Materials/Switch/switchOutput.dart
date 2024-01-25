@@ -27,6 +27,16 @@ class switchOutput extends StatefulWidget {
 class switchOutputState extends State<switchOutput> {
   @override
   Widget build(BuildContext context) {
+    final sheetInfo = Provider.of<SheetInfoProvider>(context).sheetInfo;
+    // Retrieve arguments passed by Navigator
+    final Map<String, dynamic> args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+
+    // Extract values
+    final double quantity = args['quantity'];
+    final double totalcost = args['totalcost'];
+    String material = "Switch";
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Output'),
@@ -39,6 +49,116 @@ class switchOutputState extends State<switchOutput> {
             },
           ),
         ],
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'lib/assets/logos/Logo4.png',
+              width: 250,
+              height: 250,
+              fit: BoxFit.cover,
+            ),
+            SizedBox(height: 20), // Adjust the spacing as needed
+            Container(
+              margin: EdgeInsets.only(bottom: 10),
+              child: Text(
+                "Switch Needed: $quantity",
+                style:
+                    TextStyle(fontSize: 20), // Adjust the font size as needed
+              ),
+            ),
+            Container(
+              margin: EdgeInsets.only(bottom: 10),
+              child: Text(
+                "Total amount: $totalcost",
+                style:
+                    TextStyle(fontSize: 20), // Adjust the font size as needed
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  final gsheets = GSheets(creds);
+                  final ss = await gsheets.spreadsheet('${sheetInfo?.sheetId}');
+                  final sheetName = '${sheetInfo?.sheetName}';
+
+                  // Check if the sheet exists
+                  bool sheetExists = false;
+                  for (var sheet in ss.sheets) {
+                    if (sheet.title == sheetName) {
+                      sheetExists = true;
+                      break;
+                    }
+                  }
+                  // Display an error snackbar if the sheet doesn't exist
+                  if (!sheetExists) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Sheet "$sheetName" does not exist!'),
+                        duration: Duration(seconds: 5),
+                      ),
+                    );
+
+                    // Print a message to the console
+                    print('Sheet "$sheetName" does not exist!');
+
+                    return; // Stop execution if the sheet doesn't exist
+                  }
+
+                  final sheet = ss.worksheetByTitle(sheetName);
+
+                  // Fetch all values in the sheet
+                  final allValues = await sheet?.values.allRows();
+
+                  // Check if the sheet is empty
+                  if (allValues == null || allValues.isEmpty) {
+                    // Add the header row at row 1
+                    print('Adding header row...');
+                    await sheet?.values
+                        .insertRow(1, ['Materials', 'Quantity', 'Total Cost']);
+                    print('Header row added!');
+                  } else {
+                    print('Sheet is not empty. Row count: ${allValues.length}');
+                  }
+
+                  // Append the data row
+                  final index = await sheet?.values
+                      .appendRow([material, quantity, totalcost]);
+                  print('Updated at $index');
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Data added successfully!'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                } catch (e) {
+                  print('Error updating data: $e');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Data Insertion unsuccessful!'),
+                      duration: Duration(seconds: 5),
+                    ),
+                  );
+                  // Handle the error as needed
+                }
+              },
+              child: Container(
+                width: double.infinity,
+                child: Center(
+                  child: Text(
+                    'INSERT SHEET',
+                    style: TextStyle(
+                      fontSize: 18.0,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

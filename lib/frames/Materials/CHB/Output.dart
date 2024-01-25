@@ -36,6 +36,7 @@ class _chbOutputState extends State<chbOutput> {
     // Extract values
     final double area = args['area'];
     final int totalCHB = args['totalCHB'];
+    final double totalcost = args['totalcost'];
     String material = "CHB";
 
     return Scaffold(
@@ -74,6 +75,14 @@ class _chbOutputState extends State<chbOutput> {
               margin: EdgeInsets.only(bottom: 10),
               child: Text(
                 "CHB Needed: $totalCHB",
+                style:
+                    TextStyle(fontSize: 20), // Adjust the font size as needed
+              ),
+            ), // Adjust the spacing as needed
+            Container(
+              margin: EdgeInsets.only(bottom: 10),
+              child: Text(
+                "Total Cost: $totalcost",
                 style:
                     TextStyle(fontSize: 20), // Adjust the font size as needed
               ),

@@ -12,6 +12,7 @@ class pipe extends StatefulWidget {
 class pipeState extends State<pipe> {
   TextEditingController faucetHeight = TextEditingController();
   TextEditingController pvcLength = TextEditingController();
+  TextEditingController _costController = TextEditingController();
 
   String size = 'Default';
 
@@ -102,6 +103,24 @@ class pipeState extends State<pipe> {
                   ],
                 ),
               ),
+              Padding(
+                padding: EdgeInsets.all(15.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _costController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Price per Piece',
+                          hintText: "Enter Price (₱)",
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Container(
                 margin: EdgeInsets.only(top: 5.0),
                 child: ElevatedButton(
@@ -109,6 +128,7 @@ class pipeState extends State<pipe> {
                     double calculate() {
                       double height = double.parse(faucetHeight.text);
                       double length = double.parse(pvcLength.text);
+                      double cost = double.parse(_costController.text);
                       double size1 = 0.0;
 
                       if (size == 'Default') {

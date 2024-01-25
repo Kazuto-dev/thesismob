@@ -3,6 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:thesismob/frames/Mains/calculationHistory.dart';
 import 'package:thesismob/frames/Mains/historyClass.dart';
+import 'package:thesismob/frames/Mains/summaryClass.dart';
+import 'package:thesismob/frames/Mains/summaryHistory.dart';
+
 
 class insulation extends StatefulWidget {
   @override
@@ -12,6 +15,7 @@ class insulation extends StatefulWidget {
 class insulationState extends State<insulation> {
   TextEditingController _lengthController = TextEditingController();
   TextEditingController _heightController = TextEditingController();
+  TextEditingController _costController = TextEditingController();
 
   String thickness = 'Default';
   String type = 'Default';
@@ -174,6 +178,25 @@ class insulationState extends State<insulation> {
                   ],
                 ),
               ),
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Row(
+                  children: [
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: _costController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: "Price per Piece",
+                          hintText: "Enter Price (₱)",
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Container(
                 margin: EdgeInsets.only(top: 5.0),
                 child: ElevatedButton(
@@ -181,6 +204,7 @@ class insulationState extends State<insulation> {
                     double calculate() {
                       double length = double.parse(_lengthController.text);
                       double height = double.parse(_heightController.text);
+                      double cost = double.parse(_costController.text);
 
                       double thickness1 = 0.0;
                       double size1 = 0.0;
@@ -232,6 +256,7 @@ class insulationState extends State<insulation> {
 
                       double area = length * height;
                       int insulationNeed = (area / size1).ceil();
+                      double totalcost = cost * insulationNeed;
 
                       print('area: $area(m2)');
                       print("thickness: $thickness1(m)");
@@ -247,9 +272,19 @@ class insulationState extends State<insulation> {
                             "Size: $size1(m)",
                         area: area.toString() + "m²",
                         quantity: insulationNeed.toString() + "pcs",
+                        totalamount: totalcost.toString() + "₱",
+                      );
+
+                      CalculationSummaryEntry summary = CalculationSummaryEntry(
+                        materialName: "Insulation $type1\n" +
+                            "Thickness: $thickness1(m)\n" +
+                            "Size: $size1(m)",
+                        quantity: insulationNeed.toString() + "pcs",
+                        totalamount: totalcost.toString() + "₱",
                       );
 
                       CalculationHistory.addEntry(entry);
+                      CalculationSummary.addEntry(summary);
 
                       Navigator.pushNamed(context, '/insulationOutput',
                           arguments: {

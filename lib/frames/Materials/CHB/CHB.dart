@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:thesismob/frames/Mains/calculationHistory.dart';
 import 'package:thesismob/frames/Mains/historyClass.dart';
+import 'package:thesismob/frames/Mains/summaryClass.dart';
+import 'package:thesismob/frames/Mains/summaryHistory.dart';
 
 class CHB extends StatefulWidget {
   const CHB({Key? key}) : super(key: key);
@@ -15,10 +17,12 @@ class CHB extends StatefulWidget {
 class _CHBState extends State<CHB> {
   TextEditingController lengthController = TextEditingController();
   TextEditingController widthController = TextEditingController();
+  TextEditingController costController = TextEditingController();
   String selectedWastage = 'Default';
   String selectedSize = 'Default';
 
   List<Map<String, dynamic>> calculationHistory = [];
+  List<Map<String, dynamic>> calculationSummary = [];
 
   @override
   Widget build(BuildContext context) {
@@ -135,6 +139,24 @@ class _CHBState extends State<CHB> {
                   ],
                 ),
               ),
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: costController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Price per Piece',
+                          hintText: "Enter Price (₱)",
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Container(
                 margin: EdgeInsets.only(top: 50.0),
                 child: ElevatedButton(
@@ -145,6 +167,7 @@ class _CHBState extends State<CHB> {
                       double chbSize = 0.0;
                       double length = double.parse(lengthController.text);
                       double width = double.parse(widthController.text);
+                      double cost = double.parse(costController.text);
 
                       if (selectedWastage == "Default") {
                         wastagePercentage = 0.0;
@@ -176,21 +199,36 @@ class _CHBState extends State<CHB> {
 
                       int totalCHB = chbNeed + wastage;
 
+                      double totalcost = totalCHB * cost;
+                      print("Total Cost: $totalcost");
+
                       CalculationHistoryEntry entry = CalculationHistoryEntry(
                         date: DateTime.now(),
                         calculatorType: "CHB Estimator",
                         material: "Concrete Hollow Blocks",
                         area: area.toString() + "m²",
                         quantity: totalCHB.toString() + "pcs",
+                        totalamount: totalcost.toString() + "₱",
+                      );
+
+                      CalculationSummaryEntry summary = CalculationSummaryEntry(
+                        materialName: "CHB",
+                        quantity: totalCHB.toString() + "pcs",
+                        totalamount: "₱" + totalcost.toString(),
                       );
 
                       CalculationHistory.addEntry(entry);
+                      CalculationSummary.addEntry(summary);
 
                       // Navigate to the output page with the calculated values
                       Navigator.pushNamed(
                         context,
                         '/CHBoutput',
-                        arguments: {'area': area, 'totalCHB': totalCHB},
+                        arguments: {
+                          'area': area,
+                          'totalCHB': totalCHB,
+                          'totalcost': totalcost
+                        },
                       );
 
                       return area;

@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:thesismob/frames/Mains/calculationHistory.dart';
 import 'package:thesismob/frames/Mains/historyClass.dart';
+import 'package:thesismob/frames/Mains/summaryClass.dart';
+import 'package:thesismob/frames/Mains/summaryHistory.dart';
 
 class bulb extends StatefulWidget {
   @override
@@ -12,6 +14,7 @@ class bulb extends StatefulWidget {
 class _bulbState extends State<bulb> {
   TextEditingController _lengthController = TextEditingController();
   TextEditingController _heightController = TextEditingController();
+  TextEditingController costController = TextEditingController();
   TextEditingController bulbQty = TextEditingController();
 
   String bulbType = 'Default';
@@ -157,6 +160,24 @@ class _bulbState extends State<bulb> {
                   ],
                 ),
               ),
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: costController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Price per Piece',
+                          hintText: "Enter Price (₱)",
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Container(
                 margin: EdgeInsets.only(top: 5.0),
                 child: ElevatedButton(
@@ -165,6 +186,7 @@ class _bulbState extends State<bulb> {
                       double length = double.parse(_lengthController.text);
                       double height = double.parse(_heightController.text);
                       int bulbQuantity = double.parse(bulbQty.text).toInt();
+                      double cost = double.parse(costController.text);
 
                       double roomType1 = 0.0;
                       double bulbType1 = 0.0;
@@ -204,6 +226,9 @@ class _bulbState extends State<bulb> {
                       int watts = (totalLumens / bulbType1).ceil();
                       int wperbulb = (watts / bulbQuantity).ceil();
 
+                      double totalcost = bulbQuantity * cost;
+                      print("Total Cost: $totalcost");
+
                       String bulb1 =
                           "Bulb Quantity: $bulbQuantity $wperbulb W per bulb";
 
@@ -222,6 +247,13 @@ class _bulbState extends State<bulb> {
                             "Bulb $bulbType " + wperbulb.toString() + "watts",
                         area: area.toString() + "m²",
                         quantity: bulbQuantity.toString() + "pcs",
+                        totalamount: totalcost.toString() + "₱",
+                      );
+
+                      CalculationSummaryEntry summary = CalculationSummaryEntry(
+                        materialName: "Bulb" + wperbulb.toString() + "w",
+                        quantity: bulbQuantity.toString() + "pcs",
+                        totalamount: totalcost.toString() + "₱",
                       );
 
                       CalculationHistory.addEntry(entry);

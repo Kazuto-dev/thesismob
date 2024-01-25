@@ -32,7 +32,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ),
             ),
             subtitle: Text(
-                "Calculator Type: ${entry.calculatorType}\nArea: ${entry.area}\nQuantity needed: ${entry.quantity}\nDate: ${entry.date}"),
+                "Calculator Type: ${entry.calculatorType}\nArea: ${entry.area}\nQuantity needed: ${entry.quantity}\nTotal Cost: ${entry.totalamount}\nDate: ${entry.date}"),
             trailing: IconButton(
               icon: Icon(Icons
                   .delete), // You can replace 'Icons.info' with your desired icon
