@@ -13,14 +13,20 @@ class _SummaryState extends State<Summary> {
   @override
   void initState() {
     super.initState();
+    loadSummary();
+  }
 
-    // Calculate the initial totalCost when the widget is built
+  Future<void> loadSummary() async {
+    await CalculationSummary.loadSummary();
+    _updateTotalCost();
+    setState(() {});
+    // Refresh the UI after loading history
+  }
+
+  void _updateTotalCost() {
     totalCost = CalculationSummary.summaries.map((summaryReport) {
-      // Extract the numeric part of the totalamount and remove non-numeric characters
       String amount =
           summaryReport.totalamount.replaceAll(RegExp(r'[^\d.]'), '');
-
-      // Attempt to parse the cleaned numeric string as a double; use 0.0 if parsing fails
       return double.tryParse(amount) ?? 0.0;
     }).fold(0.0, (previous, current) => previous + current);
   }
@@ -42,27 +48,29 @@ class _SummaryState extends State<Summary> {
             DataColumn(
               label: Text(
                 'Material',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
             ),
             DataColumn(
               label: Text(
                 'Quantity',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               numeric: true, // Make the "Quantity" column narrower
             ),
             DataColumn(
               label: Text(
                 'Costs',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
               numeric: true, // Make the "Costs" column narrower
             ),
             DataColumn(
-              label: Text('Delete',
-                  style:
-                      TextStyle(fontSize: 12)), // Empty column for delete icon
+              label: Text(
+                'Delete',
+                style: TextStyle(
+                    fontSize: 14), // Smaller font size for delete column
+              ),
             ),
           ],
           rows: CalculationSummary.summaries.map((summaryReport) {
@@ -99,6 +107,8 @@ class _SummaryState extends State<Summary> {
 
                         // Ensure totalCost is not negative
                         totalCost = totalCost.clamp(0.0, double.infinity);
+
+                        CalculationSummary.saveSummary();
                       });
                     },
                   ),
@@ -114,7 +124,10 @@ class _SummaryState extends State<Summary> {
         child: Text(
           'Total Cost: ₱${totalCost.toStringAsFixed(2)}',
           style: TextStyle(
-              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
       ),
     );

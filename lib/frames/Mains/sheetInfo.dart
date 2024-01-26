@@ -8,6 +8,18 @@ class SheetInfo {
   final String sheetName;
 
   SheetInfo(this.sheetId, this.sheetName);
+
+  Map<String, dynamic> toJson() {
+    return {
+      'sheetId': sheetId,
+      'sheetName': sheetName,
+    };
+  }
+
+  factory SheetInfo.fromJson(Map<String, dynamic> json) {
+    return SheetInfo(
+      json['sheetId'],
+      json['sheetName'],
+    );
+  }
 }
-
-

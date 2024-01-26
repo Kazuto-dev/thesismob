@@ -3,6 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:thesismob/frames/Mains/sheetProvider.dart';
+import 'package:thesismob/frames/Mains/sheetInfo.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class SheetInfoInput extends StatefulWidget {
   @override
@@ -12,6 +15,31 @@ class SheetInfoInput extends StatefulWidget {
 class _SheetInfoInputState extends State<SheetInfoInput> {
   final TextEditingController sheetIdController = TextEditingController();
   final TextEditingController sheetNameController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    loadSavedSheetInfo();
+  }
+
+  Future<void> loadSavedSheetInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? savedSheetInfo = prefs.getString('sheetInfo');
+
+    if (savedSheetInfo != null) {
+      final decodedSheetInfo = jsonDecode(savedSheetInfo);
+      final sheetInfo = SheetInfo.fromJson(decodedSheetInfo);
+      sheetIdController.text = sheetInfo.sheetId;
+      sheetNameController.text = sheetInfo.sheetName;
+    }
+  }
+
+  Future<void> saveSheetInfo(String sheetId, String sheetName) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final sheetInfo = SheetInfo(sheetId, sheetName);
+    final encodedSheetInfo = jsonEncode(sheetInfo.toJson());
+    prefs.setString('sheetInfo', encodedSheetInfo);
+  }
 
   @override
   Widget build(BuildContext context) {

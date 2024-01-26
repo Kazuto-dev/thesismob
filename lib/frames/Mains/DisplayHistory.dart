@@ -11,6 +11,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
   DateTime? selectedDate;
 
   @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    await CalculationHistory.loadHistory();
+    setState(() {}); // Refresh the UI after loading history
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
