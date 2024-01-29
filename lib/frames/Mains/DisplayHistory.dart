@@ -45,12 +45,40 @@ class _HistoryScreenState extends State<HistoryScreen> {
             subtitle: Text(
                 "Calculator Type: ${entry.calculatorType}\nArea: ${entry.area}\nQuantity needed: ${entry.quantity}\nTotal Cost: ${entry.totalamount}\nDate: ${entry.date}"),
             trailing: IconButton(
-              icon: Icon(Icons
-                  .delete), // You can replace 'Icons.info' with your desired icon
+              icon: Icon(Icons.delete),
               onPressed: () {
-                setState(() {
-                  CalculationHistory.history.removeAt(index);
-                });
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text("Confirmation"),
+                      content:
+                          Text("Are you sure you want to delete this item?"),
+                      actions: [
+                        TextButton(
+                          child: Text("Cancel"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        TextButton(
+                          child: Text("Delete"),
+                          onPressed: () {
+                            setState(() {
+                              CalculationHistory.history.removeAt(index);
+                            });
+                            Navigator.of(context).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text("Item deleted successfully."),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
               },
             ),
           );
