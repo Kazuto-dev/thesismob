@@ -43,6 +43,7 @@ class _CHBState extends State<CHB> {
   late int totalCHB = 0;
   late double area = 0.0;
   String material = "CHB";
+  bool isLoading = false;
 
   List<Map<String, dynamic>> calculationHistory = [];
   List<Map<String, dynamic>> calculationSummary = [];
@@ -191,7 +192,8 @@ class _CHBState extends State<CHB> {
                           builder: (BuildContext context) {
                             return AlertDialog(
                               title: Text("Missing Input"),
-                              content: Text("Please fill in all the required fields."),
+                              content: Text(
+                                  "Please fill in all the required fields."),
                               actions: [
                                 TextButton(
                                   child: Text("OK"),
@@ -253,7 +255,7 @@ class _CHBState extends State<CHB> {
                         material: "Concrete Hollow Blocks",
                         area: area.toString() + "m²",
                         quantity: totalCHB.toString() + "pcs",
-                        totalamount: totalcost.toString() + "₱",
+                        totalamount: "₱" + totalcost.toString(),
                       );
 
                       CalculationSummaryEntry summary = CalculationSummaryEntry(
@@ -324,7 +326,7 @@ class _CHBState extends State<CHB> {
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
-                              'CHB Need:',
+                              'Quantity:',
                               style: TextStyle(
                                 fontSize: 16.0,
                               ),
@@ -385,6 +387,20 @@ class _CHBState extends State<CHB> {
                 padding: EdgeInsets.only(top: 20.0),
                 child: ElevatedButton(
                   onPressed: () async {
+                    if (area == 0 || totalCHB == 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content:
+                              Text('Please insert data into the calculator!'),
+                          duration: Duration(seconds: 5),
+                        ),
+                      );
+                      return;
+                    }
+
+                    setState(() {
+                      isLoading = true;
+                    });
                     try {
                       final gsheets = GSheets(creds);
                       final ss =
@@ -452,13 +468,19 @@ class _CHBState extends State<CHB> {
                       );
                       // Handle the error as needed
                     }
+
+                    setState(() {
+                      isLoading = false;
+                    });
                   },
-                  child: Text(
-                    'Insert to Sheet',
-                    style: TextStyle(
-                      fontSize: 18.0,
-                    ),
-                  ),
+                  child: isLoading
+                      ? CircularProgressIndicator()
+                      : Text(
+                          'Insert to Sheet',
+                          style: TextStyle(
+                            fontSize: 18.0,
+                          ),
+                        ),
                 ),
               ),
             ],

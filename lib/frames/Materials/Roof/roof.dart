@@ -45,6 +45,7 @@ class RoofState extends State<roof> {
   late int sheetsNeededRounded = 0;
   late double totalcost = 0.0;
   String material = "Roof";
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -385,7 +386,7 @@ class RoofState extends State<roof> {
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
-                              'Roof Needed:',
+                              'Quantity:',
                               style: TextStyle(
                                 fontSize: 16.0,
                               ),
@@ -446,6 +447,20 @@ class RoofState extends State<roof> {
                 padding: EdgeInsets.only(top: 20.0),
                 child: ElevatedButton(
                   onPressed: () async {
+                    if (area == 0 || sheetsNeededRounded == 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content:
+                              Text('Please insert data into the calculator!'),
+                          duration: Duration(seconds: 5),
+                        ),
+                      );
+                      return;
+                    }
+
+                    setState(() {
+                      isLoading = true;
+                    });
                     try {
                       final gsheets = GSheets(creds);
                       final ss =
@@ -513,13 +528,18 @@ class RoofState extends State<roof> {
                       );
                       // Handle the error as needed
                     }
+                    setState(() {
+                      isLoading = false;
+                    });
                   },
-                  child: Text(
-                    'Insert to Sheet',
-                    style: TextStyle(
-                      fontSize: 18.0,
-                    ),
-                  ),
+                  child: isLoading
+                      ? CircularProgressIndicator()
+                      : Text(
+                          'Insert to Sheet',
+                          style: TextStyle(
+                            fontSize: 18.0,
+                          ),
+                        ),
                 ),
               ),
             ],

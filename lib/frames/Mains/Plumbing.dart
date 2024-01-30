@@ -2,19 +2,26 @@
 
 import 'package:flutter/material.dart';
 
-List<String> architecturalMaterials = [
+List<String> plumbingMaterials = [
   "PVC Pipes",
-  "Lavatory Sink", 
+  "Lavatory Sink",
   "Toilet",
   "Material 4",
 ];
 
 // ignore: camel_case_types
 class plumbing extends StatelessWidget {
-  const plumbing({super.key});
+  const plumbing({Key? key});
 
   @override
   Widget build(BuildContext context) {
+    List<String> plumbingMaterialImages = [
+      'lib/assets/images/Hose(noBG).png',
+      'lib/assets/images/Plumbing.png',
+      'lib/assets/images/Plumbing.png',
+      'lib/assets/images/Plumbing.png',
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Plumbing Calculators"),
@@ -26,43 +33,31 @@ class plumbing extends StatelessWidget {
           },
         ),
       ),
-      body: GridView.builder(
-        itemCount: 4,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-        ),
+      body: ListView.builder(
+        itemCount: plumbingMaterials.length,
         itemBuilder: (context, index) => InkWell(
           onTap: () {
-            switch (architecturalMaterials[index]) {
+            switch (plumbingMaterials[index]) {
               case "PVC Pipes":
                 Navigator.pushNamed(context, '/pvcpages');
                 break;
-              case "Plywood":
-                Navigator.pushNamed(context, '/lavatorySink');
-                //
+              case "Lavatory Sink":
+                Navigator.pushNamed(context, '/Sinkpages');
                 break;
-              case "Tiles":
-                Navigator.pushNamed(context, '/toilet');
+              case "Toilet":
+                Navigator.pushNamed(context, '/toiletpages');
                 break;
-              case "Roof":
-                Navigator.pushNamed(context, '/');
+              case "Material 4":
+                Navigator.pushNamed(context, '/faucetpages');
                 break;
             }
           },
-          child: Container(
-            margin: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Color.fromARGB(255, 87, 148, 239),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Center(
-              child: Text(
-                architecturalMaterials[index],
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Color.fromARGB(255, 226, 226, 226),
-                ),
-              ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Image.asset(
+              plumbingMaterialImages[index],
+              width: 300, // Adjust the width as per your requirement
+              height: 300, // Adjust the height as per your requirement
             ),
           ),
         ),

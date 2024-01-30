@@ -15,6 +15,7 @@ class SheetInfoInput extends StatefulWidget {
 class _SheetInfoInputState extends State<SheetInfoInput> {
   final TextEditingController sheetIdController = TextEditingController();
   final TextEditingController sheetNameController = TextEditingController();
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -95,14 +96,24 @@ class _SheetInfoInputState extends State<SheetInfoInput> {
                     ),
                     SizedBox(height: 20),
                     ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         final String sheetId = sheetIdController.text;
                         final String sheetName = sheetNameController.text;
 
                         if (sheetId.isNotEmpty && sheetName.isNotEmpty) {
+                          setState(() {
+                            isLoading = true;
+                          });
+
                           // Use the provider to set the sheet info
                           Provider.of<SheetInfoProvider>(context, listen: false)
                               .setSheetInfo(sheetId, sheetName);
+
+                          await Future.delayed(Duration(seconds: 2));
+
+                          setState(() {
+                            isLoading = false;
+                          });
 
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -125,10 +136,15 @@ class _SheetInfoInputState extends State<SheetInfoInput> {
                         minimumSize: Size(double.infinity,
                             50), // Set minimum width and height
                       ),
-                      child: Text(
-                        'Submit',
-                        style: TextStyle(fontSize: 18),
-                      ),
+                      child: isLoading
+                          ? CircularProgressIndicator(
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            )
+                          : Text(
+                              'Submit',
+                              style: TextStyle(fontSize: 18),
+                            ),
                     ),
                   ],
                 ),

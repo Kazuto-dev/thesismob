@@ -36,8 +36,14 @@ class marbleState extends State<marble> {
   TextEditingController costController = TextEditingController();
   String selectedWastage = 'Default';
   String selectedSize = 'Default';
+  String material = "Marble";
+  late double area = 0.0;
+  late int marbleNeed = 0;
+  late double totalcost = 0.0;
+  bool isLoading = false;
   @override
   Widget build(BuildContext context) {
+    final sheetInfo = Provider.of<SheetInfoProvider>(context).sheetInfo;
     return Scaffold(
       appBar: AppBar(
         title: Text("Marble Calculator"),
@@ -54,12 +60,6 @@ class marbleState extends State<marble> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Image.asset(
-                'lib/assets/logos/Logo4.png',
-                width: 300,
-                height: 300,
-                fit: BoxFit.cover,
-              ),
               Padding(
                 padding: EdgeInsets.all(10.0),
                 child: Row(
@@ -174,6 +174,29 @@ class marbleState extends State<marble> {
                 child: ElevatedButton(
                   onPressed: () {
                     double calculate() {
+                      if (lengthController.text.isEmpty ||
+                          widthController.text.isEmpty ||
+                          costController.text.isEmpty) {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text("Missing Input"),
+                              content: Text(
+                                  "Please fill in all the required fields."),
+                              actions: [
+                                TextButton(
+                                  child: Text("OK"),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                        return 0.0;
+                      }
                       double marbleSize = 0.0;
                       double length = double.parse(lengthController.text);
                       double width = double.parse(widthController.text);
@@ -195,20 +218,21 @@ class marbleState extends State<marble> {
                       } else if (selectedSize == '.30m x .20m') {
                         marbleSize = 0.06;
                       }
+                      setState(() {
+                        area = length * width;
+                        print("Area: $area");
 
-                      double area = length * width;
-                      print("Area: $area");
+                        marbleNeed = (area / marbleSize).ceil();
+                        print("Marble Needed: $marbleNeed");
 
-                      int marbleNeed = (area / marbleSize).ceil();
-                      print("Marble Needed: $marbleNeed");
+                        // Round up to the nearest whole number for the CHB needed
+                        totalcost = area * cost;
+                        print("Area: $totalcost");
 
-                      // Round up to the nearest whole number for the CHB needed
-                      double totalcost = area * cost;
-                      print("Area: $totalcost");
-
-                      int wastage =
-                          (wastagePercentage * marbleNeed).ceil().toInt();
-                      print("Wastage: $wastage");
+                        int wastage =
+                            (wastagePercentage * marbleNeed).ceil().toInt();
+                        print("Wastage: $wastage");
+                      });
 
                       CalculationHistoryEntry entry = CalculationHistoryEntry(
                           date: DateTime.now(),
@@ -216,28 +240,18 @@ class marbleState extends State<marble> {
                           material: "Marble",
                           area: area.toString() + "m²",
                           quantity: marbleNeed.toString() + "pcs",
-                          totalamount: totalcost.toString() + "₱");
+                          totalamount: "₱" + totalcost.toString());
 
                       CalculationSummaryEntry summary = CalculationSummaryEntry(
                         materialName: "Marble",
                         quantity: marbleNeed.toString() + "pcs",
-                        totalamount: totalcost.toString() + "₱",
+                        totalamount: "₱" + totalcost.toString(),
                       );
 
                       CalculationHistory.addEntry(entry);
                       CalculationSummary.addEntry(summary);
 
                       // Navigate to the output page with the calculated values
-                      Navigator.pushNamed(
-                        context,
-                        '/marbleOutput',
-                        arguments: {
-                          'area': area,
-                          'Marble Needed': marbleNeed,
-                          'totalcost': totalcost
-                        },
-                      );
-
                       return area;
                     }
 
@@ -255,6 +269,203 @@ class marbleState extends State<marble> {
                       ),
                     ),
                   ),
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.only(top: 50.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Text(
+                        'Calculation Output',
+                        style: TextStyle(
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.only(left: 100.0),
+                margin: EdgeInsets.only(top: 10.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(top: 15.0),
+                            child: Text(
+                              'Area:',
+                              style: TextStyle(
+                                fontSize: 16.0,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: 15.0),
+                            child: Text(
+                              'Quantity:',
+                              style: TextStyle(
+                                fontSize: 16.0,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: 15.0),
+                            child: Text(
+                              'Cost:',
+                              style: TextStyle(
+                                fontSize: 16.0,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.only(right: 100.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(top: 15.0),
+                            child: Text(
+                              this.area.toString() + 'm²',
+                              style: TextStyle(
+                                fontSize: 16.0,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: 15.0),
+                            child: Text(
+                              this.marbleNeed.toString() + 'pcs',
+                              style: TextStyle(
+                                fontSize: 16.0,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: 15.0),
+                            child: Text(
+                              '₱' + this.totalcost.toString(),
+                              style: TextStyle(
+                                fontSize: 16.0,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(top: 20.0),
+                child: ElevatedButton(
+                  onPressed: () async {
+                    if (area == 0 || marbleNeed == 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content:
+                              Text('Please insert data into the calculator!'),
+                          duration: Duration(seconds: 5),
+                        ),
+                      );
+                      return;
+                    }
+
+                    setState(() {
+                      isLoading = true;
+                    });
+                    try {
+                      final gsheets = GSheets(creds);
+                      final ss =
+                          await gsheets.spreadsheet('${sheetInfo?.sheetId}');
+                      final sheetName = '${sheetInfo?.sheetName}';
+
+                      // Check if the sheet exists
+                      bool sheetExists = false;
+                      for (var sheet in ss.sheets) {
+                        if (sheet.title == sheetName) {
+                          sheetExists = true;
+                          break;
+                        }
+                      }
+                      // Display an error snackbar if the sheet doesn't exist
+                      if (!sheetExists) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Sheet "$sheetName" does not exist!'),
+                            duration: Duration(seconds: 5),
+                          ),
+                        );
+
+                        // Print a message to the console
+                        print('Sheet "$sheetName" does not exist!');
+
+                        return; // Stop execution if the sheet doesn't exist
+                      }
+
+                      final sheet = ss.worksheetByTitle(sheetName);
+
+                      // Fetch all values in the sheet
+                      final allValues = await sheet?.values.allRows();
+
+                      // Check if the sheet is empty
+                      if (allValues == null || allValues.isEmpty) {
+                        // Add the header row at row 1
+                        print('Adding header row...');
+                        await sheet?.values.insertRow(
+                            1, ['Materials', 'Area(m²)', 'Quantity']);
+                        print('Header row added!');
+                      } else {
+                        print(
+                            'Sheet is not empty. Row count: ${allValues.length}');
+                      }
+
+                      // Append the data row
+                      final index = await sheet?.values
+                          .appendRow([material, area, marbleNeed]);
+                      print('Updated at $index');
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Data added successfully!'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    } catch (e) {
+                      print('Error updating data: $e');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Data Insertion unsuccessful!'),
+                          duration: Duration(seconds: 5),
+                        ),
+                      );
+                      // Handle the error as needed
+                    }
+
+                    setState(() {
+                      isLoading = false;
+                    });
+                  },
+                  child: isLoading
+                      ? CircularProgressIndicator()
+                      : Text(
+                          'Insert to Sheet',
+                          style: TextStyle(
+                            fontSize: 18.0,
+                          ),
+                        ),
                 ),
               ),
             ],

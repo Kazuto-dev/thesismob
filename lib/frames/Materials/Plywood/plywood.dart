@@ -44,6 +44,7 @@ class woodState extends State<wood> {
   late int total = 0;
   late double totalcost = 0.0;
   String material = "Plywood";
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -321,7 +322,7 @@ class woodState extends State<wood> {
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
-                              'Plywood Needed:',
+                              'Quantity:',
                               style: TextStyle(
                                 fontSize: 16.0,
                               ),
@@ -382,6 +383,20 @@ class woodState extends State<wood> {
                 padding: EdgeInsets.only(top: 20.0),
                 child: ElevatedButton(
                   onPressed: () async {
+                    if (area == 0 || total == 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content:
+                              Text('Please insert data into the calculator!'),
+                          duration: Duration(seconds: 5),
+                        ),
+                      );
+                      return;
+                    }
+
+                    setState(() {
+                      isLoading = true;
+                    });
                     try {
                       final gsheets = GSheets(creds);
                       final ss =
@@ -449,13 +464,18 @@ class woodState extends State<wood> {
                       );
                       // Handle the error as needed
                     }
+                    setState(() {
+                      isLoading = false;
+                    });
                   },
-                  child: Text(
-                    'Insert to Sheet',
-                    style: TextStyle(
-                      fontSize: 18.0,
-                    ),
-                  ),
+                  child: isLoading
+                      ? CircularProgressIndicator()
+                      : Text(
+                          'Insert to Sheet',
+                          style: TextStyle(
+                            fontSize: 18.0,
+                          ),
+                        ),
                 ),
               ),
             ],

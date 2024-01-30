@@ -42,107 +42,110 @@ class _SummaryState extends State<Summary> {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        scrollDirection: Axis.horizontal, // Enable horizontal scrolling
-        child: DataTable(
-          columns: <DataColumn>[
-            DataColumn(
-              label: Text(
-                'Material',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
-              ),
-            ),
-            DataColumn(
-              label: Text(
-                'Quantity',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
-              ),
-              numeric: true, // Make the "Quantity" column narrower
-            ),
-            DataColumn(
-              label: Text(
-                'Costs',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
-              ),
-              numeric: true, // Make the "Costs" column narrower
-            ),
-            DataColumn(
-              label: Text(
-                'Delete',
-                style: TextStyle(
-                    fontSize: 10), // Smaller font size for delete column
-              ),
-            ),
-          ],
-          rows: CalculationSummary.summaries.map((summaryReport) {
-            return DataRow(
-              cells: <DataCell>[
-                DataCell(
-                  Text(
-                    summaryReport.materialName,
-                    style: TextStyle(fontSize: 10),
-                  ),
+        scrollDirection: Axis.vertical, // Enable vertical scrolling
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal, // Enable horizontal scrolling
+          child: DataTable(
+            columns: <DataColumn>[
+              DataColumn(
+                label: Text(
+                  'Material',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
                 ),
-                DataCell(
-                  Text(
-                    summaryReport.quantity,
-                    style: TextStyle(fontSize: 10),
-                  ),
+              ),
+              DataColumn(
+                label: Text(
+                  'Quantity',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
                 ),
-                DataCell(
-                  Text(
-                    summaryReport.totalamount,
-                    style: TextStyle(fontSize: 10),
-                  ),
+                numeric: true, // Make the "Quantity" column narrower
+              ),
+              DataColumn(
+                label: Text(
+                  'Costs',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
                 ),
-                DataCell(
-                  IconButton(
-                    icon: Icon(Icons.delete, size: 18),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: Text('Confirmation'),
-                            content: Text(
-                                'Are you sure you want to delete this item?'),
-                            actions: [
-                              TextButton(
-                                child: Text('Cancel'),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                              ),
-                              TextButton(
-                                child: Text('Delete'),
-                                onPressed: () {
-                                  setState(() {
-                                    CalculationSummary.summaries
-                                        .remove(summaryReport);
+                numeric: true, // Make the "Costs" column narrower
+              ),
+              DataColumn(
+                label: Text(
+                  'Delete',
+                  style: TextStyle(
+                      fontSize: 10), // Smaller font size for delete column
+                ),
+              ),
+            ],
+            rows: CalculationSummary.summaries.map((summaryReport) {
+              return DataRow(
+                cells: <DataCell>[
+                  DataCell(
+                    Text(
+                      summaryReport.materialName,
+                      style: TextStyle(fontSize: 10),
+                    ),
+                  ),
+                  DataCell(
+                    Text(
+                      summaryReport.quantity,
+                      style: TextStyle(fontSize: 10),
+                    ),
+                  ),
+                  DataCell(
+                    Text(
+                      summaryReport.totalamount,
+                      style: TextStyle(fontSize: 10),
+                    ),
+                  ),
+                  DataCell(
+                    IconButton(
+                      icon: Icon(Icons.delete, size: 18),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('Confirmation'),
+                              content: Text(
+                                  'Are you sure you want to delete this item?'),
+                              actions: [
+                                TextButton(
+                                  child: Text('Cancel'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                                TextButton(
+                                  child: Text('Delete'),
+                                  onPressed: () {
+                                    setState(() {
+                                      CalculationSummary.summaries
+                                          .remove(summaryReport);
 
-                                    // Subtract the deleted item's cost from the total
-                                    totalCost -= double.parse(summaryReport
-                                        .totalamount
-                                        .replaceAll('₱', ''));
+                                      // Subtract the deleted item's cost from the total
+                                      totalCost -= double.parse(summaryReport
+                                          .totalamount
+                                          .replaceAll('₱', ''));
 
-                                    // Ensure totalCost is not negative
-                                    totalCost =
-                                        totalCost.clamp(0.0, double.infinity);
+                                      // Ensure totalCost is not negative
+                                      totalCost =
+                                          totalCost.clamp(0.0, double.infinity);
 
-                                    CalculationSummary.saveSummary();
-                                  });
-                                  Navigator.of(context).pop();
-                                },
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
+                                      CalculationSummary.saveSummary();
+                                    });
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ],
-            );
-          }).toList(),
+                ],
+              );
+            }).toList(),
+          ),
         ),
       ),
       bottomNavigationBar: Container(

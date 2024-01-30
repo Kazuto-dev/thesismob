@@ -5,16 +5,23 @@ import 'package:flutter/material.dart';
 List<String> electricalMaterials = [
   "Bulb",
   "Switch",
-  "Conjunction \nBox",
+  "Conjunction Box",
   "Material 4",
 ];
 
 // ignore: camel_case_types
 class electrical extends StatelessWidget {
-  const electrical({super.key});
+  const electrical({Key? key});
 
   @override
   Widget build(BuildContext context) {
+    List<String> electricalMaterialImages = [
+      'lib/assets/images/Bulb(noBG).png',
+      'lib/assets/images/Elec.png',
+      'lib/assets/images/Elec.png',
+      'lib/assets/images/Elec.png',
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Electrical Calculators"),
@@ -26,11 +33,8 @@ class electrical extends StatelessWidget {
           },
         ),
       ),
-      body: GridView.builder(
-        itemCount: 4,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-        ),
+      body: ListView.builder(
+        itemCount: electricalMaterials.length,
         itemBuilder: (context, index) => InkWell(
           onTap: () {
             switch (electricalMaterials[index]) {
@@ -39,30 +43,21 @@ class electrical extends StatelessWidget {
                 break;
               case "Switch":
                 Navigator.pushNamed(context, '/switchPages');
-                //
                 break;
-              case "Conjunction \nBox":
+              case "Conjunction Box":
                 Navigator.pushNamed(context, '/cbPages');
                 break;
-              case "Roof":
-                Navigator.pushNamed(context, '/');
+              case "Material 4":
+                Navigator.pushNamed(context, '/socketpages');
                 break;
             }
           },
-          child: Container(
-            margin: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Color.fromARGB(255, 87, 148, 239),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Center(
-              child: Text(
-                electricalMaterials[index],
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Color.fromARGB(255, 226, 226, 226),
-                ),
-              ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Image.asset(
+              electricalMaterialImages[index],
+              width: 300, // Adjust the width as per your requirement
+              height: 300, // Adjust the height as per your requirement
             ),
           ),
         ),

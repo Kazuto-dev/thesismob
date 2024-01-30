@@ -45,6 +45,7 @@ class _tilesState extends State<tiles> {
   late int total = 0;
   late double totalcost = 0.0;
   String material = "Tiles";
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +57,7 @@ class _tilesState extends State<tiles> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pushNamed(context, '/struc');
+            Navigator.pushNamed(context, '/arch');
           },
         ),
       ),
@@ -340,7 +341,7 @@ class _tilesState extends State<tiles> {
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
-                              'Tiles Needed:',
+                              'Quantity:',
                               style: TextStyle(
                                 fontSize: 16.0,
                               ),
@@ -401,6 +402,20 @@ class _tilesState extends State<tiles> {
                 padding: EdgeInsets.only(top: 20.0),
                 child: ElevatedButton(
                   onPressed: () async {
+                    if (area == 0 || total == 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content:
+                              Text('Please insert data into the calculator!'),
+                          duration: Duration(seconds: 5),
+                        ),
+                      );
+                      return;
+                    }
+
+                    setState(() {
+                      isLoading = true;
+                    });
                     try {
                       final gsheets = GSheets(creds);
                       final ss =
@@ -468,13 +483,18 @@ class _tilesState extends State<tiles> {
                       );
                       // Handle the error as needed
                     }
+                    setState(() {
+                      isLoading = false;
+                    });
                   },
-                  child: Text(
-                    'Insert to Sheet',
-                    style: TextStyle(
-                      fontSize: 18.0,
-                    ),
-                  ),
+                  child: isLoading
+                      ? CircularProgressIndicator()
+                      : Text(
+                          'Insert to Sheet',
+                          style: TextStyle(
+                            fontSize: 18.0,
+                          ),
+                        ),
                 ),
               ),
             ],

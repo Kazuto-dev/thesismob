@@ -48,6 +48,7 @@ class insulationState extends State<insulation> {
   late double insulationNeed = 0.0;
   late int insulationNeedRounded = 0;
   String material = "Insulation";
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +60,7 @@ class insulationState extends State<insulation> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pushNamed(context, '/arch');
+            Navigator.pushNamed(context, '/struc');
           },
         ),
       ),
@@ -401,7 +402,7 @@ class insulationState extends State<insulation> {
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
-                              'Foam Needed:',
+                              'Quantity:',
                               style: TextStyle(
                                 fontSize: 16.0,
                               ),
@@ -462,6 +463,20 @@ class insulationState extends State<insulation> {
                 padding: EdgeInsets.only(top: 20.0),
                 child: ElevatedButton(
                   onPressed: () async {
+                    if (area == 0 || insulationNeedRounded == 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content:
+                              Text('Please insert data into the calculator!'),
+                          duration: Duration(seconds: 5),
+                        ),
+                      );
+                      return;
+                    }
+
+                    setState(() {
+                      isLoading = true;
+                    });
                     try {
                       final gsheets = GSheets(creds);
                       final ss =
@@ -529,13 +544,18 @@ class insulationState extends State<insulation> {
                       );
                       // Handle the error as needed
                     }
+                    setState(() {
+                      isLoading = false;
+                    });
                   },
-                  child: Text(
-                    'Insert to Sheet',
-                    style: TextStyle(
-                      fontSize: 18.0,
-                    ),
-                  ),
+                  child: isLoading
+                      ? CircularProgressIndicator()
+                      : Text(
+                          'Insert to Sheet',
+                          style: TextStyle(
+                            fontSize: 18.0,
+                          ),
+                        ),
                 ),
               ),
             ],

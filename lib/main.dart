@@ -102,6 +102,26 @@ import 'package:thesismob/frames/Materials/Switch/switchDef.dart';
 import 'package:thesismob/frames/Materials/Switch/switchOutput.dart';
 import 'package:thesismob/frames/Materials/Switch/switchSol.dart';
 
+import 'package:thesismob/frames/Materials/Sink/Sink.dart';
+import 'package:thesismob/frames/Materials/Sink/SinkPages.dart';
+import 'package:thesismob/frames/Materials/Sink/SinkDef.dart';
+import 'package:thesismob/frames/Materials/Sink/SinkSol.dart';
+
+import 'package:thesismob/frames/Materials/Toilet/Toiletpages.dart';
+import 'package:thesismob/frames/Materials/Toilet/toilet.dart';
+import 'package:thesismob/frames/Materials/Toilet/toiletDef.dart';
+import 'package:thesismob/frames/Materials/Toilet/toiletSol.dart';
+
+import 'package:thesismob/frames/Materials/Socket/socketPages.dart';
+import 'package:thesismob/frames/Materials/Socket/socket.dart';
+import 'package:thesismob/frames/Materials/Socket/socketDef.dart';
+import 'package:thesismob/frames/Materials/Socket/socketSol.dart';
+
+import 'package:thesismob/frames/Materials/Faucet/faucet.dart';
+import 'package:thesismob/frames/Materials/Faucet/faucetDef.dart';
+import 'package:thesismob/frames/Materials/Faucet/faucetSol.dart';
+import 'package:thesismob/frames/Materials/Faucet/faucetPages.dart';
+
 void main() {
   runApp(
     ChangeNotifierProvider(
@@ -215,6 +235,26 @@ class MyApp extends StatelessWidget {
         '/switchDef': (context) => switchDef(),
         '/switchSol': (context) => switchSol(),
         '/switchOutput': (context) => switchOutput(),
+
+        '/Sinkpages': (context) => sinkpages(),
+        '/sink': (context) => sink(),
+        '/sinkdef': (context) => sinkdef(),
+        '/sinksol': (context) => sinksol(),
+
+        '/toiletpages': (context) => toiletpages(),
+        '/toilet': (context) => toilet(),
+        '/toiletdef': (context) => toiletdef(),
+        '/toiletsol': (context) => toiletsol(),
+
+        '/socketpages': (context) => socketPages(),
+        '/socket': (context) => MySocket(),
+        '/socketdef': (context) => socketDef(),
+        '/socketsol': (context) => socketSol(),
+
+        '/faucetpages': (context) => faucetPages(),
+        '/faucet': (context) => Myfaucet(),
+        '/faucetdef': (context) => faucetDef(),
+        '/faucetsol': (context) => faucetSol(),
       },
     );
   }

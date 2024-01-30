@@ -5,16 +5,23 @@ import 'package:flutter/material.dart';
 List<String> structuralMaterials = [
   "CHB",
   "Plywood",
-  "Tiles",
+  "Insulation",
   "Roof",
 ];
 
 // ignore: camel_case_types
 class structural extends StatelessWidget {
-  const structural({super.key});
+  const structural({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    List<String> structuralMaterialImages = [
+      'lib/assets/images/CHB(noBG).png',
+      'lib/assets/images/Plywood(noBG).png',
+      'lib/assets/images/Struc.png',
+      'lib/assets/images/Roof(noBG).png',
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Structural Calculators"),
@@ -26,45 +33,35 @@ class structural extends StatelessWidget {
           },
         ),
       ),
-      body: GridView.builder(
-          itemCount: 4,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
+      body: ListView.builder(
+        itemCount: structuralMaterials.length,
+        itemBuilder: (context, index) => InkWell(
+          onTap: () {
+            switch (structuralMaterials[index]) {
+              case "CHB":
+                Navigator.pushNamed(context, '/CHBpages');
+                break;
+              case "Plywood":
+                Navigator.pushNamed(context, '/plywoodPages');
+                break;
+              case "Insulation":
+                Navigator.pushNamed(context, '/insulationPages');
+                break;
+              case "Roof":
+                Navigator.pushNamed(context, '/roofPages');
+                break;
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Image.asset(
+              structuralMaterialImages[index],
+              width: 300, // Adjust the width as per your requirement
+              height: 300, // Adjust the height as per your requirement
+            ),
           ),
-          itemBuilder: (context, index) => InkWell(
-              onTap: () {
-                switch (structuralMaterials[index]) {
-                  case "CHB":
-                    Navigator.pushNamed(context, '/CHBpages');
-                    break;
-                  case "Plywood":
-                    Navigator.pushNamed(context, '/plywoodPages');
-                    //
-                    break;
-                  case "Tiles":
-                    Navigator.pushNamed(context, '/tilesPages');
-                    break;
-                  case "Roof":
-                    Navigator.pushNamed(context, '/roofPages');
-                    break;
-                }
-              },
-              child: Container(
-                margin: EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 87, 148, 239),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Center(
-                  child: Text(
-                    structuralMaterials[index],
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: Color.fromARGB(255, 226, 226, 226),
-                    ),
-                  ),
-                ),
-              ))),
+        ),
+      ),
     );
   }
 }
