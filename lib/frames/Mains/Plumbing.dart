@@ -17,9 +17,9 @@ class plumbing extends StatelessWidget {
   Widget build(BuildContext context) {
     List<String> plumbingMaterialImages = [
       'lib/assets/images/Hose(noBG).png',
-      'lib/assets/images/Plumbing.png',
-      'lib/assets/images/Plumbing.png',
-      'lib/assets/images/Plumbing.png',
+      'lib/assets/images/sink.png',
+      'lib/assets/images/toilet.png',
+      'lib/assets/images/faucet.png',
     ];
 
     return Scaffold(

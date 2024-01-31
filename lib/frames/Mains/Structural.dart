@@ -18,7 +18,7 @@ class structural extends StatelessWidget {
     List<String> structuralMaterialImages = [
       'lib/assets/images/CHB(noBG).png',
       'lib/assets/images/Plywood(noBG).png',
-      'lib/assets/images/Struc.png',
+      'lib/assets/images/IF.png',
       'lib/assets/images/Roof(noBG).png',
     ];
 

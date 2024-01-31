@@ -33,14 +33,14 @@ class _pagesState extends State<pvcpages> {
     return Scaffold(
       body: pages[_selectedIndex],
       bottomNavigationBar: Container(
-        color: Colors.black,
+        color:  const Color.fromARGB(255, 44, 44, 44),
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: 15.0,
             vertical: 20.0,
           ),
           child: GNav(
-            backgroundColor: Colors.black,
+            backgroundColor:  const Color.fromARGB(255, 44, 44, 44),
             color: Colors.white,
             activeColor: Colors.white,
             tabBackgroundColor: Colors.grey.shade800,

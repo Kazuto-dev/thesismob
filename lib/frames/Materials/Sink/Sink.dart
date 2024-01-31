@@ -48,8 +48,13 @@ class sinkState extends State<sink> {
     final sheetInfo = Provider.of<SheetInfoProvider>(context).sheetInfo;
     return Scaffold(
       appBar: AppBar(
-        title: Center(
-          child: Text('Lavatory Sink'),
+        title: Text("Sink Calculator"),
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushNamed(context, '/plumb');
+          },
         ),
       ),
       body: SingleChildScrollView(

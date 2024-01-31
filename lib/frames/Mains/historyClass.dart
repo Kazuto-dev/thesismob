@@ -8,7 +8,7 @@ class CalculationHistory {
 
   static void addEntry(CalculationHistoryEntry entry) {
     history.add(entry);
-    _saveHistory();
+    saveHistory();
   }
 
   static List<CalculationHistoryEntry> getHistoryForCalculatorType(
@@ -18,9 +18,10 @@ class CalculationHistory {
         .toList();
   }
 
-  static void _saveHistory() async {
+  static void saveHistory() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String encoded = jsonEncode(history.map((entry) => entry.toJson()).toList());
+    final String encoded =
+        jsonEncode(history.map((entry) => entry.toJson()).toList());
     prefs.setString(_historyKey, encoded);
   }
 
@@ -30,7 +31,9 @@ class CalculationHistory {
 
     if (historyJson != null) {
       List<dynamic> decoded = jsonDecode(historyJson);
-      history = decoded.map((item) => CalculationHistoryEntry.fromJson(item)).toList();
+      history = decoded
+          .map((item) => CalculationHistoryEntry.fromJson(item))
+          .toList();
     }
   }
 }

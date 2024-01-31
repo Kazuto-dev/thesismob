@@ -79,7 +79,7 @@ class _CHBState extends State<CHB> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: 'Length (m)',
+                          labelText: 'Area Length (m)',
                           hintText: "Enter Length (m)",
                         ),
                       ),
@@ -91,7 +91,7 @@ class _CHBState extends State<CHB> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: "Width (m)",
+                          labelText: "Area Width (m)",
                           hintText: "Enter Width (m)",
                         ),
                       ),

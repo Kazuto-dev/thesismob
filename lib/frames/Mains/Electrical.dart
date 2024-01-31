@@ -17,9 +17,9 @@ class electrical extends StatelessWidget {
   Widget build(BuildContext context) {
     List<String> electricalMaterialImages = [
       'lib/assets/images/Bulb(noBG).png',
-      'lib/assets/images/Elec.png',
-      'lib/assets/images/Elec.png',
-      'lib/assets/images/Elec.png',
+      'lib/assets/images/switch.png',
+      'lib/assets/images/JB.png',
+      'lib/assets/images/suck.png',
     ];
 
     return Scaffold(

@@ -79,8 +79,8 @@ class insulationState extends State<insulation> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: 'Length (m)',
-                          hintText: "Enter Length (m)",
+                          labelText: 'Area Length (m)',
+                          hintText: "Enter Area Length (m)",
                         ),
                       ),
                     ),
@@ -91,8 +91,8 @@ class insulationState extends State<insulation> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: "Width (m)",
-                          hintText: "Enter Width (m)",
+                          labelText: "Area Width (m)",
+                          hintText: "Enter Area Width (m)",
                         ),
                       ),
                     ),
@@ -206,7 +206,6 @@ class insulationState extends State<insulation> {
                 padding: EdgeInsets.all(10.0),
                 child: Row(
                   children: [
-                    SizedBox(width: 10),
                     Expanded(
                       child: TextField(
                         controller: _costController,
@@ -325,7 +324,8 @@ class insulationState extends State<insulation> {
                       CalculationHistoryEntry entry = CalculationHistoryEntry(
                         date: DateTime.now(),
                         calculatorType: "PE FOAM Insulation Estimator",
-                        material: "Insulation $type1\n" +
+                        material: "Insulation " +
+                            "$type1\n" +
                             "Thickness: $thickness1(m)\n" +
                             "Size: $size1(m)",
                         area: area.toString() + "m²",

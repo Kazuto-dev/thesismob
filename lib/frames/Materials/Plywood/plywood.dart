@@ -66,7 +66,7 @@ class woodState extends State<wood> {
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Padding(
-                padding: EdgeInsets.all(15.0),
+                padding: EdgeInsets.all(10.0),
                 child: Row(
                   children: [
                     Expanded(
@@ -75,8 +75,8 @@ class woodState extends State<wood> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: 'Length (m)',
-                          hintText: "Enter Length (m)",
+                          labelText: 'Area Length (m)',
+                          hintText: "Enter Area Length (m)",
                         ),
                       ),
                     ),
@@ -87,8 +87,8 @@ class woodState extends State<wood> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: "Width (m)",
-                          hintText: "Enter Width (m)",
+                          labelText: "Width Area (m)",
+                          hintText: "Enter Area Width (m)",
                         ),
                       ),
                     ),

@@ -56,7 +56,7 @@ class _SheetInfoInputState extends State<SheetInfoInput> {
         actions: [
           // Any existing action buttons go here, if applicable
           IconButton(
-            icon: Icon(Icons.key_sharp),
+            icon: Icon(Icons.key, size: 40),
             onPressed: () {
               Navigator.push(
                 context,

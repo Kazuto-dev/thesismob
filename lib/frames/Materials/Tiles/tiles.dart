@@ -67,7 +67,7 @@ class _tilesState extends State<tiles> {
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Padding(
-                padding: EdgeInsets.all(15.0),
+                padding: EdgeInsets.all(10.0),
                 child: Row(
                   children: [
                     Expanded(
@@ -76,8 +76,8 @@ class _tilesState extends State<tiles> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: 'Length (m)',
-                          hintText: "Enter Length (m)",
+                          labelText: 'Area Length (m)',
+                          hintText: "Enter Area Length (m)",
                         ),
                       ),
                     ),
@@ -97,7 +97,7 @@ class _tilesState extends State<tiles> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.all(15.0),
+                padding: EdgeInsets.all(10.0),
                 child: Row(
                   children: [
                     Expanded(
@@ -134,7 +134,6 @@ class _tilesState extends State<tiles> {
                 padding: EdgeInsets.all(10.0),
                 child: Row(
                   children: [
-                    SizedBox(width: 10),
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         value: selectedtileSize, // Use doorSize here
@@ -170,7 +169,7 @@ class _tilesState extends State<tiles> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.all(15.0),
+                padding: EdgeInsets.all(10.0),
                 child: Row(
                   children: [
                     Expanded(

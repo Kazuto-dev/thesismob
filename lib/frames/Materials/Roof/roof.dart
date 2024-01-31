@@ -76,8 +76,8 @@ class RoofState extends State<roof> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: 'Length (m)',
-                          hintText: "Enter Length (m)",
+                          labelText: 'Area Length (m)',
+                          hintText: "Enter Area Length (m)",
                         ),
                       ),
                     ),
@@ -88,8 +88,8 @@ class RoofState extends State<roof> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: "Width (m)",
-                          hintText: "Enter Width (m)",
+                          labelText: "Area Width (m)",
+                          hintText: "Enter Area Width (m)",
                         ),
                       ),
                     ),

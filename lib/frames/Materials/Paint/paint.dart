@@ -82,8 +82,8 @@ class _paintState extends State<paint> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: 'Length (m)',
-                          hintText: "Enter Length (m)",
+                          labelText: 'Area Length (m)',
+                          hintText: "Enter Area Length (m)",
                         ),
                       ),
                     ),
@@ -94,8 +94,8 @@ class _paintState extends State<paint> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: "Width (m)",
-                          hintText: "Enter Width (m)",
+                          labelText: "Area Width (m)",
+                          hintText: "Enter Area Width (m)",
                         ),
                       ),
                     ),

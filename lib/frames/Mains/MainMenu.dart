@@ -112,7 +112,7 @@ class _FirstPageState extends State<FirstPage> {
                         child: Center(
                           child: Container(
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(5),
                               border: Border.all(
                                 color: Colors.black,
                                 width: 1.0,
@@ -122,7 +122,10 @@ class _FirstPageState extends State<FirstPage> {
                                 fit: BoxFit.cover,
                               ),
                             ),
-                            margin: EdgeInsets.all(7.0),
+                            margin: EdgeInsets.symmetric(
+                                horizontal: 5.0,
+                                vertical:
+                                    5.0), // Set margin to 5.0 for each side
                             height: 200.0,
                             width: 200.0,
                           ),
