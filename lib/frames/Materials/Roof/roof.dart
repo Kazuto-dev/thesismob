@@ -57,7 +57,7 @@ class RoofState extends State<roof> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pushNamed(context, '/struc');
+            Navigator.pushNamed(context, '/arch');
           },
         ),
       ),
@@ -141,13 +141,13 @@ class RoofState extends State<roof> {
                         },
                         items: <String>[
                           'Default',
-                          '5FT',
-                          '6FT',
-                          '7FT',
-                          '8FT',
-                          '9FT',
-                          '10FT',
-                          '12FT',
+                          "1.524m",
+                          "1.829m",
+                          "2.134m",
+                          "2.438m",
+                          "2.743m",
+                          "3.048m",
+                          "3.658m",
                         ].map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -264,19 +264,19 @@ class RoofState extends State<roof> {
 
                       if (selectedRoofLength == 'Default') {
                         roofSizeL = 0.0;
-                      } else if (selectedRoofLength == '5FT') {
+                      } else if (selectedRoofLength == '1.524m') {
                         roofSizeL = 1.524;
-                      } else if (selectedRoofLength == '6FT') {
+                      } else if (selectedRoofLength == '1.829m') {
                         roofSizeL = 1.829;
-                      } else if (selectedRoofLength == '7FT') {
+                      } else if (selectedRoofLength == '2.134m') {
                         roofSizeL = 2.134;
-                      } else if (selectedRoofLength == '8FT') {
+                      } else if (selectedRoofLength == '2.438m') {
                         roofSizeL = 2.438;
-                      } else if (selectedRoofLength == '9FT') {
+                      } else if (selectedRoofLength == '2.743m') {
                         roofSizeL = 2.743;
-                      } else if (selectedRoofLength == '10FT') {
+                      } else if (selectedRoofLength == '3.048m') {
                         roofSizeL = 3.048;
-                      } else if (selectedRoofLength == '12FT') {
+                      } else if (selectedRoofLength == '3.657m') {
                         roofSizeL = 3.657;
                       }
 
@@ -412,7 +412,7 @@ class RoofState extends State<roof> {
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
-                              this.area.toString() + 'm²',
+                              this.area.toString() + 'sqm',
                               style: TextStyle(
                                 fontSize: 16.0,
                               ),
@@ -421,12 +421,14 @@ class RoofState extends State<roof> {
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
-                              this.sheetsNeededRounded.toString() + 'pcs',
+                              this.sheetsNeededRounded == 1
+                                  ? '1pc'
+                                  : this.sheetsNeededRounded.toString() + 'pcs',
                               style: TextStyle(
                                 fontSize: 16.0,
                               ),
                             ),
-                          ),
+                          ), // pc pcs
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
@@ -500,7 +502,7 @@ class RoofState extends State<roof> {
                         // Add the header row at row 1
                         print('Adding header row...');
                         await sheet?.values.insertRow(
-                            1, ['Materials', 'Area(m²)', 'Quantity']);
+                            1, ['Materials', 'Area(sqm)', 'Quantity']);
                         print('Header row added!');
                       } else {
                         print(

@@ -230,12 +230,14 @@ class cBoxState extends State<cBox> {
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
-                              this.totalquantity.toString() + 'pcs',
+                              this.totalquantity == 1
+                                  ? '1pc'
+                                  : this.totalquantity.toString() + 'pcs',
                               style: TextStyle(
                                 fontSize: 16.0,
                               ),
                             ),
-                          ),
+                          ), // pc pcs
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
@@ -309,7 +311,7 @@ class cBoxState extends State<cBox> {
                         // Add the header row at row 1
                         print('Adding header row...');
                         await sheet?.values.insertRow(
-                            1, ['Materials', 'Area(m²)', 'Quantity']);
+                            1, ['Materials', 'Area(sqm)', 'Quantity']);
                         print('Header row added!');
                       } else {
                         print(

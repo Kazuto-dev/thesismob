@@ -6,7 +6,7 @@ List<String> structuralMaterials = [
   "CHB",
   "Plywood",
   "Insulation",
-  "Roof",
+  "?",
 ];
 
 // ignore: camel_case_types
@@ -19,11 +19,13 @@ class structural extends StatelessWidget {
       'lib/assets/images/CHB(noBG).png',
       'lib/assets/images/Plywood(noBG).png',
       'lib/assets/images/IF.png',
-      'lib/assets/images/Roof(noBG).png',
+      'lib/assets/images/Struc.png',
     ];
 
     return Scaffold(
+      backgroundColor: Color.fromARGB(255, 229, 240, 255),
       appBar: AppBar(
+        backgroundColor: Color.fromARGB(255, 229, 240, 255),
         title: Text("Structural Calculators"),
         centerTitle: true,
         leading: IconButton(
@@ -47,8 +49,8 @@ class structural extends StatelessWidget {
               case "Insulation":
                 Navigator.pushNamed(context, '/insulationPages');
                 break;
-              case "Roof":
-                Navigator.pushNamed(context, '/roofPages');
+              case "?":
+                Navigator.pushNamed(context, '');
                 break;
             }
           },

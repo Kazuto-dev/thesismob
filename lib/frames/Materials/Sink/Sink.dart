@@ -96,12 +96,12 @@ class sinkState extends State<sink> {
                         },
                         items: <String>[
                           'Default',
-                          'Stainless',
-                          'Glass',
-                          'Wooden',
-                          'Ceramic',
-                          'Bronze',
-                          'Natural Stone',
+                          'Wall Mounted',
+                          'Vessel',
+                          'Drop in',
+                          'Undermount',
+                          'Semi recessed',
+                          'Pedestal',
                         ].map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -110,7 +110,7 @@ class sinkState extends State<sink> {
                         }).toList(),
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: "Switch Type",
+                          labelText: "Sink Type",
                         ),
                       ),
                     ),
@@ -270,12 +270,14 @@ class sinkState extends State<sink> {
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
-                              this.totalquantity.toString() + 'pcs',
+                              this.totalquantity == 1
+                                  ? '1pc'
+                                  : this.totalquantity.toString() + 'pcs',
                               style: TextStyle(
                                 fontSize: 16.0,
                               ),
                             ),
-                          ),
+                          ), // pc pcs
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
@@ -349,7 +351,7 @@ class sinkState extends State<sink> {
                         // Add the header row at row 1
                         print('Adding header row...');
                         await sheet?.values.insertRow(
-                            1, ['Materials', 'Area(m²)', 'Quantity']);
+                            1, ['Materials', 'Area(sqm)', 'Quantity']);
                         print('Header row added!');
                       } else {
                         print(

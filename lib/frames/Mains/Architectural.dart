@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 List<String> architecturalMaterials = [
   "Paint",
   "Tiles",
-  "Wood Floor",
+  "Roof",
   "Marble",
 ];
 
@@ -16,12 +16,14 @@ class architectural extends StatelessWidget {
     List<String> structuralMaterialImages = [
       'lib/assets/images/Paint(noBG).png',
       'lib/assets/images/Tiles(noBG).png',
-      'lib/assets/images/Arch.png',
+      'lib/assets/images/Roof(noBG).png',
       'lib/assets/images/Arch.png',
     ];
 
     return Scaffold(
+      backgroundColor: Color.fromARGB(255, 229, 240, 255),
       appBar: AppBar(
+        backgroundColor: Color.fromARGB(255, 229, 240, 255),
         title: Text("Architectural Calculators"),
         centerTitle: true,
         leading: IconButton(
@@ -43,11 +45,11 @@ class architectural extends StatelessWidget {
                 Navigator.pushNamed(context, '/tilesPages');
                 //
                 break;
-              case "Wood Floor":
-                Navigator.pushNamed(context, '/woodfloorPages');
+              case "Roof":
+                Navigator.pushNamed(context, '/roofPages');
                 break;
-              case "Marble":
-                Navigator.pushNamed(context, '/marblePages');
+              case "?":
+                Navigator.pushNamed(context, '/?');
                 break;
             }
           },

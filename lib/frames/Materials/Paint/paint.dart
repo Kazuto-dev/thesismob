@@ -108,36 +108,6 @@ class _paintState extends State<paint> {
                   children: [
                     Expanded(
                       child: TextField(
-                        controller: _doorQty,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: 'Quantity of Doors',
-                          hintText: "Enter Quantity of Doors",
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: TextField(
-                        controller: _windowQty,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: "Quantity of Windows",
-                          hintText: "Enter Quantity of Windows",
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(10.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
                         controller: _coat,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
@@ -156,73 +126,6 @@ class _paintState extends State<paint> {
                           border: OutlineInputBorder(),
                           labelText: "Paint Coverage (sqm/L)",
                           hintText: "Enter Paint Coverage (sqm/L)",
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(10.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: windowSize, // Use windowSize here
-                        onChanged: (String? newValue) {
-                          // Handle the selection
-
-                          setState(() {
-                            windowSize = newValue!;
-                            print(
-                                "Window Size before calculation: $windowSize");
-                          });
-                        },
-                        items: <String>[
-                          'Default',
-                          '24x24 =0.38m²',
-                          '24x48 =0.74m²',
-                          '24x60 =0.93m²',
-                          '42x42 =1.14 m²',
-                          '14x29 =0.26m²',
-                          '36x36 =0.83m²',
-                        ].map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: "Window Size (m)",
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: doorSize, // Use doorSize here
-                        onChanged: (String? newValue) {
-                          // Handle the selection
-                          setState(() {
-                            doorSize = newValue!;
-                            print("Door Size before calculation: $doorSize");
-                            // Update doorSize here
-                          });
-                        },
-                        items: <String>[
-                          'Default',
-                          '80x36 = 1.85m²',
-                          '80x43 = 2.17m²',
-                        ].map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: "Door Size (m)",
                         ),
                       ),
                     ),
@@ -278,51 +181,15 @@ class _paintState extends State<paint> {
                       }
                       double length = double.parse(_lengthController.text);
                       double height = double.parse(_heightController.text);
-                      double door = double.parse(_doorQty.text);
-                      double window = double.parse(_windowQty.text);
                       double coat = double.parse(_coat.text);
                       double cost = double.parse(costController.text);
                       double paintCoverage = double.parse(_paintCoverage.text);
-                      double windowSize1 = 0.0;
-                      double doorSize1 = 0.0;
 
-                      if (windowSize == 'Default') {
-                        windowSize1 = 0.0;
-                      } else if (windowSize == '24x24 =0.38m²') {
-                        windowSize1 = 0.38;
-                      } else if (windowSize == '24x48 =0.74m²') {
-                        windowSize1 = 0.74;
-                      } else if (windowSize == '36x36 =0.83m²') {
-                        windowSize1 = 0.83;
-                      } else if (windowSize == '24x60 =0.93m²') {
-                        windowSize1 = 0.93;
-                      } else if (windowSize == '42x42 =1.14 m²') {
-                        windowSize1 = 1.14;
-                      } else if (windowSize == '14x29 =0.26m²') {
-                        windowSize1 = 0.26;
-                      } else if (windowSize == '36x36 =0.83m²') {
-                        windowSize1 = 0.83;
-                      }
-
-                      if (doorSize == 'Default') {
-                        doorSize1 = 0.0;
-                      } else if (doorSize == '80x36 = 1.85m²') {
-                        doorSize1 = 1.85;
-                      } else if (doorSize == '80x43 = 2.17m²') {
-                        doorSize1 = 2.17;
-                      }
                       setState(() {
-                        print("Selected Window Size: $windowSize1");
-                        print("Selected Door Size: $doorSize1");
-
                         area = length * height;
                         totalLiters = area / paintCoverage;
                         totalLitersWithCoat = totalLiters * coat;
 
-                        double doorWin =
-                            (window * windowSize1) + (door * doorSize1);
-
-                        totalArea = area - doorWin;
                         totalcost = totalLiters * cost;
 
                         totalArea = double.parse(totalArea.toStringAsFixed(2));
@@ -335,7 +202,7 @@ class _paintState extends State<paint> {
                         date: DateTime.now(),
                         calculatorType: "Paint Estimator",
                         material: "Paint $coat coat",
-                        area: totalArea.toString() + "m²",
+                        area: totalArea.toString() + "sqm",
                         quantity: totalLitersWithCoat.toString() + "L",
                         totalamount: "₱" + totalcost.toString(),
                       );
@@ -433,7 +300,7 @@ class _paintState extends State<paint> {
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
-                              this.area.toString() + 'm²',
+                              this.area.toString() + 'sqm',
                               style: TextStyle(
                                 fontSize: 16.0,
                               ),
@@ -442,7 +309,9 @@ class _paintState extends State<paint> {
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
-                              this.totalLitersWithCoat.toString() + "L",
+                              (this.totalLitersWithCoat / 3.78541)
+                                      .toStringAsFixed(2) +
+                                  " gal",
                               style: TextStyle(
                                 fontSize: 16.0,
                               ),
@@ -521,7 +390,7 @@ class _paintState extends State<paint> {
                         // Add the header row at row 1
                         print('Adding header row...');
                         await sheet?.values.insertRow(
-                            1, ['Materials', 'Area(m²)', 'Quantity']);
+                            1, ['Materials', 'Area(sqm)', 'Quantity']);
                         print('Header row added!');
                       } else {
                         print(

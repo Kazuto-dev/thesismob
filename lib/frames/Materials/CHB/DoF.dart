@@ -19,6 +19,23 @@ class DoF extends StatelessWidget {
           },
         ),
       ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Concrete Hollow Blocks (CHB)",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              " Concrete hollow blocks or CHBs are modular materials used in construction. They have a hollow core, usually more than 25% of their total area, hence they are called “hollow blocks.” The hollow area allows insulation against heat, moisture, and sound.",
+              style: TextStyle(fontSize: 16),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -23,7 +23,9 @@ class plumbing extends StatelessWidget {
     ];
 
     return Scaffold(
+      backgroundColor: Color.fromARGB(255, 229, 240, 255),
       appBar: AppBar(
+        backgroundColor: Color.fromARGB(255, 229, 240, 255),
         title: Text("Plumbing Calculators"),
         centerTitle: true,
         leading: IconButton(

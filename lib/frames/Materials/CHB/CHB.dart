@@ -115,9 +115,9 @@ class _CHBState extends State<CHB> {
                         },
                         items: <String>[
                           'Default',
-                          '5% Wastage',
-                          '10% Wastage',
-                          '15% Wastage',
+                          '5% Contingency',
+                          '10% Contingency',
+                          '15% Contingency',
                         ].map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -126,7 +126,7 @@ class _CHBState extends State<CHB> {
                         }).toList(),
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: "CHB Wastage",
+                          labelText: "CHB Contingency",
                         ),
                       ),
                     ),
@@ -143,8 +143,9 @@ class _CHBState extends State<CHB> {
                         },
                         items: <String>[
                           'Default',
-                          '.40m x .20m',
-                          '.30m x .20m',
+                          '4"',
+                          '5"',
+                          '6"',
                         ].map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -210,26 +211,21 @@ class _CHBState extends State<CHB> {
 
                       // ... (your existing calculation code)
                       double wastagePercentage = 0.0;
-                      double chbSize = 0.0;
+                      double chbSize = 0.08;
                       double length = double.parse(lengthController.text);
                       double width = double.parse(widthController.text);
                       double cost = double.parse(costController.text);
 
                       if (selectedWastage == "Default") {
                         wastagePercentage = 0.0;
-                      } else if (selectedWastage == '5% Wastage') {
+                      } else if (selectedWastage == '5% Contingency') {
                         wastagePercentage = 0.05;
-                      } else if (selectedWastage == '10% Wastage') {
+                      } else if (selectedWastage == '10% Contingency') {
                         wastagePercentage = 0.1;
-                      } else if (selectedWastage == '15% Wastage') {
+                      } else if (selectedWastage == '15% Contingency') {
                         wastagePercentage = 0.15;
                       }
 
-                      if (selectedSize == '.40m x .20m') {
-                        chbSize = 0.08;
-                      } else if (selectedSize == '.30m x .20m') {
-                        chbSize = 0.06;
-                      }
                       setState(() {
                         area = length * width;
                         print("Area: $area");
@@ -253,13 +249,13 @@ class _CHBState extends State<CHB> {
                         date: DateTime.now(),
                         calculatorType: "CHB Estimator",
                         material: "Concrete Hollow Blocks",
-                        area: area.toString() + "m²",
+                        area: area.toString() + "sqm",
                         quantity: totalCHB.toString() + "pcs",
                         totalamount: "₱" + totalcost.toString(),
                       );
 
                       CalculationSummaryEntry summary = CalculationSummaryEntry(
-                        materialName: "CHB",
+                        materialName: "CHB " + selectedSize,
                         quantity: totalCHB.toString() + "pcs",
                         totalamount: "₱" + totalcost.toString(),
                       );
@@ -352,7 +348,7 @@ class _CHBState extends State<CHB> {
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
-                              this.area.toString() + 'm²',
+                              this.area.toString() + 'sqm',
                               style: TextStyle(
                                 fontSize: 16.0,
                               ),
@@ -361,7 +357,9 @@ class _CHBState extends State<CHB> {
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
-                              this.totalCHB.toString() + 'pcs',
+                              this.totalCHB == 1
+                                  ? '1pc'
+                                  : this.totalCHB.toString() + 'pcs',
                               style: TextStyle(
                                 fontSize: 16.0,
                               ),

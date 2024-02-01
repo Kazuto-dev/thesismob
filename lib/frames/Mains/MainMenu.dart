@@ -39,26 +39,30 @@ class _FirstPageState extends State<FirstPage> {
     return _isLoading
         ? Scaffold(
             body: Center(
-              child: CircularProgressIndicator(),
+              child: Image.asset(
+                'lib/assets/logos/SLogo.png',
+                height: 100,
+                width: 100,
+              ),
             ),
           )
         : Scaffold(
             appBar: AppBar(
+              backgroundColor: Color.fromARGB(255, 229, 240, 255),
               title: Image.asset(
-                'lib/assets/logos/Logo3.png', // Replace with the path to your image asset
+                'lib/assets/logos/Logo3.png',
                 height: 100,
-                width: 500, // Adjust the height as needed
+                width: 500,
               ),
               leading: IconButton(
-                icon: Icon(Icons.history, size: 40), // Increase the size to 30
+                icon: Icon(Icons.history, size: 40),
                 onPressed: () {
                   Navigator.pushNamed(context, '/history');
                 },
               ),
               actions: [
                 IconButton(
-                  icon: Icon(Icons.summarize,
-                      size: 40), // Increase the size to 30
+                  icon: Icon(Icons.summarize, size: 40),
                   onPressed: () {
                     Navigator.pushNamed(context, '/summary');
                   },
@@ -66,75 +70,75 @@ class _FirstPageState extends State<FirstPage> {
               ],
               centerTitle: true,
             ),
-            // The rest of your widget tree
-            // Inside your Drawer:
-
-            body: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Add the text at the top
-                Container(
-                  padding: EdgeInsets.only(bottom: 100.0),
-                  child: Text(
-                    "Building Precision, Calculation one at a Time",
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Colors.black,
+            body: Container(
+              color: Color.fromARGB(
+                  255, 229, 240, 255), // Set the background color here
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: EdgeInsets.only(bottom: 100.0),
+                    child: Text(
+                      "Building Precision, Calculation one at a Time",
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: GridView.builder(
-                      itemCount: imagePaths.length,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                      ),
-                      itemBuilder: (context, index) => InkWell(
-                        onTap: () {
-                          // Redirect to a page based on the chosen image
-                          switch (index) {
-                            case 0:
-                              Navigator.pushNamed(context, '/struc');
-                              break;
-                            case 1:
-                              Navigator.pushNamed(context, '/arch');
-                              break;
-                            case 2:
-                              Navigator.pushNamed(context, '/elec');
-                              break;
-                            case 3:
-                              Navigator.pushNamed(context, '/plumb');
-                              break;
-                          }
-                        },
-                        child: Center(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(5),
-                              border: Border.all(
-                                color: Colors.black,
-                                width: 1.0,
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: GridView.builder(
+                        itemCount: imagePaths.length,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                        ),
+                        itemBuilder: (context, index) => InkWell(
+                          onTap: () {
+                            switch (index) {
+                              case 0:
+                                Navigator.pushNamed(context, '/struc');
+                                break;
+                              case 1:
+                                Navigator.pushNamed(context, '/arch');
+                                break;
+                              case 2:
+                                Navigator.pushNamed(context, '/elec');
+                                break;
+                              case 3:
+                                Navigator.pushNamed(context, '/plumb');
+                                break;
+                            }
+                          },
+                          child: Center(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5),
+                                border: Border.all(
+                                  color:
+                                      const Color.fromARGB(255, 110, 128, 239),
+                                  width: 3.0,
+                                ),
+                                image: DecorationImage(
+                                  image: AssetImage(imagePaths[index]),
+                                  fit: BoxFit.cover,
+                                ),
                               ),
-                              image: DecorationImage(
-                                image: AssetImage(imagePaths[index]),
-                                fit: BoxFit.cover,
-                              ),
+                              margin: EdgeInsets.symmetric(
+                                  horizontal: 5.0,
+                                  vertical:
+                                      5.0), // Set margin to 5.0 for each side
+                              height: 200.0,
+                              width: 200.0,
                             ),
-                            margin: EdgeInsets.symmetric(
-                                horizontal: 5.0,
-                                vertical:
-                                    5.0), // Set margin to 5.0 for each side
-                            height: 200.0,
-                            width: 200.0,
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
   }

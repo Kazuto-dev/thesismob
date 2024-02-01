@@ -3,7 +3,7 @@ class CalculationHistoryEntry {
   final String material;
   final String area;
   final String quantity;
-  final DateTime date;
+  late final DateTime date;
   final String totalamount;
 
   CalculationHistoryEntry({
@@ -14,6 +14,7 @@ class CalculationHistoryEntry {
     required this.date,
     required this.totalamount,
   });
+
 
   Map<String, dynamic> toJson() {
     return {

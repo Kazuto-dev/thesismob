@@ -76,8 +76,8 @@ class _tilesState extends State<tiles> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: 'Area Length (m)',
-                          hintText: "Enter Area Length (m)",
+                          labelText: 'Room Length (m)',
+                          hintText: "Enter Room Length (m)",
                         ),
                       ),
                     ),
@@ -88,8 +88,46 @@ class _tilesState extends State<tiles> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: "Width (m)",
-                          hintText: "Enter Width (m)",
+                          labelText: "Room Width (m)",
+                          hintText: "Enter Room Width (m)",
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: selectedtileSize, // Use doorSize here
+                        onChanged: (String? newValue) {
+                          // Handle the selection
+                          setState(() {
+                            selectedtileSize = newValue!;
+                          });
+                        },
+                        items: <String>[
+                          'Default',
+                          '20 x 20 Wall Tile',
+                          '20 x 30 Wall Tile',
+                          '15 x 15 Wall Tile',
+                          '15 x 15 Floor Tile',
+                          '20 x 20 Floor Tile',
+                          '30 x 30 Floor Tile',
+                          '40 x 40 Floor Tile',
+                          '60 x 60 Floor Tile',
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: "Tile Size",
                         ),
                       ),
                     ),
@@ -112,9 +150,9 @@ class _tilesState extends State<tiles> {
                         },
                         items: <String>[
                           'Default',
-                          '5% Wastage',
-                          '10% Wastage',
-                          '15% Wastage',
+                          '5% Contigency',
+                          '10% Contigency',
+                          '15% Contigency',
                         ].map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -123,45 +161,7 @@ class _tilesState extends State<tiles> {
                         }).toList(),
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: "Tile Wastage",
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(10.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: selectedtileSize, // Use doorSize here
-                        onChanged: (String? newValue) {
-                          // Handle the selection
-                          setState(() {
-                            selectedtileSize = newValue!;
-                          });
-                        },
-                        items: <String>[
-                          'Default',
-                          '20 x 20',
-                          '20 x 30',
-                          '20 x 90',
-                          '30 x 30',
-                          '30 x 60',
-                          '40 x 40',
-                          '60 x 60',
-                          '60 x 120',
-                        ].map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: "Tile Size",
+                          labelText: "Tile Contigency",
                         ),
                       ),
                     ),
@@ -224,32 +224,32 @@ class _tilesState extends State<tiles> {
 
                       if (selectedtileWastage == "Default") {
                         wastagePercentage = 0.0;
-                      } else if (selectedtileWastage == '5% Wastage') {
+                      } else if (selectedtileWastage == '5% Contigency') {
                         wastagePercentage = 0.05;
-                      } else if (selectedtileWastage == '10% Wastage') {
+                      } else if (selectedtileWastage == '10% Contigency') {
                         wastagePercentage = 0.1;
-                      } else if (selectedtileWastage == '15% Wastage') {
+                      } else if (selectedtileWastage == '15% Contigency') {
                         wastagePercentage = 0.15;
                       }
 
                       if (selectedtileSize == 'Default') {
                         tileSize = 0.0;
-                      } else if (selectedtileSize == '20 x 20') {
+                      } else if (selectedtileSize == '15 x 15 Floor Tile') {
+                        tileSize = 0.0225;
+                      } else if (selectedtileSize == '15 x 15 Wall Tile') {
+                        tileSize = 0.0225;
+                      } else if (selectedtileSize == '20 x 20 Wall Tile') {
                         tileSize = 0.04;
-                      } else if (selectedtileSize == '20 x 30') {
+                      } else if (selectedtileSize == '20 x 20 Floor Tile') {
+                        tileSize = 0.04;
+                      } else if (selectedtileSize == '20 x 30 Wall Tile') {
                         tileSize = 0.06;
-                      } else if (selectedtileSize == '20 x 90') {
-                        tileSize = 0.17;
-                      } else if (selectedtileSize == '30 x 30') {
+                      } else if (selectedtileSize == '30 x 30 Floor Tile') {
                         tileSize = 0.09;
-                      } else if (selectedtileSize == '30 x 60') {
-                        tileSize = 0.18;
-                      } else if (selectedtileSize == '40 x 40') {
+                      } else if (selectedtileSize == '40 x 40 Floor Tile') {
                         tileSize = 0.16;
-                      } else if (selectedtileSize == '60 x 60') {
+                      } else if (selectedtileSize == '60 x 60 Floor Tile') {
                         tileSize = 0.36;
-                      } else if (selectedtileSize == '60 x 120') {
-                        tileSize = 0.72;
                       }
                       setState(() {
                         area = length * width;
@@ -267,7 +267,7 @@ class _tilesState extends State<tiles> {
                         date: DateTime.now(),
                         calculatorType: "Tile Estimator",
                         material: "Tiles",
-                        area: area.toString() + "m²",
+                        area: area.toString() + "sqm",
                         quantity: total.toString() + "pcs",
                         totalamount: "₱" + totalcost.toString(),
                       );
@@ -375,12 +375,14 @@ class _tilesState extends State<tiles> {
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
-                              this.total.toString() + 'pcs',
+                              this.total == 1
+                                  ? '1pc'
+                                  : this.total.toString() + 'pcs',
                               style: TextStyle(
                                 fontSize: 16.0,
                               ),
                             ),
-                          ),
+                          ), // pc pcs
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
@@ -454,7 +456,7 @@ class _tilesState extends State<tiles> {
                         // Add the header row at row 1
                         print('Adding header row...');
                         await sheet?.values.insertRow(
-                            1, ['Materials', 'Area(m²)', 'Quantity']);
+                            1, ['Materials', 'Area(sqm)', 'Quantity']);
                         print('Header row added!');
                       } else {
                         print(

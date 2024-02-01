@@ -324,17 +324,18 @@ class insulationState extends State<insulation> {
                       CalculationHistoryEntry entry = CalculationHistoryEntry(
                         date: DateTime.now(),
                         calculatorType: "PE FOAM Insulation Estimator",
-                        material: "Insulation " +
-                            "$type1\n" +
+                        material: "Insulation" +
+                            "\n$type1\n" +
                             "Thickness: $thickness1(m)\n" +
                             "Size: $size1(m)",
-                        area: area.toString() + "m²",
+                        area: area.toString() + "sqm",
                         quantity: insulationNeedRounded.toString() + "pcs",
                         totalamount: "₱" + totalcost.toString(),
                       );
 
                       CalculationSummaryEntry summary = CalculationSummaryEntry(
-                        materialName: "Insulation $type1\n" +
+                        materialName: "Insulation" +
+                            "\n$type1\n" +
                             "Thickness: $thickness1(m)\n" +
                             "Size: $size1(m)",
                         quantity: insulationNeedRounded.toString() + "pcs",
@@ -437,12 +438,15 @@ class insulationState extends State<insulation> {
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
-                              this.insulationNeedRounded.toString() + 'pcs',
+                              this.insulationNeedRounded == 1
+                                  ? '1pc'
+                                  : this.insulationNeedRounded.toString() +
+                                      'pcs',
                               style: TextStyle(
                                 fontSize: 16.0,
                               ),
                             ),
-                          ),
+                          ), // pc pcs
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
@@ -516,7 +520,7 @@ class insulationState extends State<insulation> {
                         // Add the header row at row 1
                         print('Adding header row...');
                         await sheet?.values.insertRow(
-                            1, ['Materials', 'Area(m²)', 'Quantity']);
+                            1, ['Materials', 'Area(sqm)', 'Quantity']);
                         print('Header row added!');
                       } else {
                         print(

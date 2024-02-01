@@ -45,7 +45,10 @@ class _SheetInfoInputState extends State<SheetInfoInput> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color.fromARGB(255, 229, 240, 255),
+
       appBar: AppBar(
+        backgroundColor: Color.fromARGB(255, 229, 240, 255),
         title: Center(child: Text('Sheet Form')),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
@@ -68,88 +71,93 @@ class _SheetInfoInputState extends State<SheetInfoInput> {
       ),
       // The rest of your Scaffold body goes here
 
-      body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'lib/assets/logos/icons8-google-sheets-300.png',
-                width: 250,
-                height: 250,
-                fit: BoxFit.cover,
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextField(
-                      controller: sheetIdController,
-                      decoration: InputDecoration(labelText: 'Enter Sheet ID'),
-                    ),
-                    SizedBox(height: 20),
-                    TextField(
-                      controller: sheetNameController,
-                      decoration:
-                          InputDecoration(labelText: 'Enter Sheet Name'),
-                    ),
-                    SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () async {
-                        final String sheetId = sheetIdController.text;
-                        final String sheetName = sheetNameController.text;
-
-                        if (sheetId.isNotEmpty && sheetName.isNotEmpty) {
-                          setState(() {
-                            isLoading = true;
-                          });
-
-                          // Use the provider to set the sheet info
-                          Provider.of<SheetInfoProvider>(context, listen: false)
-                              .setSheetInfo(sheetId, sheetName);
-
-                          await Future.delayed(Duration(seconds: 2));
-
-                          setState(() {
-                            isLoading = false;
-                          });
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Credentials added successfully!'),
-                              duration: Duration(seconds: 5),
-                            ),
-                          );
-                        } else {
-                          print('Please enter both Sheet ID and Sheet Name');
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        primary:
-                            Color.fromARGB(255, 0, 149, 0), // Background color
-                        onPrimary: Colors.white, // Text color
-                        padding: EdgeInsets.all(12), // Button padding
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ), // Button shape with rounded corners
-                        minimumSize: Size(double.infinity,
-                            50), // Set minimum width and height
-                      ),
-                      child: isLoading
-                          ? CircularProgressIndicator(
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
-                            )
-                          : Text(
-                              'Submit',
-                              style: TextStyle(fontSize: 18),
-                            ),
-                    ),
-                  ],
+      body: Container(
+        child: SingleChildScrollView(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'lib/assets/logos/icons8-google-sheets-300.png',
+                  width: 250,
+                  height: 250,
+                  fit: BoxFit.cover,
                 ),
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextField(
+                        controller: sheetIdController,
+                        decoration:
+                            InputDecoration(labelText: 'Enter Sheet ID'),
+                      ),
+                      SizedBox(height: 20),
+                      TextField(
+                        controller: sheetNameController,
+                        decoration:
+                            InputDecoration(labelText: 'Enter Sheet Name'),
+                      ),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () async {
+                          final String sheetId = sheetIdController.text;
+                          final String sheetName = sheetNameController.text;
+
+                          if (sheetId.isNotEmpty && sheetName.isNotEmpty) {
+                            setState(() {
+                              isLoading = true;
+                            });
+
+                            // Use the provider to set the sheet info
+                            Provider.of<SheetInfoProvider>(context,
+                                    listen: false)
+                                .setSheetInfo(sheetId, sheetName);
+
+                            await Future.delayed(Duration(seconds: 2));
+
+                            setState(() {
+                              isLoading = false;
+                            });
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content:
+                                    Text('Credentials added successfully!'),
+                                duration: Duration(seconds: 5),
+                              ),
+                            );
+                          } else {
+                            print('Please enter both Sheet ID and Sheet Name');
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          primary: Color.fromARGB(
+                              255, 0, 149, 0), // Background color
+                          onPrimary: Colors.white, // Text color
+                          padding: EdgeInsets.all(12), // Button padding
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ), // Button shape with rounded corners
+                          minimumSize: Size(double.infinity,
+                              50), // Set minimum width and height
+                        ),
+                        child: isLoading
+                            ? CircularProgressIndicator(
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              )
+                            : Text(
+                                'Submit',
+                                style: TextStyle(fontSize: 18),
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -164,7 +172,9 @@ class displayCreds extends StatelessWidget {
     final sheetInfo = Provider.of<SheetInfoProvider>(context).sheetInfo;
 
     return Scaffold(
+      backgroundColor: Color.fromARGB(255, 229, 240, 255),
       appBar: AppBar(
+        backgroundColor: Color.fromARGB(255, 229, 240, 255),
         title: Center(child: Text('Credentials')),
       ),
       body: Center(

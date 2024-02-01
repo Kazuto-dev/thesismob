@@ -31,8 +31,6 @@ class bulb extends StatefulWidget {
 }
 
 class _bulbState extends State<bulb> {
-  TextEditingController _lengthController = TextEditingController();
-  TextEditingController _heightController = TextEditingController();
   TextEditingController costController = TextEditingController();
   TextEditingController bulbQty = TextEditingController();
   late double totalcost = 0.0;
@@ -42,7 +40,7 @@ class _bulbState extends State<bulb> {
   bool isLoading = false;
 
   String bulbType = 'Default';
-  String roomType = 'Default';
+  String watts = 'Default';
   @override
   Widget build(BuildContext context) {
     final sheetInfo = Provider.of<SheetInfoProvider>(context).sheetInfo;
@@ -62,36 +60,6 @@ class _bulbState extends State<bulb> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Padding(
-                padding: EdgeInsets.all(10.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _lengthController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: 'Area Length (m)',
-                          hintText: "Enter Area Length (m)",
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: TextField(
-                        controller: _heightController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: "Area Width (m)",
-                          hintText: "Enter Area Width (m)",
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               Padding(
                 padding: EdgeInsets.all(10.0),
                 child: Row(
@@ -146,24 +114,28 @@ class _bulbState extends State<bulb> {
                     SizedBox(width: 10),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: roomType, // Use doorSize here
+                        value: watts, // Use doorSize here
                         onChanged: (String? newValue) {
                           // Handle the selection
                           setState(() {
-                            roomType = newValue!;
-                            print("Room type before calculation: $roomType");
+                            watts = newValue!;
                             // Update doorSize here
                           });
                         },
                         items: <String>[
                           'Default',
-                          'Toilet',
-                          'Kitchen',
-                          'Dining',
-                          'Living',
-                          'Garage',
-                          'Bedroom',
-                          'Storage',
+                          '3W',
+                          '5W',
+                          '7W',
+                          '9W',
+                          '11W',
+                          '13W',
+                          '15W',
+                          '18W',
+                          '20W',
+                          '25W',
+                          '30W',
+                          '40W',
                         ].map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -172,7 +144,7 @@ class _bulbState extends State<bulb> {
                         }).toList(),
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: "Room Type",
+                          labelText: "Watts",
                         ),
                       ),
                     ),
@@ -202,78 +174,27 @@ class _bulbState extends State<bulb> {
                 child: ElevatedButton(
                   onPressed: () {
                     double caculate() {
-                      double length = double.parse(_lengthController.text);
-                      double height = double.parse(_heightController.text);
                       bulbQuantity = double.parse(bulbQty.text).toInt();
                       double cost = double.parse(costController.text);
 
-                      double roomType1 = 0.0;
-                      double bulbType1 = 0.0;
-
-                      if (bulbType == 'Default') {
-                        bulbType1 = 0.0;
-                      } else if (bulbType == 'Incandecent') {
-                        bulbType1 = 15.0;
-                      } else if (bulbType == 'Halogen') {
-                        bulbType1 = 25.0;
-                      } else if (bulbType == 'CFL') {
-                        bulbType1 = 60.0;
-                      } else if (bulbType == 'LED') {
-                        bulbType1 = 75.0;
-                      }
-
-                      if (roomType == 'Default') {
-                        roomType1 = 0.0;
-                      } else if (roomType == 'Toilet') {
-                        roomType1 = 400.0;
-                      } else if (roomType == 'Kitchen') {
-                        roomType1 = 350.0;
-                      } else if (roomType == 'Dining') {
-                        roomType1 = 300.0;
-                      } else if (roomType == 'Living') {
-                        roomType1 = 250.0;
-                      } else if (roomType == 'Garage') {
-                        roomType1 = 200.0;
-                      } else if (roomType == 'Bedroom') {
-                        roomType1 = 150.0;
-                      } else if (roomType == 'Storage') {
-                        roomType1 = 100.0;
-                      }
-
                       setState(() {
-                        area = (length * height);
-                        double totalLumens = (area * roomType1);
-                        int watts = (totalLumens / bulbType1).ceil();
-                        int wperbulb = (watts / bulbQuantity).ceil();
-
-                        totalcost = bulbQuantity * cost;
-                        print("Total Cost: $totalcost");
-
-                        // Add your state updates here
-
-                        String bulb1 =
-                            "Bulb Quantity: $bulbQuantity $wperbulb W per bulb";
-
-                        print("Bulb Type: $bulbType");
-                        print("Room Type: $roomType");
-                        print("Area: $area");
-                        print("Total Lumens: $totalLumens");
-                        print("Watts: $watts");
-                        print("Watts per bulb: $wperbulb");
-                        print("Bulb Quantity: $bulbQuantity");
+                        material = "Bulb $bulbType + $watts";
+                        area = 0.0;
+                        totalcost =
+                            bulbQty.text.isEmpty ? 0 : (bulbQuantity * cost);
                       });
 
                       CalculationHistoryEntry entry = CalculationHistoryEntry(
                         date: DateTime.now(),
                         calculatorType: "Bulb Estimator",
-                        material: "Bulb $bulbType ",
+                        material: "Bulb $bulbType $watts",
                         area: area.toString() + "m²",
                         quantity: bulbQuantity.toString() + "pcs",
                         totalamount: "₱" + totalcost.toString(),
                       );
 
                       CalculationSummaryEntry summary = CalculationSummaryEntry(
-                        materialName: "Bulb",
+                        materialName: "Bulb $bulbType $watts",
                         quantity: bulbQuantity.toString() + "pcs",
                         totalamount: "₱" + totalcost.toString(),
                       );
@@ -374,7 +295,9 @@ class _bulbState extends State<bulb> {
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
-                              this.bulbQuantity.toString() + 'pcs',
+                              this.bulbQuantity == 1
+                                  ? '1pc'
+                                  : this.bulbQuantity.toString() + 'pcs',
                               style: TextStyle(
                                 fontSize: 16.0,
                               ),

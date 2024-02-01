@@ -29,8 +29,6 @@ import 'package:thesismob/frames/Materials/Tiles/tiles.dart';
 import 'package:thesismob/frames/Materials/Tiles/tilesOutput.dart';
 import 'package:thesismob/frames/Materials/Tiles/tilesPages.dart';
 
-import 'package:thesismob/frames/Mains/overAllDoF.dart';
-import 'package:thesismob/frames/Mains/overAllSolution.dart';
 import 'package:thesismob/frames/Mains/Architectural.dart';
 import 'package:thesismob/frames/Mains/Electrical.dart';
 import 'package:thesismob/frames/Mains/Plumbing.dart';
@@ -72,23 +70,11 @@ import 'package:thesismob/frames/Materials/insulation/insulationPages.dart';
 import 'package:thesismob/frames/Materials/insulation/insulationDef.dart';
 import 'package:thesismob/frames/Materials/insulation/insulationSolution.dart';
 
-import 'package:thesismob/frames/Materials/woodFloor/woodfloor.dart';
-import 'package:thesismob/frames/Materials/woodFloor/woodfloorOutput.dart';
-import 'package:thesismob/frames/Materials/woodFloor/woodfloorPages.dart';
-import 'package:thesismob/frames/Materials/woodFloor/woodfloorDef.dart';
-import 'package:thesismob/frames/Materials/woodFloor/woodfloorSol.dart';
-
 import 'package:thesismob/frames/Materials/SteelPlate/steelPlate.dart';
 import 'package:thesismob/frames/Materials/SteelPlate/steelPlatePages.dart';
 import 'package:thesismob/frames/Materials/SteelPlate/steelPlateDef.dart';
 import 'package:thesismob/frames/Materials/SteelPlate/SteelPlateOutput.dart';
 import 'package:thesismob/frames/Materials/SteelPlate/SteelPlateSol.dart';
-
-import 'package:thesismob/frames/Materials/Marble/marble.dart';
-import 'package:thesismob/frames/Materials/Marble/marblePages.dart';
-import 'package:thesismob/frames/Materials/Marble/marbleDef.dart';
-import 'package:thesismob/frames/Materials/Marble/marbleSol.dart';
-import 'package:thesismob/frames/Materials/Marble/marbleOutput.dart';
 
 import 'package:thesismob/frames/Materials/ConjunctionBox/cb.dart';
 import 'package:thesismob/frames/Materials/ConjunctionBox/cbPages.dart';
@@ -162,9 +148,6 @@ class MyApp extends StatelessWidget {
         '/CHBDef': (context) => DoF(),
         '/CHBSol': (context) => Solutions(),
 
-        '/DefinitionBox': (context) => DOF(),
-        '/SolutionBox': (context) => SOLUTION(),
-
         '/solutiontiles': (context) => SolutionsTiles(),
         '/definitiontiles': (context) => DoFTiles(),
         '/outputTiles': (context) => tilesOutput(),
@@ -206,23 +189,11 @@ class MyApp extends StatelessWidget {
         '/insulationDef': (context) => insulationDef(),
         '/insulationSolution': (context) => insulationSol(),
 
-        '/woodfloor': (context) => woodFloor(),
-        '/woodfloorPages': (context) => woodFloorPages(),
-        '/woodfloorDef': (context) => woodFloorDef(),
-        '/woodfloorSol': (context) => woodFloorSol(),
-        '/woodfloorOutput': (context) => woodFloorOutput(),
-
         '/steelPlate': (context) => steelPlate(),
         '/steelPlatePages': (context) => SPpages(),
         '/steelPlateDef': (context) => steelPlateDef(),
         '/steelPlateSol': (context) => steelPlateSol(),
         '/steelPlateOutput': (context) => steelPlateOutput(),
-
-        '/marble': (context) => marble(),
-        '/marblePages': (context) => marblePages(),
-        '/marbleDef': (context) => marbleDef(),
-        '/marbleSol': (context) => marbleSol(),
-        '/marbleOutput': (context) => marbleOutput(),
 
         '/cb': (context) => cBox(),
         '/cbPages': (context) => cBoxpages(),

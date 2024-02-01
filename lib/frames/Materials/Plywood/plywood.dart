@@ -111,9 +111,9 @@ class woodState extends State<wood> {
                         },
                         items: <String>[
                           'Default',
-                          '5% Wastage',
-                          '10% Wastage',
-                          '15% Wastage',
+                          '5% Contingency',
+                          '10% Contingency',
+                          '15% Contingency',
                         ].map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -122,7 +122,7 @@ class woodState extends State<wood> {
                         }).toList(),
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: "Wastage",
+                          labelText: "Contingency",
                         ),
                       ),
                     ),
@@ -209,11 +209,11 @@ class woodState extends State<wood> {
 
                       if (selectedwoodWastage == "Default") {
                         wastagePercentage = 0.0;
-                      } else if (selectedwoodWastage == '5% Wastage') {
+                      } else if (selectedwoodWastage == '5% Contingency') {
                         wastagePercentage = 0.05;
-                      } else if (selectedwoodWastage == '10% Wastage') {
+                      } else if (selectedwoodWastage == '10% Contingency') {
                         wastagePercentage = 0.1;
-                      } else if (selectedwoodWastage == '15% Wastage') {
+                      } else if (selectedwoodWastage == '15% Contingency') {
                         wastagePercentage = 0.15;
                       }
 
@@ -249,7 +249,7 @@ class woodState extends State<wood> {
                         date: DateTime.now(),
                         calculatorType: "Plywood Estimator",
                         material: "Plywood $selectedwoodSize",
-                        area: area.toString() + "m²",
+                        area: area.toString() + "sqm",
                         quantity: total.toString() + "pcs",
                         totalamount: totalcost.toString() + "₱",
                       );
@@ -357,12 +357,14 @@ class woodState extends State<wood> {
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
-                              this.total.toString() + 'pcs',
+                              this.total == 1
+                                  ? '1pc'
+                                  : this.total.toString() + 'pcs',
                               style: TextStyle(
                                 fontSize: 16.0,
                               ),
                             ),
-                          ),
+                          ), // pc pcs
                           Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
@@ -436,7 +438,7 @@ class woodState extends State<wood> {
                         // Add the header row at row 1
                         print('Adding header row...');
                         await sheet?.values.insertRow(
-                            1, ['Materials', 'Area(m²)', 'Quantity']);
+                            1, ['Materials', 'Area(sqm)', 'Quantity']);
                         print('Header row added!');
                       } else {
                         print(

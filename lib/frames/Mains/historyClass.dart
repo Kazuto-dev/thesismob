@@ -1,6 +1,7 @@
-import 'package:thesismob/frames/Mains/calculationHistory.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:thesismob/frames/Mains/calculationHistory.dart';
 
 class CalculationHistory {
   static List<CalculationHistoryEntry> history = [];
@@ -20,9 +21,12 @@ class CalculationHistory {
 
   static void saveHistory() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String encoded =
-        jsonEncode(history.map((entry) => entry.toJson()).toList());
+    final String encoded = encodeHistory();
     prefs.setString(_historyKey, encoded);
+  }
+
+  static String encodeHistory() {
+    return jsonEncode(history.map((entry) => entry.toJson()).toList());
   }
 
   static Future<void> loadHistory() async {
@@ -30,10 +34,20 @@ class CalculationHistory {
     final String? historyJson = prefs.getString(_historyKey);
 
     if (historyJson != null) {
-      List<dynamic> decoded = jsonDecode(historyJson);
-      history = decoded
-          .map((item) => CalculationHistoryEntry.fromJson(item))
-          .toList();
+      decodeHistory(historyJson);
     }
+  }
+
+  static void decodeHistory(String historyJson) {
+    List<dynamic> decoded = jsonDecode(historyJson);
+    history =
+        decoded.map((item) => CalculationHistoryEntry.fromJson(item)).toList();
+  }
+
+  static void deleteOldEntries() {
+    DateTime currentDate = DateTime.now();
+    history
+        .removeWhere((entry) => currentDate.difference(entry.date).inDays > 5);
+    saveHistory();
   }
 }
