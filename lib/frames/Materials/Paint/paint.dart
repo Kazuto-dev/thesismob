@@ -337,7 +337,7 @@ class _paintState extends State<paint> {
                 padding: EdgeInsets.only(top: 20.0),
                 child: ElevatedButton(
                   onPressed: () async {
-                    if (area == 0 || totalLitersWithCoat == 0) {
+                    if (totalcost == 0 || totalLitersWithCoat == 0) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content:
@@ -389,8 +389,8 @@ class _paintState extends State<paint> {
                       if (allValues == null || allValues.isEmpty) {
                         // Add the header row at row 1
                         print('Adding header row...');
-                        await sheet?.values.insertRow(
-                            1, ['Materials', 'Area(sqm)', 'Quantity']);
+                        await sheet?.values.insertRow(1,
+                            ['Materials', 'Area(sqm)', 'Quantity', 'Cost(₱)']);
                         print('Header row added!');
                       } else {
                         print(
@@ -398,8 +398,8 @@ class _paintState extends State<paint> {
                       }
 
                       // Append the data row
-                      final index = await sheet?.values
-                          .appendRow([material, area, totalLitersWithCoat]);
+                      final index = await sheet?.values.appendRow(
+                          [material, area, totalLitersWithCoat, totalcost]);
                       print('Updated at $index');
 
                       ScaffoldMessenger.of(context).showSnackBar(

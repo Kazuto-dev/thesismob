@@ -467,7 +467,7 @@ class insulationState extends State<insulation> {
                 padding: EdgeInsets.only(top: 20.0),
                 child: ElevatedButton(
                   onPressed: () async {
-                    if (area == 0 || insulationNeedRounded == 0) {
+                    if (insulationNeedRounded == 0 || totalcost == 0) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content:
@@ -519,8 +519,9 @@ class insulationState extends State<insulation> {
                       if (allValues == null || allValues.isEmpty) {
                         // Add the header row at row 1
                         print('Adding header row...');
-                        await sheet?.values.insertRow(
-                            1, ['Materials', 'Area(sqm)', 'Quantity']);
+                        await sheet?.values.insertRow(1,
+                            ['Materials', 'Area(sqm)', 'Quantity', 'Cost(₱)']);
+
                         print('Header row added!');
                       } else {
                         print(
@@ -528,8 +529,8 @@ class insulationState extends State<insulation> {
                       }
 
                       // Append the data row
-                      final index = await sheet?.values
-                          .appendRow([material, area, insulationNeed]);
+                      final index = await sheet?.values.appendRow(
+                          [material, area, insulationNeedRounded, totalcost]);
                       print('Updated at $index');
 
                       ScaffoldMessenger.of(context).showSnackBar(

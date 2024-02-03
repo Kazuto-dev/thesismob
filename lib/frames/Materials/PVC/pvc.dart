@@ -35,14 +35,14 @@ class pipe extends StatefulWidget {
 
 class pipeState extends State<pipe> {
   TextEditingController quantityController = TextEditingController();
-  TextEditingController pvcLength = TextEditingController();
   TextEditingController _costController = TextEditingController();
   String size = 'Default';
   late double totalcost = 0.0;
-  String selectedType = "Default";
+  String selectedlength = "Default";
   late double totalquantity = 0.0;
   String material = "Plumbing Pipe";
   bool isLoading = false;
+  late double area = 0.0;
 
   @override
   Widget build(BuildContext context) {
@@ -88,20 +88,18 @@ class pipeState extends State<pipe> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: selectedType, // Use windowSize here
+                        value: selectedlength, // Use windowSize here
                         onChanged: (String? newValue) {
                           // Handle the selection
 
                           setState(() {
-                            selectedType = newValue!;
+                            selectedlength = newValue!;
                           });
                         },
                         items: <String>[
                           'Default',
-                          'PVC',
-                          'Flexi',
-                          'Iron Pipe',
-                          'Copper Pipe',
+                          '5ft',
+                          '10ft',
                         ].map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -110,7 +108,7 @@ class pipeState extends State<pipe> {
                         }).toList(),
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: "Switch Type",
+                          labelText: "PVC Length",
                         ),
                       ),
                     ),
@@ -127,7 +125,11 @@ class pipeState extends State<pipe> {
                         },
                         items: <String>[
                           'Default',
-                          '10(m)',
+                          '½”',
+                          '¾”',
+                          '1”',
+                          '1¼”',
+                          '1½”',
                         ].map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -136,7 +138,7 @@ class pipeState extends State<pipe> {
                         }).toList(),
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: "Default Size (m)",
+                          labelText: "PVC Size",
                         ),
                       ),
                     ),
@@ -190,10 +192,31 @@ class pipeState extends State<pipe> {
                       }
                       double cost = double.parse(_costController.text);
                       double quantity = double.parse(quantityController.text);
-                      double area = 0.0;
+                      double length = 0.0;
+                      double size1 = 0.0;
+
+                      if (selectedlength == "5ft") {
+                        length = 5.0;
+                      } else if (selectedlength == "10ft") {
+                        length = 10.0;
+                      } else if (selectedlength == "Default") {
+                        length = 0.0;
+                      }
+
+                      switch (size) {
+                        case "½”":
+                        case "¾”":
+                        case "1”":
+                        case "1¼”":
+                        case "1½”":
+                          size1 /= 12;
+                          break;
+                        // Add more cases as needed
+                        default:
+                          size1 = 0.0;
+                      }
 
                       setState(() {
-                        // Round up to the nearest whole number for the CHB needed
                         totalcost = quantity * cost;
                         print("Total Cost: $totalcost");
                         totalquantity = quantity;
@@ -202,16 +225,14 @@ class pipeState extends State<pipe> {
                       CalculationHistoryEntry entry = CalculationHistoryEntry(
                         date: DateTime.now(),
                         calculatorType: "Plumbing Pipe Cost Calculator",
-                        material:
-                            "Plumbing Pipe - $selectedType\n" + "Size: $size\n",
+                        material: "PVC pipe $size X $selectedlength",
                         quantity: totalquantity.toString(),
                         area: area.toString(),
                         totalamount: "₱" + totalcost.toString(),
                       );
 
                       CalculationSummaryEntry summary = CalculationSummaryEntry(
-                        materialName:
-                            "Plumbing Pipe - $selectedType\n" + "Size: $size\n",
+                        materialName: "PVC pipe $size X $selectedlength",
                         quantity: totalquantity.toString(),
                         totalamount: "₱" + totalcost.toString(),
                       );
@@ -291,7 +312,7 @@ class pipeState extends State<pipe> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                           Padding(
+                          Padding(
                             padding: EdgeInsets.only(top: 15.0),
                             child: Text(
                               this.totalquantity == 1
@@ -374,8 +395,8 @@ class pipeState extends State<pipe> {
                       if (allValues == null || allValues.isEmpty) {
                         // Add the header row at row 1
                         print('Adding header row...');
-                        await sheet?.values.insertRow(
-                            1, ['Materials', 'Area(sqm)', 'Quantity']);
+                        await sheet?.values.insertRow(1,
+                            ['Materials', 'Area(sqm)', 'Quantity', 'Cost(₱)']);
                         print('Header row added!');
                       } else {
                         print(
@@ -383,8 +404,8 @@ class pipeState extends State<pipe> {
                       }
 
                       // Append the data row
-                      final index = await sheet?.values
-                          .appendRow([material, totalquantity]);
+                      final index = await sheet?.values.appendRow(
+                          [material, area, totalquantity, totalcost]);
                       print('Updated at $index');
 
                       ScaffoldMessenger.of(context).showSnackBar(

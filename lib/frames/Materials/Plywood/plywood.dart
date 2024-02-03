@@ -385,7 +385,7 @@ class woodState extends State<wood> {
                 padding: EdgeInsets.only(top: 20.0),
                 child: ElevatedButton(
                   onPressed: () async {
-                    if (area == 0 || total == 0) {
+                    if (totalcost == 0 || total == 0) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content:
@@ -437,8 +437,8 @@ class woodState extends State<wood> {
                       if (allValues == null || allValues.isEmpty) {
                         // Add the header row at row 1
                         print('Adding header row...');
-                        await sheet?.values.insertRow(
-                            1, ['Materials', 'Area(sqm)', 'Quantity']);
+                        await sheet?.values.insertRow(1,
+                            ['Materials', 'Area(sqm)', 'Quantity', 'Cost(₱)']);
                         print('Header row added!');
                       } else {
                         print(
@@ -447,7 +447,7 @@ class woodState extends State<wood> {
 
                       // Append the data row
                       final index = await sheet?.values
-                          .appendRow([material, area, total]);
+                          .appendRow([material, area, total, totalcost]);
                       print('Updated at $index');
 
                       ScaffoldMessenger.of(context).showSnackBar(

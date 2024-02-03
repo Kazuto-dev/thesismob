@@ -45,10 +45,9 @@ class _SheetInfoInputState extends State<SheetInfoInput> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 229, 240, 255),
-
+      backgroundColor: Color.fromARGB(255, 251, 248, 235),
       appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 229, 240, 255),
+        backgroundColor: Color.fromARGB(255, 251, 248, 235),
         title: Center(child: Text('Sheet Form')),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
@@ -172,9 +171,9 @@ class displayCreds extends StatelessWidget {
     final sheetInfo = Provider.of<SheetInfoProvider>(context).sheetInfo;
 
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 229, 240, 255),
+      backgroundColor: Color.fromARGB(255, 251, 248, 235),
       appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 229, 240, 255),
+        backgroundColor: Color.fromARGB(255, 251, 248, 235),
         title: Center(child: Text('Credentials')),
       ),
       body: Center(

@@ -5,10 +5,8 @@ import 'package:thesismob/frames/Mains/calculationHistory.dart';
 import 'package:thesismob/frames/Mains/historyClass.dart';
 import 'package:thesismob/frames/Mains/summaryClass.dart';
 import 'package:thesismob/frames/Mains/summaryHistory.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:gsheets/gsheets.dart';
 import 'package:thesismob/frames/Mains/sheetProvider.dart';
-import 'package:thesismob/frames/Mains/sheetInfo.dart';
 import 'package:provider/provider.dart';
 
 const creds = r'''{
@@ -40,6 +38,7 @@ class RoofState extends State<roof> {
   String selectedRoofWidth = 'Default';
   String selectedRoofLength = 'Default';
   String selectedCorrugation = 'Default';
+  String roofType = 'Default';
   late double area = 0.0;
   late double sheetsNeeded = 0;
   late int sheetsNeededRounded = 0;
@@ -67,7 +66,40 @@ class RoofState extends State<roof> {
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Padding(
-                padding: EdgeInsets.all(5.0),
+                padding: EdgeInsets.all(10.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: roofType, // Use windowSize here
+                        onChanged: (String? newValue) {
+                          // Handle the selection
+
+                          setState(() {
+                            roofType = newValue!;
+                          });
+                        },
+                        items: <String>[
+                          'Default',
+                          'Ribbed Roof',
+                          'Corrugated Roof',
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: "Roof Type",
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(10.0),
                 child: Row(
                   children: [
                     Expanded(
@@ -163,37 +195,38 @@ class RoofState extends State<roof> {
                   ],
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.all(10.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: selectedCorrugation, // Use windowSize here
-                        onChanged: (String? newValue) {
-                          // Handle the selection
-
-                          setState(() {
-                            selectedCorrugation = newValue!;
-                          });
-                        },
-                        items: <String>[
-                          'Default',
-                          '1.5 Corrugation',
-                          '2.5 Corrugation',
-                        ].map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: "Corrugation",
+              Visibility(
+                visible: roofType == 'Corrugated Roof',
+                child: Padding(
+                  padding: EdgeInsets.all(10.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: selectedCorrugation, // Use windowSize here
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedCorrugation = newValue!;
+                            });
+                          },
+                          items: <String>[
+                            'Default',
+                            '1.5 Corrugation',
+                            '2.5 Corrugation',
+                          ].map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: "Corrugation",
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               Padding(
@@ -250,6 +283,26 @@ class RoofState extends State<roof> {
                       double length = double.parse(_lengthController.text);
                       double width = double.parse(_widthController.text);
 
+                      if (roofType == 'Default') {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text("Select Roof Type"),
+                              content: Text("Please select type of roof."),
+                              actions: [
+                                TextButton(
+                                  child: Text("OK"),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      }
+
                       if (selectedRoofWidth == "Default") {
                         roofSizeW = 0.0;
                       } else if (selectedRoofWidth == '0.8m') {
@@ -287,27 +340,41 @@ class RoofState extends State<roof> {
                       } else if (selectedCorrugation == '2.5 Corrugation') {
                         corrugation = 1.829;
                       }
-                      setState(() {
-                        area = length * width;
-                        print("Area: $area");
 
-                        double effectW = roofSizeW / corrugation;
-                        double sheetArea = effectW * roofSizeL;
-                        sheetsNeeded = area / sheetArea;
-
-                        if (sheetsNeeded.isFinite) {
+                      if (roofType == 'Ribbed Roof') {
+                        setState(() {
+                          area = length * width;
+                          sheetsNeeded = area / (roofSizeW * roofSizeL);
                           sheetsNeededRounded = sheetsNeeded.ceil();
-                        } else {
-                          // Handle the case where sheetsNeeded is Infinity or NaN
-                          sheetsNeededRounded =
-                              0; // You can set a default value or handle it according to your application logic
-                        }
+                          totalcost = sheetsNeededRounded * cost;
+                          print("Area: $area");
+                          print("Sheets Needed: $sheetsNeeded");
+                          print("Total Cost: $totalcost");
+                        });
+                      } else if (roofType == 'Corrugated Roof') {
+                        setState(() {
+                          area = length * width;
+                          print("Area: $area");
 
-                        print("Sheets Needed: $sheetsNeededRounded");
+                          double effectW = roofSizeW / corrugation;
+                          double sheetArea = effectW * roofSizeL;
+                          sheetsNeeded = area / sheetArea;
 
-                        totalcost = sheetsNeededRounded * cost;
-                        print("Total Cost: $totalcost");
-                      });
+                          print("EffectW: $effectW");
+                          print("Sheet Area: $sheetArea");
+                          print("Sheets Needed: $sheetsNeeded");
+
+                          if (sheetsNeeded.isFinite) {
+                            sheetsNeededRounded = sheetsNeeded.ceil();
+                          } else {
+                            sheetsNeededRounded = 0;
+                          }
+
+                          totalcost = sheetsNeededRounded * cost;
+
+                          print("Total Cost: $totalcost");
+                        });
+                      }
 
                       CalculationHistoryEntry entry = CalculationHistoryEntry(
                         date: DateTime.now(),
@@ -449,7 +516,7 @@ class RoofState extends State<roof> {
                 padding: EdgeInsets.only(top: 20.0),
                 child: ElevatedButton(
                   onPressed: () async {
-                    if (area == 0 || sheetsNeededRounded == 0) {
+                    if (totalcost == 0 || sheetsNeededRounded == 0) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content:
@@ -501,8 +568,8 @@ class RoofState extends State<roof> {
                       if (allValues == null || allValues.isEmpty) {
                         // Add the header row at row 1
                         print('Adding header row...');
-                        await sheet?.values.insertRow(
-                            1, ['Materials', 'Area(sqm)', 'Quantity']);
+                        await sheet?.values.insertRow(1,
+                            ['Materials', 'Area(sqm)', 'Quantity', 'Cost(₱)']);
                         print('Header row added!');
                       } else {
                         print(
@@ -510,8 +577,8 @@ class RoofState extends State<roof> {
                       }
 
                       // Append the data row
-                      final index = await sheet?.values
-                          .appendRow([material, area, sheetsNeeded]);
+                      final index = await sheet?.values.appendRow(
+                          [material, area, sheetsNeededRounded, totalcost]);
                       print('Updated at $index');
 
                       ScaffoldMessenger.of(context).showSnackBar(

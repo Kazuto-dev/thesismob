@@ -70,8 +70,8 @@ class _bulbState extends State<bulb> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: 'Quantity of Bulbs',
-                          hintText: "Enter Quantity of Bulbs",
+                          labelText: 'Quantity',
+                          hintText: "Enter Quantity",
                         ),
                       ),
                     ),
@@ -323,7 +323,7 @@ class _bulbState extends State<bulb> {
                 padding: EdgeInsets.only(top: 20.0),
                 child: ElevatedButton(
                   onPressed: () async {
-                    if (area == 0 || bulbQuantity == 0) {
+                    if (totalcost == 0 || bulbQuantity == 0) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content:
@@ -375,8 +375,9 @@ class _bulbState extends State<bulb> {
                       if (allValues == null || allValues.isEmpty) {
                         // Add the header row at row 1
                         print('Adding header row...');
-                        await sheet?.values.insertRow(
-                            1, ['Materials', 'Area(m²)', 'Quantity']);
+                        await sheet?.values.insertRow(1,
+                            ['Materials', 'Area(sqm)', 'Quantity', 'Cost(₱)']);
+
                         print('Header row added!');
                       } else {
                         print(
@@ -385,7 +386,7 @@ class _bulbState extends State<bulb> {
 
                       // Append the data row
                       final index = await sheet?.values
-                          .appendRow([material, area, bulbQuantity]);
+                          .appendRow([material, area, bulbQuantity, totalcost]);
                       print('Updated at $index');
 
                       ScaffoldMessenger.of(context).showSnackBar(

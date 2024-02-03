@@ -72,15 +72,15 @@ class _SummaryState extends State<Summary> {
                 child: Center(
                   child: DataTable(
                     headingRowColor: MaterialStateColor.resolveWith(
-                        (states) => const Color.fromARGB(255, 53, 53, 53)),
+                        (states) => Color.fromARGB(128, 158, 158, 158)),
                     columns: <DataColumn>[
                       DataColumn(
                         label: Text(
                           'Material',
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 10,
-                              color: Colors.white),
+                              fontSize: 12,
+                              color: const Color.fromARGB(255, 31, 31, 31)),
                         ),
                       ),
                       DataColumn(
@@ -88,8 +88,8 @@ class _SummaryState extends State<Summary> {
                           'Quantity',
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 10,
-                              color: Colors.white),
+                              fontSize: 12,
+                              color: const Color.fromARGB(255, 31, 31, 31)),
                         ),
                         numeric: true, // Make the "Quantity" column narrower
                       ),
@@ -98,8 +98,8 @@ class _SummaryState extends State<Summary> {
                           'Costs',
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 10,
-                              color: Colors.white),
+                              fontSize: 12,
+                              color: const Color.fromARGB(255, 31, 31, 31)),
                         ),
                         numeric: true, // Make the "Costs" column narrower
                       ),
@@ -107,9 +107,8 @@ class _SummaryState extends State<Summary> {
                         label: Text(
                           'Delete',
                           style: TextStyle(
-                              fontSize: 10,
-                              color: Colors
-                                  .white), // Smaller font size for delete column
+                              fontSize: 12,
+                              color: const Color.fromARGB(255, 31, 31, 31)),
                         ),
                       ),
                     ],
@@ -121,8 +120,8 @@ class _SummaryState extends State<Summary> {
                       final summaryReport = entry.value;
                       final isEven = index % 2 == 0;
                       final rowColor = isEven
-                          ? Color.fromARGB(255, 198, 210, 250)
-                          : Color.fromARGB(255, 200, 200, 200);
+                          ? Color.fromARGB(255, 249, 249, 249)
+                          : Color.fromARGB(255, 242, 242, 242);
                       final textStyle = TextStyle(
                           fontSize: 10,
                           color: isEven
@@ -136,19 +135,28 @@ class _SummaryState extends State<Summary> {
                           DataCell(
                             Text(
                               summaryReport.materialName,
-                              style: textStyle,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.normal,
+                                  fontSize: 11,
+                                  color: const Color.fromARGB(255, 33, 33, 33)),
                             ),
                           ),
                           DataCell(
                             Text(
                               summaryReport.quantity,
-                              style: textStyle,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.normal,
+                                  fontSize: 11,
+                                  color: const Color.fromARGB(255, 33, 33, 33)),
                             ),
                           ),
                           DataCell(
                             Text(
                               summaryReport.totalamount,
-                              style: textStyle,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.normal,
+                                  fontSize: 11,
+                                  color: const Color.fromARGB(255, 33, 33, 33)),
                             ),
                           ),
                           DataCell(

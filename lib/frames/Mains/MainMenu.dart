@@ -1,5 +1,6 @@
 // ignore_for_file: file_names, use_super_parameters, unused_import, prefer_const_constructors, prefer_const_literals_to_create_immutables
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class FirstPage extends StatefulWidget {
   final String? displayName;
@@ -17,6 +18,16 @@ class _FirstPageState extends State<FirstPage> {
     "lib/assets/images/Elec.png",
     "lib/assets/images/Plumbing.png",
   ];
+
+  String _getLabelText(int index) {
+    List<String> labels = [
+      "Structural",
+      "Architectural",
+      "Electrical",
+      "Plumbing"
+    ];
+    return labels[index % labels.length];
+  }
 
   bool _isLoading = true;
 
@@ -36,6 +47,18 @@ class _FirstPageState extends State<FirstPage> {
 
   @override
   Widget build(BuildContext context) {
+    Color _getButtonColor(int index) {
+      List<Color> buttonColors = [
+        Color.fromARGB(255, 225, 160, 177),
+        Color.fromARGB(255, 239, 182, 171),
+        Color.fromARGB(255, 243, 223, 170),
+        Color.fromARGB(255, 178, 216, 226),
+        // Add more colors here for each index
+      ];
+
+      return buttonColors[index % buttonColors.length];
+    }
+
     return _isLoading
         ? Scaffold(
             body: Center(
@@ -48,21 +71,16 @@ class _FirstPageState extends State<FirstPage> {
           )
         : Scaffold(
             appBar: AppBar(
-              backgroundColor: Color.fromARGB(255, 229, 240, 255),
-              title: Image.asset(
-                'lib/assets/logos/Logo3.png',
-                height: 100,
-                width: 500,
-              ),
+              backgroundColor: Color.fromARGB(255, 251, 248, 235),
               leading: IconButton(
-                icon: Icon(Icons.history, size: 40),
+                icon: Icon(Icons.history, size: 30),
                 onPressed: () {
                   Navigator.pushNamed(context, '/history');
                 },
               ),
               actions: [
                 IconButton(
-                  icon: Icon(Icons.summarize, size: 40),
+                  icon: Icon(Icons.summarize, size: 30),
                   onPressed: () {
                     Navigator.pushNamed(context, '/summary');
                   },
@@ -71,67 +89,103 @@ class _FirstPageState extends State<FirstPage> {
               centerTitle: true,
             ),
             body: Container(
+              padding: EdgeInsets.only(top: 0), // Add bottom padding here
               color: Color.fromARGB(
-                  255, 229, 240, 255), // Set the background color here
+                  255, 251, 248, 235), // Set the background color here
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    padding: EdgeInsets.only(bottom: 100.0),
-                    child: Text(
-                      "Building Precision, Calculation one at a Time",
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.black,
-                      ),
+                    child: Column(
+                      children: [
+                        Image.asset(
+                          'lib/assets/logos/Logo2.png',
+                          height: 50,
+                          width: 250,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(bottom: 20),
+                          child: Text(
+                            "Building Precision, Calculation one at a Time",
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                              fontFamily: GoogleFonts.poppins().fontFamily,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   Expanded(
-                    child: Align(
-                      alignment: Alignment.topCenter,
-                      child: GridView.builder(
-                        itemCount: imagePaths.length,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                        ),
-                        itemBuilder: (context, index) => InkWell(
-                          onTap: () {
-                            switch (index) {
-                              case 0:
-                                Navigator.pushNamed(context, '/struc');
-                                break;
-                              case 1:
-                                Navigator.pushNamed(context, '/arch');
-                                break;
-                              case 2:
-                                Navigator.pushNamed(context, '/elec');
-                                break;
-                              case 3:
-                                Navigator.pushNamed(context, '/plumb');
-                                break;
-                            }
-                          },
-                          child: Center(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5),
-                                border: Border.all(
-                                  color:
-                                      const Color.fromARGB(255, 110, 128, 239),
-                                  width: 3.0,
-                                ),
-                                image: DecorationImage(
-                                  image: AssetImage(imagePaths[index]),
-                                  fit: BoxFit.cover,
+                    child: ListView.builder(
+                      itemCount: imagePaths.length,
+                      itemBuilder: (context, index) => InkWell(
+                        onTap: () {
+                          switch (index) {
+                            case 0:
+                              Navigator.pushNamed(context, '/struc');
+                              break;
+                            case 1:
+                              Navigator.pushNamed(context, '/arch');
+                              break;
+                            case 2:
+                              Navigator.pushNamed(context, '/elec');
+                              break;
+                            case 3:
+                              Navigator.pushNamed(context, '/plumb');
+                              break;
+                          }
+                        },
+                        child: Container(
+                          margin:
+                              EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: _getButtonColor(index),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 1,
+                                child: Container(
+                                  decoration: BoxDecoration(),
+                                  child: Padding(
+                                    padding:
+                                        EdgeInsets.all(15), // Add padding here
+                                    child: Image.asset(
+                                      imagePaths[index],
+                                      height:
+                                          120, // Adjust the height as desired
+                                      width: 100, // Adjust the width as desired
+                                    ),
+                                  ),
                                 ),
                               ),
-                              margin: EdgeInsets.symmetric(
-                                  horizontal: 5.0,
-                                  vertical:
-                                      5.0), // Set margin to 5.0 for each side
-                              height: 200.0,
-                              width: 200.0,
-                            ),
+                              Expanded(
+                                flex: 2,
+                                child: Padding(
+                                  padding: EdgeInsets.only(left: 40),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _getLabelText(index),
+                                        style: TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily:
+                                              GoogleFonts.poppins().fontFamily,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),

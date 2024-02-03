@@ -33,9 +33,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 229, 240, 255),
+      backgroundColor: Color.fromARGB(255, 251, 248, 235),
       appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 229, 240, 255),
+        backgroundColor: Color.fromARGB(255, 251, 248, 235),
         title: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Text("Calculation History"),

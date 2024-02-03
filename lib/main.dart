@@ -70,12 +70,6 @@ import 'package:thesismob/frames/Materials/insulation/insulationPages.dart';
 import 'package:thesismob/frames/Materials/insulation/insulationDef.dart';
 import 'package:thesismob/frames/Materials/insulation/insulationSolution.dart';
 
-import 'package:thesismob/frames/Materials/SteelPlate/steelPlate.dart';
-import 'package:thesismob/frames/Materials/SteelPlate/steelPlatePages.dart';
-import 'package:thesismob/frames/Materials/SteelPlate/steelPlateDef.dart';
-import 'package:thesismob/frames/Materials/SteelPlate/SteelPlateOutput.dart';
-import 'package:thesismob/frames/Materials/SteelPlate/SteelPlateSol.dart';
-
 import 'package:thesismob/frames/Materials/ConjunctionBox/cb.dart';
 import 'package:thesismob/frames/Materials/ConjunctionBox/cbPages.dart';
 import 'package:thesismob/frames/Materials/ConjunctionBox/cbDef.dart';
@@ -188,12 +182,6 @@ class MyApp extends StatelessWidget {
         '/insulationPages': (context) => insulationpages(),
         '/insulationDef': (context) => insulationDef(),
         '/insulationSolution': (context) => insulationSol(),
-
-        '/steelPlate': (context) => steelPlate(),
-        '/steelPlatePages': (context) => SPpages(),
-        '/steelPlateDef': (context) => steelPlateDef(),
-        '/steelPlateSol': (context) => steelPlateSol(),
-        '/steelPlateOutput': (context) => steelPlateOutput(),
 
         '/cb': (context) => cBox(),
         '/cbPages': (context) => cBoxpages(),

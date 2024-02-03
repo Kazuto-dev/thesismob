@@ -39,6 +39,7 @@ class sinkState extends State<toilet> {
   late double totalcost = 0.0;
   String material = "Switch";
   bool isLoading = false;
+  late double area = 0.0;
 
   List<Map<String, dynamic>> calculationHistory = [];
   List<Map<String, dynamic>> calculationSummary = [];
@@ -348,8 +349,9 @@ class sinkState extends State<toilet> {
                       if (allValues == null || allValues.isEmpty) {
                         // Add the header row at row 1
                         print('Adding header row...');
-                        await sheet?.values.insertRow(
-                            1, ['Materials', 'Area(sqm)', 'Quantity']);
+                        await sheet?.values.insertRow(1,
+                            ['Materials', 'Area(sqm)', 'Quantity', 'Cost(₱)']);
+
                         print('Header row added!');
                       } else {
                         print(
@@ -357,8 +359,9 @@ class sinkState extends State<toilet> {
                       }
 
                       // Append the data row
-                      final index = await sheet?.values
-                          .appendRow([material, totalquantity]);
+                      final index = await sheet?.values.appendRow(
+                          [material, area, totalquantity, totalcost]);
+
                       print('Updated at $index');
 
                       ScaffoldMessenger.of(context).showSnackBar(

@@ -11,7 +11,7 @@ class instructions extends StatelessWidget {
     return Scaffold(
       // Set the background color here
       appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 229, 240, 255),
+        backgroundColor: Color.fromARGB(255, 251, 248, 235),
         title: Text("BuildQuantify Instructions"),
         centerTitle: true,
         leading: IconButton(
@@ -23,7 +23,7 @@ class instructions extends StatelessWidget {
       ),
 
       body: Container(
-        color: Color.fromARGB(255, 229, 240, 255),
+        color: Color.fromARGB(255, 251, 248, 235),
         child: SingleChildScrollView(
           padding: EdgeInsets.all(16.0),
           child: Column(

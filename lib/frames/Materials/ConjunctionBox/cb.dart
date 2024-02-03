@@ -36,15 +36,16 @@ class cBoxState extends State<cBox> {
   late double quantity = 0.0;
   late double totalcost = 0.0;
   late double totalquantity = 0.0;
-  String material = "Conjunction Box";
+  String material = "junction Box";
   bool isLoading = false;
+  late double area = 0.0;
 
   @override
   Widget build(BuildContext context) {
     final sheetInfo = Provider.of<SheetInfoProvider>(context).sheetInfo;
     return Scaffold(
       appBar: AppBar(
-        title: Text("Conjunction Box Calculator"),
+        title: Text("Junction Box Calculator"),
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
@@ -136,15 +137,15 @@ class cBoxState extends State<cBox> {
 
                       CalculationHistoryEntry entry = CalculationHistoryEntry(
                         date: DateTime.now(),
-                        calculatorType: "Conjunction Box Cost Calculator",
-                        material: "Conjunction Box",
+                        calculatorType: "junction Box Cost Calculator",
+                        material: "junction Box",
                         quantity: quantity.toString(),
                         area: area.toString(),
                         totalamount: "₱" + totalcost.toString(),
                       );
 
                       CalculationSummaryEntry summary = CalculationSummaryEntry(
-                        materialName: "Conjunction Box",
+                        materialName: "junction Box",
                         quantity: quantity.toString(),
                         totalamount: "₱" + totalcost.toString(),
                       );
@@ -310,8 +311,8 @@ class cBoxState extends State<cBox> {
                       if (allValues == null || allValues.isEmpty) {
                         // Add the header row at row 1
                         print('Adding header row...');
-                        await sheet?.values.insertRow(
-                            1, ['Materials', 'Area(sqm)', 'Quantity']);
+                        await sheet?.values.insertRow(1,
+                            ['Materials', 'Area(sqm)', 'Quantity', 'Cost(₱)']);
                         print('Header row added!');
                       } else {
                         print(
@@ -319,8 +320,8 @@ class cBoxState extends State<cBox> {
                       }
 
                       // Append the data row
-                      final index = await sheet?.values
-                          .appendRow([material, totalquantity]);
+                      final index = await sheet?.values.appendRow(
+                          [material, area, totalquantity, totalcost]);
                       print('Updated at $index');
 
                       ScaffoldMessenger.of(context).showSnackBar(
