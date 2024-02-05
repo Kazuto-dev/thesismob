@@ -10,14 +10,9 @@ class Solutions extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text("Solution"),
         centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pushNamed(context, '/struc');
-          },
-        ),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),

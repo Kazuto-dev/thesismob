@@ -49,11 +49,10 @@ class _FirstPageState extends State<FirstPage> {
   Widget build(BuildContext context) {
     Color _getButtonColor(int index) {
       List<Color> buttonColors = [
-        Color.fromARGB(255, 225, 160, 177),
-        Color.fromARGB(255, 239, 182, 171),
-        Color.fromARGB(255, 243, 223, 170),
-        Color.fromARGB(255, 178, 216, 226),
-        // Add more colors here for each index
+        Color.fromARGB(255, 255, 255, 255),
+        Color.fromARGB(255, 255, 255, 255),
+        Color.fromARGB(255, 255, 255, 255),
+        Color.fromARGB(255, 255, 255, 255),
       ];
 
       return buttonColors[index % buttonColors.length];
@@ -63,119 +62,134 @@ class _FirstPageState extends State<FirstPage> {
         ? Scaffold(
             body: Center(
               child: Image.asset(
-                'lib/assets/logos/SLogo.png',
-                height: 100,
-                width: 100,
+                'lib/assets/logos/Logo2.png',
+                height: 200,
+                width: 200,
               ),
             ),
           )
         : Scaffold(
-            appBar: AppBar(
-              backgroundColor: Color.fromARGB(255, 251, 248, 235),
-              leading: IconButton(
-                icon: Icon(Icons.history, size: 30),
-                onPressed: () {
-                  Navigator.pushNamed(context, '/history');
-                },
-              ),
-              actions: [
-                IconButton(
-                  icon: Icon(Icons.summarize, size: 30),
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/summary');
-                  },
+            body: Stack(
+              children: [
+                Image.asset(
+                  'lib/assets/images/BG1.png',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
                 ),
-              ],
-              centerTitle: true,
-            ),
-            body: Container(
-              padding: EdgeInsets.only(top: 0), // Add bottom padding here
-              color: Color.fromARGB(
-                  255, 251, 248, 235), // Set the background color here
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    child: Column(
-                      children: [
-                        Image.asset(
-                          'lib/assets/logos/Logo2.png',
-                          height: 50,
-                          width: 250,
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(bottom: 20),
-                          child: Text(
-                            "Building Precision, Calculation one at a Time",
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 16,
-                              fontFamily: GoogleFonts.poppins().fontFamily,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
+                Positioned(
+                  top: 30.0,
+                  right: 5.0,
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.lightbulb,
+                      color: Colors.white,
+                      size: 35.0,
                     ),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/instructions');
+                    },
                   ),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: imagePaths.length,
-                      itemBuilder: (context, index) => InkWell(
-                        onTap: () {
-                          switch (index) {
-                            case 0:
-                              Navigator.pushNamed(context, '/struc');
-                              break;
-                            case 1:
-                              Navigator.pushNamed(context, '/arch');
-                              break;
-                            case 2:
-                              Navigator.pushNamed(context, '/elec');
-                              break;
-                            case 3:
-                              Navigator.pushNamed(context, '/plumb');
-                              break;
-                          }
-                        },
-                        child: Container(
-                          margin:
-                              EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: _getButtonColor(index),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Row(
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 90.0),
+                  child: Container(
+                    color: Color.fromARGB(255, 251, 248, 235).withOpacity(
+                        0.0), // Set the background color here with opacity
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          child: Column(
                             children: [
-                              Expanded(
-                                flex: 1,
-                                child: Container(
-                                  decoration: BoxDecoration(),
-                                  child: Padding(
-                                    padding:
-                                        EdgeInsets.all(15), // Add padding here
-                                    child: Image.asset(
-                                      imagePaths[index],
-                                      height:
-                                          120, // Adjust the height as desired
-                                      width: 100, // Adjust the width as desired
-                                    ),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2.0),
+                                child: Image.asset(
+                                  'lib/assets/images/BQ2.png',
+                                  height: 120,
+                                  width: 350,
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(bottom: 20),
+                                child: Text(
+                                  "Building Precision,\n Calculation one at a Time",
+                                  textAlign: TextAlign
+                                      .center, // Add text alignment here
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 16,
+                                    fontFamily:
+                                        GoogleFonts.poppins().fontFamily,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ),
-                              Expanded(
-                                flex: 2,
-                                child: Padding(
-                                  padding: EdgeInsets.only(left: 40),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.only(left: 15.0, right: 15.0),
+                            child: GridView.builder(
+                              itemCount: imagePaths.length,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 10.0,
+                                mainAxisSpacing: 10.0,
+                              ),
+                              itemBuilder: (context, index) => InkWell(
+                                onTap: () {
+                                  switch (index) {
+                                    case 0:
+                                      Navigator.pushNamed(
+                                          context, '/strucPages');
+                                      break;
+                                    case 1:
+                                      Navigator.pushNamed(
+                                          context, '/archPages');
+                                      break;
+                                    case 2:
+                                      Navigator.pushNamed(
+                                          context, '/elecPages');
+                                      break;
+                                    case 3:
+                                      Navigator.pushNamed(
+                                          context, '/plumbPages');
+                                      break;
+                                  }
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.all(
+                                      10.0), // Add padding to all sides
+                                  decoration: BoxDecoration(
+                                    color: _getButtonColor(index),
+                                    borderRadius: BorderRadius.circular(15),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.withOpacity(0.5),
+                                        spreadRadius: 2,
+                                        blurRadius: 5,
+                                        offset: Offset(
+                                            0, 3), // changes position of shadow
+                                      ),
+                                    ],
+                                  ),
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
                                     children: [
+                                      Image.asset(
+                                        imagePaths[index],
+                                        height: 120,
+                                        width: 80,
+                                      ),
+                                      SizedBox(height: 10),
                                       Text(
                                         _getLabelText(index),
                                         style: TextStyle(
-                                          fontSize: 22,
+                                          fontSize: 16,
                                           fontWeight: FontWeight.bold,
                                           fontFamily:
                                               GoogleFonts.poppins().fontFamily,
@@ -185,14 +199,14 @@ class _FirstPageState extends State<FirstPage> {
                                   ),
                                 ),
                               ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
   }

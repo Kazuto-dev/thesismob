@@ -111,7 +111,7 @@ class MySocketState extends State<MySocket> {
                         }).toList(),
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: "Switch Type",
+                          labelText: "Socket Type",
                         ),
                       ),
                     ),

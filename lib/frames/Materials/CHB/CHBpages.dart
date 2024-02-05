@@ -117,35 +117,38 @@ class _PagesState extends State<pages> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: pages[_selectedIndex],
-      bottomNavigationBar: Container(
-        color: Color.fromARGB(255, 251, 248, 235),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 25.0,
-            vertical: 5.0,
-          ),
-          child: GNav(
-            backgroundColor: Color.fromARGB(255, 251, 248, 235),
-            color: Color.fromARGB(255, 39, 39, 39),
-            activeColor: const Color.fromARGB(255, 71, 71, 71),
-            gap: 8,
-            selectedIndex: _selectedIndex,
-            onTabChange: _navigateBot,
-            padding: EdgeInsets.all(16),
-            tabs: [
-              GButton(
-                icon: Icons.home,
-                iconSize: 30,
-              ),
-              GButton(
-                icon: Icons.article,
-                iconSize: 30,
-              ),
-              GButton(
-                icon: Icons.lightbulb,
-                iconSize: 30,
-              ),
-            ],
+      bottomNavigationBar: Material(
+        elevation: 8, // Set the elevation value as needed
+        child: Container(
+          color: Color.fromARGB(255, 251, 248, 235),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 25.0,
+              vertical: 5.0,
+            ),
+            child: GNav(
+              backgroundColor: Color.fromARGB(255, 251, 248, 235),
+              color: Color.fromARGB(255, 39, 39, 39),
+              activeColor: const Color.fromARGB(255, 71, 71, 71),
+              gap: 8,
+              selectedIndex: _selectedIndex,
+              onTabChange: _navigateBot,
+              padding: EdgeInsets.all(16),
+              tabs: [
+                GButton(
+                  icon: Icons.home,
+                  iconSize: 30,
+                ),
+                GButton(
+                  icon: Icons.article,
+                  iconSize: 30,
+                ),
+                GButton(
+                  icon: Icons.lightbulb,
+                  iconSize: 30,
+                ),
+              ],
+            ),
           ),
         ),
       ),

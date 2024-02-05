@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:thesismob/frames/Mains/summaryClass.dart';
 import 'package:thesismob/frames/Mains/summaryHistory.dart';
 
@@ -45,24 +46,54 @@ class _SummaryState extends State<Summary> {
   Widget build(BuildContext context) {
     return _isLoading
         ? Scaffold(
-            backgroundColor: Color.fromARGB(255, 229, 240, 255),
+            backgroundColor: Color.fromARGB(255, 255, 255, 255),
             body: Center(
               child: Image.asset(
-                'lib/assets/logos/SLogo.png',
-                height: 100,
-                width: 100,
+                'lib/assets/logos/Logo2.png',
+                height: 200,
+                width: 200,
               ),
             ),
           )
         : Scaffold(
             backgroundColor: Color.fromARGB(255, 229, 240, 255),
             appBar: AppBar(
-              backgroundColor: Color.fromARGB(255, 229, 240, 255),
+              automaticallyImplyLeading: false,
+              flexibleSpace: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color.fromARGB(255, 255, 189, 32),
+                      Color.fromARGB(255, 221, 115, 2),
+                    ],
+                  ),
+                ),
+              ),
               title: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text("Calculation Summary"),
+                padding: EdgeInsets.only(top: 30.0),
+                child: Text(
+                  "Calculation Summary",
+                  style: TextStyle(
+                    color: const Color.fromARGB(255, 241, 240, 240),
+                    fontSize: 22,
+                    fontFamily: GoogleFonts.poppins().fontFamily,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
               centerTitle: true,
+              bottom: PreferredSize(
+                preferredSize:
+                    Size.fromHeight(30.0), // Set your preferred height
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Add more widgets if needed
+                  ],
+                ),
+              ),
             ),
             body: SingleChildScrollView(
               scrollDirection: Axis.vertical, // Enable vertical scrolling

@@ -11,117 +11,179 @@ List<String> plumbingMaterials = [
 ];
 
 // ignore: camel_case_types
-class plumbing extends StatelessWidget {
+class plumbing extends StatefulWidget {
   const plumbing({Key? key});
+
+  @override
+  State<plumbing> createState() => _plumbingState();
+}
+
+class _plumbingState extends State<plumbing> {
+  bool _isLoading = true;
+  void initState() {
+    super.initState();
+    _startLoadingTimer();
+  }
+
+  void _startLoadingTimer() {
+    Future.delayed(Duration(seconds: 1), () {
+      setState(() {
+        _isLoading = false;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     List<String> plumbingMaterialImages = [
-      'lib/assets/images/pipes.png',
-      'lib/assets/images/sink.png',
+      'lib/assets/images/Pipes.png',
+      'lib/assets/images/Sink.png',
       'lib/assets/images/toilet.png',
-      'lib/assets/images/faucet.png',
+      'lib/assets/images/Faucet.png',
     ];
 
     Color _getButtonColor(int index) {
       List<Color> buttonColors = [
-        Color.fromARGB(255, 225, 160, 177),
-        Color.fromARGB(255, 239, 182, 171),
-        Color.fromARGB(255, 243, 223, 170),
-        Color.fromARGB(255, 178, 216, 226),
+        Color.fromARGB(255, 255, 255, 255),
+        Color.fromARGB(255, 255, 255, 255),
+        Color.fromARGB(255, 255, 255, 255),
+        Color.fromARGB(255, 255, 255, 255),
       ];
 
       return buttonColors[index % buttonColors.length];
     }
 
-    return Scaffold(
-      backgroundColor: Color.fromARGB(
-                  255, 251, 248, 235),
-      appBar: AppBar(
-        backgroundColor: Color.fromARGB(
-                  255, 251, 248, 235),
-        title: Padding(
-          padding: EdgeInsets.only(top: 30.0),
-          child: Text(
-            "Plumbing Calculators",
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 22,
-              fontFamily: GoogleFonts.poppins().fontFamily,
-              fontWeight: FontWeight.w600,
+    return _isLoading
+        ? Scaffold(
+            backgroundColor: Color.fromARGB(255, 251, 248, 235),
+            body: Center(
+              child: Image.asset(
+                'lib/assets/images/Plumbing.png',
+                height: 100,
+                width: 100,
+              ),
             ),
-          ),
-        ),
-        centerTitle: true,
-        leading: Padding(
-          padding: EdgeInsets.only(top: 25.0),
-          child: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.pushNamed(context, '/mainpage');
-            },
-          ),
-        ),
-      ),
-      body: Container(
-        child: Padding(
-          padding: EdgeInsets.only(top: 20.0),
-          child: ListView.builder(
-            itemCount: plumbingMaterials.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: Container(
-                  // ... your other settings ...
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (index == 0) {
-                        Navigator.pushNamed(context, '/pvcpages');
-                      } else if (index == 1) {
-                        Navigator.pushNamed(context, '/Sinkpages');
-                      } else if (index == 2) {
-                        Navigator.pushNamed(context, '/toiletpages');
-                      } else {
-                        Navigator.pushNamed(context, '/faucetpages');
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      primary: _getButtonColor(index),
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          plumbingMaterials[index],
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 20,
-                            fontFamily: GoogleFonts.poppins().fontFamily,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Image.asset(
-                          plumbingMaterialImages[index],
-                          width: 100,
-                          height: 100,
-                        ),
-                      ],
-                    ),
+          )
+        : Scaffold(
+            backgroundColor: Color.fromARGB(255, 251, 248, 235),
+            appBar: AppBar(
+              toolbarHeight: 150.0, // Adjust the height as needed
+              flexibleSpace: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color.fromARGB(255, 255, 189, 32),
+                      Color.fromARGB(255, 221, 115, 2),
+                    ],
                   ),
                 ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
+              ),
+              title: Column(
+                children: [
+                  Container(
+                    child: Image.asset(
+                      'lib/assets/logos/Z_Plumbing.png',
+                      height: 90,
+                      width: 90,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0),
+                    child: Text(
+                      'Plumbing Materials',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 255, 255, 255),
+                        fontSize: 22,
+                        fontFamily: GoogleFonts.poppins().fontFamily,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              centerTitle: true,
+              leading: Container(
+                child: IconButton(
+                  icon: Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/mainpage');
+                  },
+                ),
+              ),
+              bottom: PreferredSize(
+                preferredSize: Size.fromHeight(20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Add more widgets if needed
+                  ],
+                ),
+              ),
+            ),
+            body: Container(
+              child: Padding(
+                padding: EdgeInsets.only(top: 20.0),
+                child: ListView.builder(
+                  itemCount: plumbingMaterials.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 10),
+                      child: Container(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (index == 0) {
+                              Navigator.pushNamed(context, '/pvcPages');
+                            } else if (index == 1) {
+                              Navigator.pushNamed(context, '/sinkPages');
+                            } else if (index == 2) {
+                              Navigator.pushNamed(context, '/toiletPages');
+                            } else {
+                              Navigator.pushNamed(context, '/faucetPages');
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            primary: _getButtonColor(index),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 30, vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            elevation: 3,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                plumbingMaterials[index],
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 20,
+                                  fontFamily: GoogleFonts.poppins().fontFamily,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Image.asset(
+                                plumbingMaterialImages[index],
+                                width: 60,
+                                height: 60,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          );
   }
 }

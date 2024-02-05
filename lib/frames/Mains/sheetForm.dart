@@ -1,6 +1,7 @@
 // ignore_for_file: file_names, prefer_const_constructors, library_private_types_in_public_api, use_key_in_widget_constructors, deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:thesismob/frames/Mains/sheetProvider.dart';
 import 'package:thesismob/frames/Mains/sheetInfo.dart';
@@ -47,26 +48,41 @@ class _SheetInfoInputState extends State<SheetInfoInput> {
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 251, 248, 235),
       appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 251, 248, 235),
-        title: Center(child: Text('Sheet Form')),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pushNamed(context, '/mainpage');
-          },
-        ),
-        actions: [
-          // Any existing action buttons go here, if applicable
-          IconButton(
-            icon: Icon(Icons.key, size: 40),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => displayCreds()),
-              );
-            },
+        automaticallyImplyLeading: false,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color.fromARGB(255, 255, 189, 32),
+                Color.fromARGB(255, 221, 115, 2),
+              ],
+            ),
           ),
-        ],
+        ),
+        title: Padding(
+          padding: EdgeInsets.only(top: 30.0),
+          child: Text(
+            "Sheet Details",
+            style: TextStyle(
+              color: const Color.fromARGB(255, 241, 240, 240),
+              fontSize: 22,
+              fontFamily: GoogleFonts.poppins().fontFamily,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(30.0), // Set your preferred height
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Add more widgets if needed
+            ],
+          ),
+        ),
       ),
       // The rest of your Scaffold body goes here
 
@@ -91,12 +107,24 @@ class _SheetInfoInputState extends State<SheetInfoInput> {
                         controller: sheetIdController,
                         decoration:
                             InputDecoration(labelText: 'Enter Sheet ID'),
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 29, 29, 29),
+                          fontSize: 18,
+                          fontFamily: GoogleFonts.poppins().fontFamily,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       SizedBox(height: 20),
                       TextField(
                         controller: sheetNameController,
                         decoration:
                             InputDecoration(labelText: 'Enter Sheet Name'),
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 33, 33, 33),
+                          fontSize: 18,
+                          fontFamily: GoogleFonts.poppins().fontFamily,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       SizedBox(height: 20),
                       ElevatedButton(
@@ -132,25 +160,34 @@ class _SheetInfoInputState extends State<SheetInfoInput> {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          primary: Color.fromARGB(
-                              255, 0, 149, 0), // Background color
-                          onPrimary: Colors.white, // Text color
-                          padding: EdgeInsets.all(12), // Button padding
+                          primary: Color.fromRGBO(249, 155, 7, 1),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ), // Button shape with rounded corners
-                          minimumSize: Size(double.infinity,
-                              50), // Set minimum width and height
+                            borderRadius: BorderRadius.circular(50.0),
+                          ),
                         ),
-                        child: isLoading
-                            ? CircularProgressIndicator(
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
-                              )
-                            : Text(
-                                'Submit',
-                                style: TextStyle(fontSize: 18),
-                              ),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 100.0,
+                            vertical: 15.0,
+                          ),
+                          child: isLoading
+                              ? CircularProgressIndicator(
+                                  // Customize the appearance of the loading indicator if needed
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                )
+                              : Text(
+                                  'Submit',
+                                  style: TextStyle(
+                                    color: const Color.fromARGB(
+                                        255, 255, 255, 255),
+                                    fontSize: 20,
+                                    fontFamily:
+                                        GoogleFonts.poppins().fontFamily,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                        ),
                       ),
                     ],
                   ),
@@ -158,28 +195,6 @@ class _SheetInfoInputState extends State<SheetInfoInput> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class displayCreds extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    // Access the sheet info from the provider
-    final sheetInfo = Provider.of<SheetInfoProvider>(context).sheetInfo;
-
-    return Scaffold(
-      backgroundColor: Color.fromARGB(255, 251, 248, 235),
-      appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 251, 248, 235),
-        title: Center(child: Text('Credentials')),
-      ),
-      body: Center(
-        child: Text(
-          'Sheet ID: ${sheetInfo?.sheetId}\nSheet Name: ${sheetInfo?.sheetName}',
-          textAlign: TextAlign.center,
         ),
       ),
     );

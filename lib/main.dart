@@ -12,6 +12,10 @@ import 'package:thesismob/frames/Mains/DisplayHistory.dart';
 import 'package:thesismob/frames/Mains/TableSummary.dart';
 import 'package:thesismob/frames/Mains/summaryClass.dart';
 import 'package:thesismob/frames/Mains/summaryHistory.dart';
+import 'package:thesismob/frames/Mains/structuralpages.dart';
+import 'package:thesismob/frames/Mains/archpages.dart';
+import 'package:thesismob/frames/Mains/electricalPages.dart';
+import 'package:thesismob/frames/Mains/plumbingpages.dart';
 
 //Pages
 import 'package:thesismob/frames/Mains/MainMenu.dart';
@@ -22,6 +26,8 @@ import 'package:thesismob/frames/Materials/CHB/CHB.dart';
 import 'package:thesismob/frames/Materials/CHB/Solutions.dart';
 import 'package:thesismob/frames/Materials/CHB/DoF.dart';
 import 'package:thesismob/frames/Materials/CHB/Output.dart';
+import 'package:thesismob/frames/Materials/Carpet/CarpetDef.dart';
+import 'package:thesismob/frames/Materials/Carpet/CarpetSol.dart';
 
 import 'package:thesismob/frames/Materials/Tiles/DoFTiles.dart';
 import 'package:thesismob/frames/Materials/Tiles/SolutionTiles.dart';
@@ -102,6 +108,24 @@ import 'package:thesismob/frames/Materials/Faucet/faucetDef.dart';
 import 'package:thesismob/frames/Materials/Faucet/faucetSol.dart';
 import 'package:thesismob/frames/Materials/Faucet/faucetPages.dart';
 
+import 'package:thesismob/frames/Materials/carpet/Carpetpages.dart';
+import 'package:thesismob/frames/Materials/carpet/Carpet.dart';
+
+import 'package:thesismob/frames/Materials/Wallpaper/wallpaper.dart';
+import 'package:thesismob/frames/Materials/Wallpaper/wallpaperpages.dart';
+import 'package:thesismob/frames/Materials/Wallpaper/wallpaperDef.dart';
+import 'package:thesismob/frames/Materials/Wallpaper/wallpaperSol.dart';
+
+import 'package:thesismob/frames/Materials/ElectricalWires/wires.dart';
+import 'package:thesismob/frames/Materials/ElectricalWires/wiresPages.dart';
+import 'package:thesismob/frames/Materials/ElectricalWires/wiresSol.dart';
+import 'package:thesismob/frames/Materials/ElectricalWires/wiresDef.dart';
+
+import 'package:thesismob/frames/Materials/UtilityBox/box.dart';
+import 'package:thesismob/frames/Materials/UtilityBox/boxPages.dart';
+import 'package:thesismob/frames/Materials/UtilityBox/boxDef.dart';
+import 'package:thesismob/frames/Materials/UtilityBox/boxSol.dart';
+
 void main() {
   runApp(
     ChangeNotifierProvider(
@@ -132,9 +156,13 @@ class MyApp extends StatelessWidget {
         '/summary': (context) => Summary(),
 
         '/arch': (context) => architectural(),
+        '/archPages': (context) => archpages(),
         '/struc': (context) => structural(),
+        '/strucPages': (context) => structuralpages(),
         '/plumb': (context) => plumbing(),
+        '/plumbPages': (context) => plumPages(),
         '/elec': (context) => electrical(),
+        '/elecPages': (context) => elecPages(),
 
         '/CHBpages': (context) => pages(),
         '/chb': (context) => CHB(),
@@ -175,7 +203,7 @@ class MyApp extends StatelessWidget {
         '/pvc': (context) => pipe(),
         '/pvcDef': (context) => pipeDef(),
         '/pvcSolution': (context) => pipeSol(),
-        '/pvcpages': (context) => pvcpages(),
+        '/pvcPages': (context) => pvcpages(),
 
         '/insulation': (context) => insulation(),
         '/insulationOutput': (context) => insulationOutput(),
@@ -195,25 +223,45 @@ class MyApp extends StatelessWidget {
         '/switchSol': (context) => switchSol(),
         '/switchOutput': (context) => switchOutput(),
 
-        '/Sinkpages': (context) => sinkpages(),
+        '/sinkPages': (context) => sinkpages(),
         '/sink': (context) => sink(),
         '/sinkdef': (context) => sinkdef(),
         '/sinksol': (context) => sinksol(),
 
-        '/toiletpages': (context) => toiletpages(),
+        '/toiletPages': (context) => toiletpages(),
         '/toilet': (context) => toilet(),
         '/toiletdef': (context) => toiletdef(),
         '/toiletsol': (context) => toiletsol(),
 
-        '/socketpages': (context) => socketPages(),
+        '/socketPages': (context) => socketPages(),
         '/socket': (context) => MySocket(),
         '/socketdef': (context) => socketDef(),
         '/socketsol': (context) => socketSol(),
 
-        '/faucetpages': (context) => faucetPages(),
+        '/faucetPages': (context) => faucetPages(),
         '/faucet': (context) => Myfaucet(),
         '/faucetdef': (context) => faucetDef(),
         '/faucetsol': (context) => faucetSol(),
+
+        '/carpetPages': (context) => carpetPages(),
+        '/carpet': (context) => carpet(),
+        '/carpetDef': (context) => carpetDef(),
+        '/carpetSol': (context) => carpetSol(),
+
+        '/wallpaperPages': (context) => wallpaperPages(),
+        '/wallpaper': (context) => wallpaper(),
+        '/wallpaperDef': (context) => wallpaperDef(),
+        '/wallpaperSol': (context) => wallpaperSol(),
+
+        '/wiresPages': (context) => wiresPages(),
+        '/wires': (context) => wires(),
+        '/wiresDef': (context) => wiresDef(),
+        '/wiresSol': (context) => wiresSol(),
+
+        '/boxPages': (context) => boxPages(),
+        '/box': (context) => box(),
+        '/boxDef': (context) => boxDef(),
+        '/boxSol': (context) => boxSol(),
       },
     );
   }

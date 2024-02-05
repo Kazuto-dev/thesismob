@@ -9,6 +9,7 @@ class sinkdef extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Center(child: Text("Definition of Terms")),
         centerTitle: true,
         leading: IconButton(

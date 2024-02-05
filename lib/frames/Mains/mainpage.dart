@@ -5,6 +5,8 @@ import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:thesismob/frames/Mains/Instructions.dart';
 import 'package:thesismob/frames/Mains/MainMenu.dart';
 import 'package:thesismob/frames/Mains/sheetForm.dart';
+import 'package:thesismob/frames/Mains/tableSummary.dart';
+import 'package:thesismob/frames/Mains/displayHistory.dart';
 
 class mainpage extends StatefulWidget {
   const mainpage({Key? key}) : super(key: key);
@@ -24,44 +26,52 @@ class _pagesState extends State<mainpage> {
 
   final List<Widget> pages = [
     FirstPage(),
-    instructions(),
     SheetInfoInput(),
+    HistoryScreen(),
+    Summary(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: pages[_selectedIndex],
-      bottomNavigationBar: Container(
-        color: Color.fromARGB(255, 251, 248, 235),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 25.0,
-            vertical: 5.0,
-          ),
-          child: GNav(
-            backgroundColor: Color.fromARGB(255, 251, 248, 235),
-            color: Color.fromARGB(255, 39, 39, 39),
-            activeColor: const Color.fromARGB(255, 71, 71, 71),
-            tabBackgroundColor: Color.fromARGB(255, 214, 214, 214),
-            gap: 8,
-            selectedIndex: _selectedIndex,
-            onTabChange: _navigateBot,
-            padding: EdgeInsets.all(16),
-            tabs: [
-              GButton(
-                icon: Icons.home,
-                iconSize: 30,
-              ),
-              GButton(
-                icon: Icons.article,
-                iconSize: 30,
-              ),
-              GButton(
-                icon: Icons.lightbulb,
-                iconSize: 30,
-              ),
-            ],
+      bottomNavigationBar: Material(
+        elevation: 10, // Set the elevation to add a shadow
+        child: Container(
+          color: Color.fromARGB(255, 255, 255, 255),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 25.0,
+              vertical: 5.0,
+            ),
+            child: GNav(
+              backgroundColor: Color.fromARGB(255, 255, 255, 255),
+              color: Color.fromARGB(255, 39, 39, 39),
+              activeColor: const Color.fromARGB(255, 71, 71, 71),
+              tabBackgroundColor: Color.fromARGB(255, 214, 214, 214),
+              gap: 8,
+              selectedIndex: _selectedIndex,
+              onTabChange: _navigateBot,
+              padding: EdgeInsets.all(16),
+              tabs: [
+                GButton(
+                  icon: Icons.home_filled,
+                  iconSize: 30,
+                ),
+                GButton(
+                  icon: Icons.file_copy_rounded,
+                  iconSize: 30,
+                ),
+                GButton(
+                  icon: Icons.history,
+                  iconSize: 30,
+                ),
+                GButton(
+                  icon: Icons.view_list_rounded, // Added a new button icon
+                  iconSize: 30,
+                ),
+              ],
+            ),
           ),
         ),
       ),
