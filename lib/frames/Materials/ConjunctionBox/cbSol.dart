@@ -16,14 +16,44 @@ class cBoxSol extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            SizedBox(height: 16.0),
             Text(
-              "Junction Box",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              "Quantity Calculation (Qty):",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16.0),
             Text(
-              "A junction box is a container that houses electrical connections, such as wire splices, and is used to protect the connections from the elements. It is typically made of metal or plastic and is designed to be weatherproof. Conjunction boxes are used in a variety of applications, including outdoor lighting, irrigation systems, and electrical wiring for buildings. They are an essential component of any electrical system and are designed to provide a safe and secure environment for electrical connections.",
+              " The variable qty represents the quantity or number of shower units you have. This could be the total number of individual shower units you are purchasing or dealing with.",
               style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "Price per Piece (price per piece):",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              " price per piece represents the cost of one individual shower unit. It's the price you pay for each separate item.",
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "Shower Cost Calculation (shower cost):",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "The total cost of the shower units is obtained by multiplying the quantity (price per piece).",
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 8.0),
+            Text(
+              "cost=qty×price per piece",
+              style: TextStyle(
+                  fontSize: 16,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.blueAccent,
+                  fontWeight: FontWeight.bold),
             ),
           ],
         ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:thesismob/frames/Mains/calculationHistory.dart';
+import 'package:thesismob/frames/Mains/historyClass.dart';
 import 'package:thesismob/frames/Mains/summaryClass.dart';
 import 'package:thesismob/frames/Mains/summaryHistory.dart';
 
@@ -136,6 +138,14 @@ class _SummaryState extends State<Summary> {
                       ),
                       DataColumn(
                         label: Text(
+                          'Details',
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: const Color.fromARGB(255, 31, 31, 31)),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
                           'Delete',
                           style: TextStyle(
                               fontSize: 12,
@@ -148,6 +158,7 @@ class _SummaryState extends State<Summary> {
                         .entries
                         .map((entry) {
                       final index = entry.key;
+
                       final summaryReport = entry.value;
                       final isEven = index % 2 == 0;
                       final rowColor = isEven
@@ -188,6 +199,15 @@ class _SummaryState extends State<Summary> {
                                   fontWeight: FontWeight.normal,
                                   fontSize: 11,
                                   color: const Color.fromARGB(255, 33, 33, 33)),
+                            ),
+                          ),
+                          DataCell(
+                            // Show details in a modal on tap
+                            IconButton(
+                              icon: Icon(Icons.info, size: 18),
+                              onPressed: () {
+                                _showDetailsModal(context, summaryReport);
+                              },
                             ),
                           ),
                           DataCell(
@@ -260,4 +280,34 @@ class _SummaryState extends State<Summary> {
             ),
           );
   }
+}
+
+Future<void> _showDetailsModal(
+    BuildContext context, CalculationSummaryEntry summaryReport) async {
+  return showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Item Details'),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Material: ${summaryReport.materialName}'),
+            Text('Quantity: ${summaryReport.quantity}'),
+            Text('Costs: ${summaryReport.totalamount}'),
+            // Add more details as needed
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('Close'),
+          ),
+        ],
+      );
+    },
+  );
 }

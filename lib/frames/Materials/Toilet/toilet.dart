@@ -490,7 +490,7 @@ class sinkState extends State<toilet> {
                     // Call the calculate function
                     calculate();
                   },
-                  style: ElevatedButton.styleFrom(
+                 style: ElevatedButton.styleFrom(
                     primary: Color.fromRGBO(249, 155, 7, 1),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(50.0),
@@ -498,7 +498,7 @@ class sinkState extends State<toilet> {
                   ),
                   child: Padding(
                     padding: EdgeInsets.symmetric(
-                      horizontal: 110.0,
+                      horizontal: 100.0,
                       vertical: 15.0,
                     ),
                     child: isLoading

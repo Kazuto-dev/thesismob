@@ -38,39 +38,43 @@ class _pagesState extends State<structuralpages> {
     return Scaffold(
       body: pages[_selectedIndex],
       bottomNavigationBar: Container(
-        color: Color.fromARGB(255, 251, 248, 235),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 25.0,
-            vertical: 5.0,
-          ),
-          child: GNav(
-            backgroundColor: Color.fromARGB(255, 251, 248, 235),
-            color: Color.fromARGB(255, 39, 39, 39),
-            activeColor: const Color.fromARGB(255, 71, 71, 71),
-            tabBackgroundColor: Color.fromARGB(255, 214, 214, 214),
-            gap: 8,
-            selectedIndex: _selectedIndex,
-            onTabChange: _navigateBot,
-            padding: EdgeInsets.all(16),
-            tabs: [
-              GButton(
-                icon: Icons.build,
-                iconSize: 30,
-              ),
-              GButton(
-                icon: Icons.file_copy_rounded,
-                iconSize: 30,
-              ),
-              GButton(
-                icon: Icons.history,
-                iconSize: 30,
-              ),
-              GButton(
-                icon: Icons.view_list_rounded, // Added a new button icon
-                iconSize: 30,
-              ),
-            ],
+        child: Material(
+          elevation: 10,
+          color: Color.fromARGB(255, 255, 255, 255),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 25.0,
+              vertical: 5.0,
+            ),
+            // Added elevation of 10
+            child: GNav(
+              backgroundColor: Color.fromARGB(255, 255, 255, 255),
+              color: Color.fromARGB(255, 39, 39, 39),
+              activeColor: const Color.fromARGB(255, 71, 71, 71),
+              tabBackgroundColor: Color.fromARGB(255, 214, 214, 214),
+              gap: 8,
+              selectedIndex: _selectedIndex,
+              onTabChange: _navigateBot,
+              padding: EdgeInsets.all(16),
+              tabs: [
+                GButton(
+                  icon: Icons.build,
+                  iconSize: 30,
+                ),
+                GButton(
+                  icon: Icons.file_copy_rounded,
+                  iconSize: 30,
+                ),
+                GButton(
+                  icon: Icons.history,
+                  iconSize: 30,
+                ),
+                GButton(
+                  icon: Icons.view_list_rounded, // Added a new button icon
+                  iconSize: 30,
+                ),
+              ],
+            ),
           ),
         ),
       ),

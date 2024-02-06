@@ -8,6 +8,7 @@ List<String> plumbingMaterials = [
   "Sink",
   "Toilet",
   "Faucet",
+  "Shower",
 ];
 
 // ignore: camel_case_types
@@ -40,10 +41,12 @@ class _plumbingState extends State<plumbing> {
       'lib/assets/images/Sink.png',
       'lib/assets/images/toilet.png',
       'lib/assets/images/Faucet.png',
+      'lib/assets/images/shower.png',
     ];
 
     Color _getButtonColor(int index) {
       List<Color> buttonColors = [
+        Color.fromARGB(255, 255, 255, 255),
         Color.fromARGB(255, 255, 255, 255),
         Color.fromARGB(255, 255, 255, 255),
         Color.fromARGB(255, 255, 255, 255),
@@ -55,7 +58,7 @@ class _plumbingState extends State<plumbing> {
 
     return _isLoading
         ? Scaffold(
-            backgroundColor: Color.fromARGB(255, 251, 248, 235),
+            backgroundColor: Color.fromARGB(255, 255, 255, 255),
             body: Center(
               child: Image.asset(
                 'lib/assets/images/Plumbing.png',
@@ -65,7 +68,7 @@ class _plumbingState extends State<plumbing> {
             ),
           )
         : Scaffold(
-            backgroundColor: Color.fromARGB(255, 251, 248, 235),
+            backgroundColor: Color.fromARGB(255, 255, 255, 255),
             appBar: AppBar(
               toolbarHeight: 150.0, // Adjust the height as needed
               flexibleSpace: Container(
@@ -144,8 +147,10 @@ class _plumbingState extends State<plumbing> {
                               Navigator.pushNamed(context, '/sinkPages');
                             } else if (index == 2) {
                               Navigator.pushNamed(context, '/toiletPages');
-                            } else {
+                            } else if (index == 3) {
                               Navigator.pushNamed(context, '/faucetPages');
+                            } else if (index == 4) {
+                              Navigator.pushNamed(context, '/showerPages');
                             }
                           },
                           style: ElevatedButton.styleFrom(

@@ -33,8 +33,17 @@ class box extends StatefulWidget {
 }
 
 class _carpetState extends State<box> {
+  TextEditingController costController = TextEditingController();
+  TextEditingController quantityController = TextEditingController();
+  late double quantity = 0.0;
+  late double totalcost = 0.0;
+  late double totalquantity = 0.0;
+  String material = "utility Box";
+  bool isLoading = false;
+  late double area = 0.0;
   @override
   Widget build(BuildContext context) {
+    final sheetInfo = Provider.of<SheetInfoProvider>(context).sheetInfo;
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 251, 248, 235),
       appBar: AppBar(
@@ -78,6 +87,402 @@ class _carpetState extends State<box> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Add more widgets if needed
+            ],
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  Container(
+                    margin: EdgeInsets.symmetric(
+                      horizontal: 20.0,
+                      vertical: 20.0,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 228, 228, 228),
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    padding: EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 15.0),
+                          child: Center(
+                            child: Text(
+                              'Calculation Output',
+                              style: TextStyle(
+                                fontSize: 18.0,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: GoogleFonts.poppins().fontFamily,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.only(left: 70.0),
+                          margin: EdgeInsets.only(top: 0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 10.0),
+                                child: Container(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding: EdgeInsets.only(top: 15.0),
+                                        child: Text(
+                                          'Area:',
+                                          style: TextStyle(
+                                            color:
+                                                Color.fromARGB(255, 48, 48, 48),
+                                            fontSize: 18,
+                                            fontFamily: GoogleFonts.poppins()
+                                                .fontFamily,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: EdgeInsets.only(top: 15.0),
+                                        child: Text(
+                                          'Quantity:',
+                                          style: TextStyle(
+                                            color:
+                                                Color.fromARGB(255, 48, 48, 48),
+                                            fontSize: 18,
+                                            fontFamily: GoogleFonts.poppins()
+                                                .fontFamily,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: EdgeInsets.only(top: 15.0),
+                                        child: Text(
+                                          'Cost:',
+                                          style: TextStyle(
+                                            color:
+                                                Color.fromARGB(255, 48, 48, 48),
+                                            fontSize: 18,
+                                            fontFamily: GoogleFonts.poppins()
+                                                .fontFamily,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                    bottom: 10.0, right: 0),
+                                child: Container(
+                                  padding: EdgeInsets.only(right: 70.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding: EdgeInsets.only(top: 15.0),
+                                        child: Text(
+                                          this.area.toString() + 'sqm',
+                                          style: TextStyle(
+                                            color:
+                                                Color.fromARGB(255, 48, 48, 48),
+                                            fontSize: 18,
+                                            fontFamily: GoogleFonts.poppins()
+                                                .fontFamily,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: EdgeInsets.only(top: 15.0),
+                                        child: Text(
+                                          this.totalquantity == 1
+                                              ? '1pc'
+                                              : this.totalquantity.toString() +
+                                                  'pcs',
+                                          style: TextStyle(
+                                            color:
+                                                Color.fromARGB(255, 48, 48, 48),
+                                            fontSize: 18,
+                                            fontFamily: GoogleFonts.poppins()
+                                                .fontFamily,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: EdgeInsets.only(top: 15.0),
+                                        child: Text(
+                                          'PHP' + this.totalcost.toString(),
+                                          style: TextStyle(
+                                            color:
+                                                Color.fromARGB(255, 48, 48, 48),
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 30.0, top: 50.0),
+                    child: GestureDetector(
+                      onTap: () async {
+                        if (totalquantity == 0 || totalcost == 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  'Please insert data into the calculator!'),
+                              duration: Duration(seconds: 5),
+                            ),
+                          );
+                          return;
+                        }
+
+                        setState(() {
+                          isLoading = true;
+                        });
+                        try {
+                          final gsheets = GSheets(creds);
+                          final ss = await gsheets
+                              .spreadsheet('${sheetInfo?.sheetId}');
+                          final sheetName = '${sheetInfo?.sheetName}';
+
+                          // Check if the sheet exists
+                          bool sheetExists = false;
+                          for (var sheet in ss.sheets) {
+                            if (sheet.title == sheetName) {
+                              sheetExists = true;
+                              break;
+                            }
+                          }
+                          // Display an error snackbar if the sheet doesn't exist
+                          if (!sheetExists) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content:
+                                    Text('Sheet "$sheetName" does not exist!'),
+                                duration: Duration(seconds: 5),
+                              ),
+                            );
+
+                            // Print a message to the console
+                            print('Sheet "$sheetName" does not exist!');
+
+                            return; // Stop execution if the sheet doesn't exist
+                          }
+
+                          final sheet = ss.worksheetByTitle(sheetName);
+
+                          // Fetch all values in the sheet
+                          final allValues = await sheet?.values.allRows();
+
+                          // Check if the sheet is empty
+                          if (allValues == null || allValues.isEmpty) {
+                            // Add the header row at row 1
+                            print('Adding header row...');
+                            await sheet?.values.insertRow(1, [
+                              'Materials',
+                              'Area(sqm)',
+                              'Quantity',
+                              'Cost(₱)'
+                            ]);
+                            print('Header row added!');
+                          } else {
+                            print(
+                                'Sheet is not empty. Row count: ${allValues.length}');
+                          }
+
+                          // Append the data row
+                          final index = await sheet?.values.appendRow(
+                              [material, area, totalquantity, totalcost]);
+                          print('Updated at $index');
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Data added successfully!'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        } catch (e) {
+                          print('Error updating data: $e');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Data Insertion unsuccessful!'),
+                              duration: Duration(seconds: 5),
+                            ),
+                          );
+                          // Handle the error as needed
+                        }
+
+                        setState(() {
+                          isLoading = false;
+                        });
+                      },
+                      child: Image.asset(
+                        'lib/assets/logos/Sheet.png',
+                        width: 70.0,
+                        height: 70.0,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: quantityController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Quantity',
+                          hintText: "Enter Quantity",
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: costController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Price per Piece',
+                          hintText: "Enter Price (₱)",
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.only(top: 50.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    double calculate() {
+                      if (quantityController.text.isEmpty ||
+                          costController.text.isEmpty) {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text("Missing Input"),
+                              content: Text(
+                                  "Please fill in all the required fields."),
+                              actions: [
+                                TextButton(
+                                  child: Text("OK"),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                        return 0.0;
+                      }
+                      double cost = double.parse(costController.text);
+                      double area = 0.0;
+                      double quantity = double.parse(quantityController.text);
+
+                      // Round up to the nearest whole number for the CHB needed
+                      setState(() {
+                        // Round up to the nearest whole number for the CHB needed
+                        totalcost = quantity * cost;
+                        print("Total Cost: $totalcost");
+                        totalquantity = quantity;
+                        print("Quantity: $totalquantity");
+                      });
+
+                      CalculationHistoryEntry entry = CalculationHistoryEntry(
+                        date: DateTime.now(),
+                        calculatorType: "Utility Box Cost Calculator",
+                        material: "utility Box",
+                        quantity: quantity.toString(),
+                        area: area.toString(),
+                        totalamount: "₱" + totalcost.toString(),
+                      );
+
+                      CalculationSummaryEntry summary = CalculationSummaryEntry(
+                        materialName: "utility Box",
+                        quantity: quantity.toString(),
+                        totalamount: "₱" + totalcost.toString(),
+                      );
+
+                      CalculationHistory.addEntry(entry);
+                      CalculationSummary.addEntry(summary);
+
+                      // Navigate to the output page with the calculated values
+
+                      return quantity;
+                    }
+
+                    // Call the calculate function
+                    calculate();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    primary: Color.fromRGBO(249, 155, 7, 1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(50.0),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 100.0,
+                      vertical: 15.0,
+                    ),
+                    child: isLoading
+                        ? CircularProgressIndicator(
+                            // Customize the appearance of the loading indicator if needed
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          )
+                        : Text(
+                            'Calculate',
+                            style: TextStyle(
+                              color: const Color.fromARGB(255, 255, 255, 255),
+                              fontSize: 20,
+                              fontFamily: GoogleFonts.poppins().fontFamily,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+              // Rest of your original code for the calculator
             ],
           ),
         ),

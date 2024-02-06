@@ -543,7 +543,7 @@ class pipeState extends State<pipe> {
                   ),
                   child: Padding(
                     padding: EdgeInsets.symmetric(
-                      horizontal: 110.0,
+                      horizontal: 100.0,
                       vertical: 15.0,
                     ),
                     child: isLoading

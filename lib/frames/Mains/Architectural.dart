@@ -45,7 +45,7 @@ class _ArchitecturalState extends State<architectural> {
   Widget build(BuildContext context) {
     return _isLoading
         ? Scaffold(
-            backgroundColor: Color.fromARGB(255, 251, 248, 235),
+            backgroundColor: Color.fromARGB(255, 255, 255, 255),
             body: Center(
               child: Image.asset(
                 'lib/assets/images/Arch.png',
@@ -55,7 +55,7 @@ class _ArchitecturalState extends State<architectural> {
             ),
           )
         : Scaffold(
-            backgroundColor: Color.fromARGB(255, 251, 248, 235),
+            backgroundColor: Color.fromARGB(255, 255, 255, 255),
             appBar: AppBar(
               toolbarHeight: 150.0,
               flexibleSpace: Container(

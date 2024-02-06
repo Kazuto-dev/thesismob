@@ -46,7 +46,7 @@ class _SheetInfoInputState extends State<SheetInfoInput> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 251, 248, 235),
+      backgroundColor: Color.fromARGB(255, 255, 255, 255),
       appBar: AppBar(
         automaticallyImplyLeading: false,
         flexibleSpace: Container(
@@ -63,15 +63,6 @@ class _SheetInfoInputState extends State<SheetInfoInput> {
         ),
         title: Padding(
           padding: EdgeInsets.only(top: 30.0),
-          child: Text(
-            "Sheet Details",
-            style: TextStyle(
-              color: const Color.fromARGB(255, 241, 240, 240),
-              fontSize: 22,
-              fontFamily: GoogleFonts.poppins().fontFamily,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
         ),
         centerTitle: true,
         bottom: PreferredSize(
@@ -93,10 +84,19 @@ class _SheetInfoInputState extends State<SheetInfoInput> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.asset(
-                  'lib/assets/logos/icons8-google-sheets-300.png',
+                  'lib/assets/logos/Sheet.png',
                   width: 250,
                   height: 250,
                   fit: BoxFit.cover,
+                ),
+                Text(
+                  'Sheet Details',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 22,
+                    fontFamily: GoogleFonts.poppins().fontFamily,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(16.0),

@@ -6,6 +6,7 @@ class CalculationSummary {
   static List<CalculationSummaryEntry> summaries = [];
   static const String _summaryKey = 'calculation_summary';
 
+
   static void addEntry(CalculationSummaryEntry summary) {
     summaries.add(summary);
     saveSummary();

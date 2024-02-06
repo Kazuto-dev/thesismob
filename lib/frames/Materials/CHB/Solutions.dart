@@ -75,25 +75,6 @@ class Solutions extends StatelessWidget {
                   color: Colors.blueAccent,
                   fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 16.0),
-            Text(
-              "When it comes to estimating the mortar needed, a good rule of thumb is that three standard bags will typically cover 100 blocks. To calculate the number of such bags, you need to divide the number of blocks by 33.3:",
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 8.0),
-            Text(
-              "mortar bags estimation = number of blocks needed / 33.3",
-              style: TextStyle(
-                  fontSize: 16,
-                  fontStyle: FontStyle.italic,
-                  color: Colors.blueAccent,
-                  fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16.0),
-            Text(
-              "You can also use our cement calculator to find how much cement and sand you'll need if you decide to mix your own mortar for your concrete blocks.",
-              style: TextStyle(fontSize: 16),
-            ),
           ],
         ),
       ),

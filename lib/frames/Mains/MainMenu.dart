@@ -131,7 +131,7 @@ class _FirstPageState extends State<FirstPage> {
                         Expanded(
                           child: Padding(
                             padding:
-                                const EdgeInsets.only(left: 15.0, right: 15.0),
+                                const EdgeInsets.only(left: 10.0, right: 10.0),
                             child: GridView.builder(
                               itemCount: imagePaths.length,
                               gridDelegate:
@@ -185,7 +185,6 @@ class _FirstPageState extends State<FirstPage> {
                                         height: 120,
                                         width: 80,
                                       ),
-                                      SizedBox(height: 10),
                                       Text(
                                         _getLabelText(index),
                                         style: TextStyle(

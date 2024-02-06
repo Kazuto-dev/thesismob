@@ -11,11 +11,52 @@ class toiletsol extends StatelessWidget {
         automaticallyImplyLeading: false,
         title: Center(child: Text("Solutions")),
         centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pushNamed(context, '/plumb');
-          },
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 16.0),
+            Text(
+              "Quantity Calculation (Qty):",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              " The variable qty represents the quantity or number of shower units you have. This could be the total number of individual shower units you are purchasing or dealing with.",
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "Price per Piece (price per piece):",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              " price per piece represents the cost of one individual shower unit. It's the price you pay for each separate item.",
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "Shower Cost Calculation (shower cost):",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "The total cost of the shower units is obtained by multiplying the quantity (price per piece).",
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 8.0),
+            Text(
+              "cost=qty×price per piece",
+              style: TextStyle(
+                  fontSize: 16,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.blueAccent,
+                  fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
       ),
     );

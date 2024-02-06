@@ -45,6 +45,7 @@ class _pagesState extends State<mainpage> {
               vertical: 5.0,
             ),
             child: GNav(
+              
               backgroundColor: Color.fromARGB(255, 255, 255, 255),
               color: Color.fromARGB(255, 39, 39, 39),
               activeColor: const Color.fromARGB(255, 71, 71, 71),

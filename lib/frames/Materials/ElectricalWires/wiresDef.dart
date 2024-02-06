@@ -13,6 +13,43 @@ class wiresDef extends StatelessWidget {
         title: Text("Definition of Terms"),
         centerTitle: true,
       ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Electrical Linear Meter",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              " Electrical wires linear meter refers to the measurement of the length of electrical wires in linear meters. In this context, 'linear meter' indicates the straight-line distance or length of the electrical wire. The linear meter measurement for electrical wires is a practical way to estimate the quantity needed, plan installations, and manage material costs in various electrical and construction projects.",
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "Electrical Type",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "Electrical wire types refer to the various categories and classifications of wires used in electrical systems based on their composition, insulation, and intended applications. Different wire types are designed to meet specific requirements in terms of electrical conductivity, insulation properties, and environmental conditions.",
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "Price per roll",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "Price of electrical per roll.",
+              style: TextStyle(fontSize: 16),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

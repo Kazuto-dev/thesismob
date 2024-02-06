@@ -126,6 +126,11 @@ import 'package:thesismob/frames/Materials/UtilityBox/boxPages.dart';
 import 'package:thesismob/frames/Materials/UtilityBox/boxDef.dart';
 import 'package:thesismob/frames/Materials/UtilityBox/boxSol.dart';
 
+import 'package:thesismob/frames/Materials/shower/shower.dart';
+import 'package:thesismob/frames/Materials/shower/showerDef.dart';
+import 'package:thesismob/frames/Materials/shower/showerPages.dart';
+import 'package:thesismob/frames/Materials/shower/showerSol.dart';
+
 void main() {
   runApp(
     ChangeNotifierProvider(
@@ -262,6 +267,11 @@ class MyApp extends StatelessWidget {
         '/box': (context) => box(),
         '/boxDef': (context) => boxDef(),
         '/boxSol': (context) => boxSol(),
+
+        '/showerPages': (context) => showerPages(),
+        '/shower': (context) => shower(),
+        '/showerDef': (context) => showerdef(),
+        '/showerSol': (context) => showersol(),
       },
     );
   }

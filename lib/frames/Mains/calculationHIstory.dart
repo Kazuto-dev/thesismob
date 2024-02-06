@@ -15,6 +15,9 @@ class CalculationHistoryEntry {
     required this.totalamount,
   });
 
+  get value => null;
+
+  get key => null;
 
   Map<String, dynamic> toJson() {
     return {
