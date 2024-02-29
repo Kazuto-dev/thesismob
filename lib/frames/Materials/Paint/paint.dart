@@ -59,7 +59,7 @@ class _paintState extends State<paint> {
   Widget build(BuildContext context) {
     final sheetInfo = Provider.of<SheetInfoProvider>(context).sheetInfo;
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 251, 248, 235),
+      backgroundColor: Color.fromARGB(255, 255, 255, 255),
       appBar: AppBar(
         flexibleSpace: Container(
           decoration: BoxDecoration(

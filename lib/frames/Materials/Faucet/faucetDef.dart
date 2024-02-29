@@ -46,6 +46,15 @@ class faucetDef extends StatelessWidget {
               "Price of faucet fixture or accessory per piece.",
               style: TextStyle(fontSize: 16),
             ),
+            Text(
+              "Reference:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "https://shop.wilcon.com.ph/faucet-fixture",
+              style: TextStyle(fontSize: 16),
+            ),
           ],
         ),
       ),

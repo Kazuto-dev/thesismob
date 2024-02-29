@@ -58,7 +58,7 @@ class _SummaryState extends State<Summary> {
             ),
           )
         : Scaffold(
-            backgroundColor: Color.fromARGB(255, 229, 240, 255),
+            backgroundColor: Color.fromARGB(255, 255, 255, 255),
             appBar: AppBar(
               automaticallyImplyLeading: false,
               flexibleSpace: Container(
@@ -105,7 +105,7 @@ class _SummaryState extends State<Summary> {
                 child: Center(
                   child: DataTable(
                     headingRowColor: MaterialStateColor.resolveWith(
-                        (states) => Color.fromARGB(128, 158, 158, 158)),
+                        (states) => Color.fromARGB(255, 255, 206, 19)),
                     columns: <DataColumn>[
                       DataColumn(
                         label: Text(
@@ -162,8 +162,8 @@ class _SummaryState extends State<Summary> {
                       final summaryReport = entry.value;
                       final isEven = index % 2 == 0;
                       final rowColor = isEven
-                          ? Color.fromARGB(255, 249, 249, 249)
-                          : Color.fromARGB(255, 242, 242, 242);
+                          ? Color.fromARGB(255, 235, 235, 235)
+                          : Color.fromARGB(255, 255, 255, 255);
                       final textStyle = TextStyle(
                           fontSize: 10,
                           color: isEven
@@ -265,7 +265,7 @@ class _SummaryState extends State<Summary> {
             ),
             bottomNavigationBar: Container(
               padding: EdgeInsets.all(16.0),
-              color: Colors.blueGrey,
+              color: const Color.fromARGB(255, 252, 181, 6),
               child: Text(
                 'Total Cost: ₱${totalCost.toStringAsFixed(2).replaceAllMapped(
                       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),

@@ -39,12 +39,26 @@ class wiresDef extends StatelessWidget {
             ),
             SizedBox(height: 16.0),
             Text(
-              "Price per roll",
+              "Price per lenght",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16.0),
             Text(
-              "Price of electrical per roll.",
+              "Price of electrical per length.",
+              style: TextStyle(fontSize: 16),
+            ),
+            Text(
+              "Reference:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "https://www.askmediy.com/electrical-wire-size-calculator/",
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "https://www.affordablecebu.com/load/technology/list_of_common_types_of_wires_in_the_philippines/7-1-0-30112",
               style: TextStyle(fontSize: 16),
             ),
           ],

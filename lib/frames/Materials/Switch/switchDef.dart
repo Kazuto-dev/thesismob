@@ -46,6 +46,15 @@ class switchDef extends StatelessWidget {
               "Price of switch per piece",
               style: TextStyle(fontSize: 16),
             ),
+            Text(
+              "Reference:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "https://jgsuperstore.com/products/omni-10a-250v-surface-convenience-outlet-for-desktop-office-and-home-electronics-1-gang-2-gang-3-gang-4-gang-wso-00",
+              style: TextStyle(fontSize: 16),
+            ),
           ],
         ),
       ),

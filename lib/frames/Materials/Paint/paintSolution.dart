@@ -44,44 +44,6 @@ class paintSol extends StatelessWidget {
             ),
             SizedBox(height: 16.0),
             Text(
-              "Door dimensions:",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16.0),
-            Text(
-              "can be left as default, with the total door area automatically calculated once the number of doors is entered.",
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 8.0),
-            Text(
-              "door = door size x No. of door",
-              style: TextStyle(
-                  fontSize: 16,
-                  fontStyle: FontStyle.italic,
-                  color: Colors.blueAccent,
-                  fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16.0),
-            Text(
-              "Windows:",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16.0),
-            Text(
-              "default, and if there are variations in window sizes.",
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 8.0),
-            Text(
-              "window = window size x No. of window",
-              style: TextStyle(
-                  fontSize: 16,
-                  fontStyle: FontStyle.italic,
-                  color: Colors.blueAccent,
-                  fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16.0),
-            Text(
               "Coat:",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
@@ -102,7 +64,7 @@ class paintSol extends StatelessWidget {
             ),
             SizedBox(height: 8.0),
             Text(
-              "paint = (Area x No. of coat) - area of the window and doors)/ by the coverage of the paint",
+              "paint = (Area x No. of coat)/ by the coverage of the paint",
               style: TextStyle(
                   fontSize: 16,
                   fontStyle: FontStyle.italic,

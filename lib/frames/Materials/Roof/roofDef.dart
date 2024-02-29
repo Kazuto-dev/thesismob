@@ -88,6 +88,25 @@ class roofDef extends StatelessWidget {
               " Price input of roof sheet per piece.",
               style: TextStyle(fontSize: 16),
             ),
+            Text(
+              "Reference:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "https://www.alphasteel.ph/rib-type-roof/",
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "https://steelcaretrading.com/product/corrugated-roof-panel/",
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "https://www.metalinkretail.com/products/corrugated-roof-prepainted",
+              style: TextStyle(fontSize: 16),
+            ),
           ],
         ),
       ),

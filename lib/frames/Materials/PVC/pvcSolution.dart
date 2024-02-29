@@ -14,7 +14,7 @@ class pipeSol extends StatelessWidget {
         title: Text("Solution"),
         centerTitle: true,
       ),
-        body: SingleChildScrollView(
+      body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,7 +68,7 @@ class pipeSol extends StatelessWidget {
             ),
             SizedBox(height: 8.0),
             Text(
-              "cost = qty * price per roll",
+              "cost = qty * price per piece",
               style: TextStyle(
                   fontSize: 16,
                   fontStyle: FontStyle.italic,
@@ -77,7 +77,7 @@ class pipeSol extends StatelessWidget {
             ),
             SizedBox(height: 16.0),
             Text(
-              "Finally, the cost is calculated by multiplying the quantity (previously calculated) by the price per roll. This gives you the total cost of the material based on the specified dimensions, quantity, and unit price.",
+              "Finally, the cost is calculated by multiplying the quantity (previously calculated) by the price per piece. This gives you the total cost of the material based on the specified dimensions, quantity, and unit price.",
               style: TextStyle(fontSize: 16),
             ),
           ],

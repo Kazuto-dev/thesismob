@@ -88,6 +88,20 @@ class DoFTiles extends StatelessWidget {
               "Price input of tile per piece.",
               style: TextStyle(fontSize: 16),
             ),
+            Text(
+              "Reference:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "https://tilecenter.ph/tiles",
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "https://shop.wilcon.com.ph/tiles",
+              style: TextStyle(fontSize: 16),
+            ),
           ],
         ),
       ),

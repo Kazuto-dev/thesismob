@@ -49,12 +49,21 @@ class wallpaperDef extends StatelessWidget {
             ),
             SizedBox(height: 15.0),
             Text(
-              "Price per gallon",
+              "Price per roll",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8.0),
             Text(
-              "Price input of tile per gallon.",
+              "Price input of wallpaper per roll.",
+              style: TextStyle(fontSize: 16),
+            ),
+            Text(
+              "Reference:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "https://fancify.com.au/pages/wallpaper-calculation",
               style: TextStyle(fontSize: 16),
             ),
           ],

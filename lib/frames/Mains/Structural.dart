@@ -5,7 +5,6 @@ List<String> structuralMaterials = [
   "Concrete Hollow\nBlocks",
   "Plywood",
   "Foam Insulation",
-  "?",
 ];
 
 class structural extends StatefulWidget {
@@ -39,7 +38,6 @@ class _structuralState extends State<structural> {
         Color.fromARGB(255, 255, 255, 255),
         Color.fromARGB(255, 255, 255, 255),
         Color.fromARGB(255, 255, 255, 255),
-        Color.fromARGB(255, 255, 255, 255),
       ];
 
       return buttonColors[index % buttonColors.length];
@@ -49,7 +47,6 @@ class _structuralState extends State<structural> {
       'lib/assets/images/CHB.png',
       'lib/assets/images/Plywood.png',
       'lib/assets/images/Insulation.png',
-      'lib/assets/images/Struc.png',
     ];
 
     return _isLoading
@@ -141,8 +138,6 @@ class _structuralState extends State<structural> {
                               Navigator.pushNamed(context, '/plywoodPages');
                             } else if (index == 2) {
                               Navigator.pushNamed(context, '/insulationPages');
-                            } else {
-                              Navigator.pushNamed(context, '/error');
                             }
                           },
                           style: ElevatedButton.styleFrom(

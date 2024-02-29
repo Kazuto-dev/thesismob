@@ -68,6 +68,15 @@ class bulbDef extends StatelessWidget {
               "Price input of light per bulb.",
               style: TextStyle(fontSize: 16),
             ),
+            Text(
+              "Reference:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "https://www.felcostore.ph/products/firefly-basic-led-a-bulb?_pos=1&_sid=4210c26e4&_ss=r",
+              style: TextStyle(fontSize: 16),
+            ),
           ],
         ),
       ),

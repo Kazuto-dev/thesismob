@@ -46,6 +46,20 @@ class sinkdef extends StatelessWidget {
               "Price of sink per piece.",
               style: TextStyle(fontSize: 16),
             ),
+            Text(
+              "Reference:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "https://shop.wilcon.com.ph/products/plumbing/sink.html?p=3",
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "https://citihardware.com/dasmarinas/kitchen/100625721-sink-bremen-zw-sbw0619-5045-sb-500x450x230-ss304-w-strainer.html",
+              style: TextStyle(fontSize: 16),
+            ),
           ],
         ),
       ),

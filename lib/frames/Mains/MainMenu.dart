@@ -92,7 +92,7 @@ class _FirstPageState extends State<FirstPage> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 90.0),
+                  padding: const EdgeInsets.only(top: 70.0),
                   child: Container(
                     color: Color.fromARGB(255, 251, 248, 235).withOpacity(
                         0.0), // Set the background color here with opacity
@@ -105,24 +105,9 @@ class _FirstPageState extends State<FirstPage> {
                               Padding(
                                 padding: const EdgeInsets.only(top: 2.0),
                                 child: Image.asset(
-                                  'lib/assets/images/BQ2.png',
-                                  height: 120,
+                                  'lib/assets/images/Official1.png',
+                                  height: 220,
                                   width: 350,
-                                ),
-                              ),
-                              Padding(
-                                padding: EdgeInsets.only(bottom: 20),
-                                child: Text(
-                                  "Building Precision,\n Calculation one at a Time",
-                                  textAlign: TextAlign
-                                      .center, // Add text alignment here
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 16,
-                                    fontFamily:
-                                        GoogleFonts.poppins().fontFamily,
-                                    fontWeight: FontWeight.w500,
-                                  ),
                                 ),
                               ),
                             ],

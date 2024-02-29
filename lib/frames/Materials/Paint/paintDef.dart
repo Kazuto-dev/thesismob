@@ -83,6 +83,16 @@ class paintDef extends StatelessWidget {
               "Price input of tile per gallon.",
               style: TextStyle(fontSize: 16),
             ),
+            SizedBox(height: 24.0), // Adjust the spacing as needed
+            Text(
+              "Reference:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.facebook.com%2FBoysenPaintsPhilippines%2Fposts%2Fnot-sure-how-many-gallons-of-paint-will-your-diy-painting-project-needone-can-av%2F3319103928138155%2F&psig=AOvVaw22JbO-8te3_l7hRxHyXO0p&ust=1707266675652000&source=images&cd=vfe&opi=89978449&ved=0CBMQjRxqFwoTCPCPz4--lYQDFQAAAAAdAAAAABAE",
+              style: TextStyle(fontSize: 16),
+            ),
           ],
         ),
       ),

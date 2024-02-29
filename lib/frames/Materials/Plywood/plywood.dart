@@ -453,6 +453,7 @@ class woodState extends State<wood> {
                             child: Text(
                               value,
                               style: TextStyle(
+                                fontSize: 13,
                                 fontFamily: GoogleFonts.poppins().fontFamily,
                                 color: Color.fromARGB(255, 41, 41,
                                     41), // Modify label text color here

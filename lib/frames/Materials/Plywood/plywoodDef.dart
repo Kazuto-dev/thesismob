@@ -77,6 +77,16 @@ class plywoodDef extends StatelessWidget {
               "Price input of CHB per piece.",
               style: TextStyle(fontSize: 16),
             ),
+            SizedBox(height: 24.0), // Adjust the spacing as needed
+            Text(
+              "Reference:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "https://www.theprojectestimate.com/plywood-price-list/",
+              style: TextStyle(fontSize: 16),
+            ),
           ],
         ),
       ),

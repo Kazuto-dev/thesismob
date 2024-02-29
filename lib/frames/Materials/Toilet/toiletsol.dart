@@ -24,7 +24,7 @@ class toiletsol extends StatelessWidget {
             ),
             SizedBox(height: 16.0),
             Text(
-              " The variable qty represents the quantity or number of shower units you have. This could be the total number of individual shower units you are purchasing or dealing with.",
+              " The variable qty represents the quantity or number of Toilet units you have. This could be the total number of individual Toilet units you are purchasing or dealing with.",
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 16.0),
@@ -34,17 +34,17 @@ class toiletsol extends StatelessWidget {
             ),
             SizedBox(height: 16.0),
             Text(
-              " price per piece represents the cost of one individual shower unit. It's the price you pay for each separate item.",
+              " price per piece represents the cost of one individual Toilet unit. It's the price you pay for each separate item.",
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 16.0),
             Text(
-              "Shower Cost Calculation (shower cost):",
+              "Toilet Cost Calculation (Toilet cost):",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16.0),
             Text(
-              "The total cost of the shower units is obtained by multiplying the quantity (price per piece).",
+              "The total cost of the Toilet units is obtained by multiplying the quantity (price per piece).",
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 8.0),

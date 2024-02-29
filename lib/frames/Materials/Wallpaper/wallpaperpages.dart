@@ -8,10 +8,10 @@ class wallpaperPages extends StatefulWidget {
   const wallpaperPages({Key? key}) : super(key: key);
 
   @override
-  State<wallpaperPages> createState() => _carpetPagesState();
+  State<wallpaperPages> createState() => _wallpaperPagesState();
 }
 
-class _carpetPagesState extends State<wallpaperPages> {
+class _wallpaperPagesState extends State<wallpaperPages> {
   int _selectedIndex = 0;
 
   void _navigateBot(int index) {

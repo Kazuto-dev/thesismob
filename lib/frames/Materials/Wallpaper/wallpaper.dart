@@ -29,10 +29,10 @@ class wallpaper extends StatefulWidget {
   const wallpaper({Key? key}) : super(key: key);
 
   @override
-  State<wallpaper> createState() => _carpetState();
+  State<wallpaper> createState() => _wallpaperState();
 }
 
-class _carpetState extends State<wallpaper> {
+class _wallpaperState extends State<wallpaper> {
   TextEditingController _lengthController = TextEditingController();
   TextEditingController _widthController = TextEditingController();
   TextEditingController _costController = TextEditingController();
@@ -465,7 +465,7 @@ class _carpetState extends State<wallpaper> {
                                   255), // Modify dropdown border color here
                             ),
                           ),
-                          labelText: "Carpet Sizes",
+                          labelText: "wallpaper Sizes",
                           labelStyle: TextStyle(
                             fontFamily: GoogleFonts.poppins().fontFamily,
                             color: Color.fromARGB(255, 41, 41,
@@ -519,7 +519,7 @@ class _carpetState extends State<wallpaper> {
                                   255), // Modify dropdown border color here
                             ),
                           ),
-                          labelText: "Carpet Contigency",
+                          labelText: "wallpaper Contigency",
                           labelStyle: TextStyle(
                             fontFamily: GoogleFonts.poppins().fontFamily,
                             color: Color.fromARGB(255, 41, 41,
@@ -674,10 +674,10 @@ class _carpetState extends State<wallpaper> {
                       setState(() {
                         area = length * width;
                         print("Area: $area");
-                        int carpetneeded = (area / wallpaperSize).ceil();
+                        int wallpaperneeded = (area / wallpaperSize).ceil();
                         int wastage =
-                            (carpetneeded * wastagePercentage).ceil().toInt();
-                        total = carpetneeded + wastage;
+                            (wallpaperneeded * wastagePercentage).ceil().toInt();
+                        total = wallpaperneeded + wastage;
                         print("Total tiles: $total");
                         totalcost = total * cost;
                         print("Total Cost: $totalcost");

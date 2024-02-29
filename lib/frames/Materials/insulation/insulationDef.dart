@@ -123,6 +123,16 @@ class insulationDef extends StatelessWidget {
               "Price of insulation material per roll.",
               style: TextStyle(fontSize: 16),
             ),
+            SizedBox(height: 24.0), // Adjust the spacing as needed
+            Text(
+              "Reference:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "https://www.ritemore.com/products/pe-foam-insulation?fbclid=IwAR31-rpqYZfO3BiIWzLUUOWgT5s7zqzAtGXmb-st2hNcXsqBHPE4nVwQFbg",
+              style: TextStyle(fontSize: 16),
+            ),
           ],
         ),
       ),

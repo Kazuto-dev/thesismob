@@ -81,6 +81,16 @@ class DoF extends StatelessWidget {
               "Price input of CHB per piece.",
               style: TextStyle(fontSize: 16),
             ),
+            SizedBox(height: 24.0), // Adjust the spacing as needed
+            Text(
+              "Reference:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "https://www.google.com/maps/uv?pb=!1s0x32fff3630267848b%3A0x9394e7120eb15b2c!3m1!7e131!4s!5sNEW%20ROCKS%20INC.!15sCgIgAQ&hl=en&imagekey=!1e10!2sAF1QipNO3DEL4l-e1igfzEg0dHT3CiGQT1uA1kL30b0C",
+              style: TextStyle(fontSize: 16),
+            ),
           ],
         ),
       ),

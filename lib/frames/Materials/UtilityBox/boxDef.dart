@@ -34,7 +34,16 @@ class boxDef extends StatelessWidget {
             ),
             SizedBox(height: 16.0),
             Text(
-              "Price per piece of junction box.",
+              "Price per piece of utility box.",
+              style: TextStyle(fontSize: 16),
+            ),
+            Text(
+              "Reference:",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              "https://shop.wilcon.com.ph/catalogsearch/result/?q=Utility%20Box",
               style: TextStyle(fontSize: 16),
             ),
           ],

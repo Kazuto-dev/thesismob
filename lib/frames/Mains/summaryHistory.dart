@@ -8,7 +8,7 @@ class CalculationSummaryEntry {
     required this.quantity,
     required this.totalamount, 
   });
-
+  
   Map<String, dynamic> toJson() {
     return {
       'materialName': materialName,
