@@ -1,59 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
+  <!-- Replaced by the value of `flutter build web --base-href`. -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="BuildQuantify estimates the quantity and cost of construction materials: blocks, plywood, paint, tiles, roofing, electrical and plumbing fixtures.">
+  <meta name="theme-color" content="#F59E0B">
 
-  <!-- iOS meta tags & icons -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="thesismob">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="BuildQuantify">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>thesismob</title>
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="manifest" href="manifest.json">
 
-  <script>
-    // The value below is injected by flutter build, do not touch.
-    const serviceWorkerVersion = null;
-  </script>
-  <!-- This script adds the flutter initialization JS code -->
-  <script src="flutter.js" defer></script>
+  <title>BuildQuantify</title>
+
+  <style>
+    html, body { margin: 0; height: 100%; background: #FFFBF5; }
+    #loader {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+      font: 600 18px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: #3B2A0E;
+      transition: opacity 200ms ease-out;
+    }
+    #loader .spinner {
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 4px solid #FDE7B5; border-top-color: #B45309;
+      animation: spin 900ms linear infinite;
+    }
+    #loader.done { opacity: 0; pointer-events: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      #loader .spinner { animation-duration: 2400ms; }
+    }
+  </style>
 </head>
 <body>
+  <div id="loader" role="status" aria-live="polite">
+    <div class="spinner" aria-hidden="true"></div>
+    <span>Loading BuildQuantify…</span>
+  </div>
+  <noscript>BuildQuantify needs JavaScript enabled to run.</noscript>
+
   <script>
-    window.addEventListener('load', function(ev) {
-      // Download main.dart.js
-      _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
-        },
-        onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
-            appRunner.runApp();
-          });
-        }
-      });
+    window.addEventListener('flutter-first-frame', function () {
+      var loader = document.getElementById('loader');
+      loader.classList.add('done');
+      setTimeout(function () { loader.remove(); }, 250);
     });
   </script>
+  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

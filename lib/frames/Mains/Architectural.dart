@@ -132,7 +132,7 @@ class _ArchitecturalState extends State<architectural> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        primary: Color.fromARGB(255, 255, 255, 255),
+                        backgroundColor: Color.fromARGB(255, 255, 255, 255),
                         padding:
                             EdgeInsets.symmetric(horizontal: 30, vertical: 10),
                         shape: RoundedRectangleBorder(

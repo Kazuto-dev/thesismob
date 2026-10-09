@@ -1,12 +1,12 @@
 {
-    "name": "thesismob",
-    "short_name": "thesismob",
+    "name": "BuildQuantify",
+    "short_name": "BuildQuantify",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#FFFBF5",
+    "theme_color": "#F59E0B",
+    "description": "Estimate the quantity and cost of construction materials.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

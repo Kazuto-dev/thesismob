@@ -160,7 +160,7 @@ class _electricalState extends State<electrical> {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                            primary: _getButtonColor(index),
+                            backgroundColor: _getButtonColor(index),
                             padding: EdgeInsets.symmetric(
                                 horizontal: 30, vertical: 10),
                             shape: RoundedRectangleBorder(

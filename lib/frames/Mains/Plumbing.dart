@@ -154,7 +154,7 @@ class _plumbingState extends State<plumbing> {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                            primary: _getButtonColor(index),
+                            backgroundColor: _getButtonColor(index),
                             padding: EdgeInsets.symmetric(
                                 horizontal: 30, vertical: 10),
                             shape: RoundedRectangleBorder(

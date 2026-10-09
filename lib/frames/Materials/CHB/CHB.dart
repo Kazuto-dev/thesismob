@@ -629,7 +629,7 @@ class _CHBState extends State<CHB> {
                     calculate();
                   },
                   style: ElevatedButton.styleFrom(
-                    primary: Color.fromRGBO(249, 155, 7, 1),
+                    backgroundColor: Color.fromRGBO(249, 155, 7, 1),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(50.0),
                     ),
