@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:thesismob/frames/Materials/insulation/insulation.dart';
-import 'package:thesismob/frames/Materials/insulation/insulationOutput.dart';
 import 'package:thesismob/frames/Materials/insulation/insulationDef.dart';
 import 'package:thesismob/frames/Materials/insulation/insulationSolution.dart';
 

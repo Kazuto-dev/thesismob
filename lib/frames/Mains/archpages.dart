@@ -5,9 +5,9 @@ import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:thesismob/frames/Mains/Instructions.dart';
 import 'package:thesismob/frames/Mains/MainMenu.dart';
 import 'package:thesismob/frames/Mains/sheetForm.dart';
-import 'package:thesismob/frames/Mains/tableSummary.dart';
-import 'package:thesismob/frames/Mains/architectural.dart';
-import 'package:thesismob/frames/Mains/displayHistory.dart';
+import 'package:thesismob/frames/Mains/TableSummary.dart';
+import 'package:thesismob/frames/Mains/Architectural.dart';
+import 'package:thesismob/frames/Mains/DisplayHistory.dart';
 
 class archpages extends StatefulWidget {
   const archpages({Key? key}) : super(key: key);

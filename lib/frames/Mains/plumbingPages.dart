@@ -6,9 +6,9 @@ import 'package:thesismob/frames/Mains/Instructions.dart';
 import 'package:thesismob/frames/Mains/MainMenu.dart';
 import 'package:thesismob/frames/Mains/Plumbing.dart';
 import 'package:thesismob/frames/Mains/sheetForm.dart';
-import 'package:thesismob/frames/Mains/tableSummary.dart';
+import 'package:thesismob/frames/Mains/TableSummary.dart';
 import 'package:thesismob/frames/Mains/Electrical.dart';
-import 'package:thesismob/frames/Mains/displayHistory.dart';
+import 'package:thesismob/frames/Mains/DisplayHistory.dart';
 
 class plumPages extends StatefulWidget {
   const plumPages({Key? key}) : super(key: key);

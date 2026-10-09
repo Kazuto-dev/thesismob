@@ -12,7 +12,7 @@ List<String> architecturalMaterials = [
 List<String> structuralMaterialImages = [
   'lib/assets/images/Paint.png',
   'lib/assets/images/Tiles.png',
-  'lib/assets/images/Roof.png',
+  'lib/assets/images/roof.png',
   'lib/assets/images/Carpet.png',
   'lib/assets/images/Wallpaper.png',
 ];

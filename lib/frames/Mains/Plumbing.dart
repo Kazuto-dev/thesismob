@@ -37,10 +37,10 @@ class _plumbingState extends State<plumbing> {
   @override
   Widget build(BuildContext context) {
     List<String> plumbingMaterialImages = [
-      'lib/assets/images/Pipes.png',
-      'lib/assets/images/Sink.png',
+      'lib/assets/images/pipes.png',
+      'lib/assets/images/sink.png',
       'lib/assets/images/toilet.png',
-      'lib/assets/images/Faucet.png',
+      'lib/assets/images/faucet.png',
       'lib/assets/images/shower.png',
     ];
 

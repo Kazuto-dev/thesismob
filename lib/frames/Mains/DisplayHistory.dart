@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:thesismob/frames/Mains/calculationHistory.dart';
+import 'package:thesismob/frames/Mains/calculationHIstory.dart';
 import 'package:thesismob/frames/Mains/historyClass.dart';
 
 class HistoryScreen extends StatefulWidget {

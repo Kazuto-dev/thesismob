@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:thesismob/frames/Mains/calculationHistory.dart';
+import 'package:thesismob/frames/Mains/calculationHIstory.dart';
 
 class CalculationHistory {
   static List<CalculationHistoryEntry> history = [];

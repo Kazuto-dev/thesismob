@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:thesismob/frames/Materials/Plywood/plywood.dart';
 import 'package:thesismob/frames/Materials/Plywood/plywoodDef.dart';
-import 'package:thesismob/frames/Materials/Plywood/plywoodOutput.dart';
 import 'package:thesismob/frames/Materials/Plywood/PlywoodSolution.dart';
 
 class plywoodpages extends StatefulWidget {
@@ -66,7 +65,6 @@ class _pagesState extends State<plywoodpages> {
     wood(),
     plywoodDef(),
     plywoodSol(),
-    plywoodOutput(),
   ];
 
   void _openBottomDrawer() {
