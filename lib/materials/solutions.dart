@@ -7,7 +7,7 @@ const _contingency = InfoSection(
   'Contingency',
   'A contingency adds extra pieces for cutting waste and breakage. The extra '
       'is the chosen percentage of the base count, rounded up.',
-  formula: 'extra = ⌈base count × contingency⌉',
+  formula: 'extra = round up(base count × contingency)',
 );
 
 List<InfoSection> _perPiece(String items) => [
@@ -32,7 +32,7 @@ const Map<String, List<InfoSection>> materialSolutions = {
       'The face of a standard concrete hollow block is 40 cm × 20 cm, or '
           '0.08 m², whatever its thickness. That is 12.5 blocks per square '
           'metre. Divide the wall area by the block face and round up.',
-      formula: 'blocks = ⌈area ÷ 0.08⌉',
+      formula: 'blocks = round up(area ÷ 0.08)',
     ),
     _contingency,
     InfoSection(
@@ -51,7 +51,7 @@ const Map<String, List<InfoSection>> materialSolutions = {
       'Sheets needed',
       "A 4' × 8' sheet is 1.22 m × 2.44 m, or 2.97 m². Divide the area by "
           'the sheet area and round up, since plywood is sold by the sheet.',
-      formula: 'sheets = ⌈area ÷ 2.97⌉',
+      formula: 'sheets = round up(area ÷ 2.97)',
     ),
     _contingency,
     InfoSection(
@@ -71,7 +71,7 @@ const Map<String, List<InfoSection>> materialSolutions = {
       'A 1 m × 50 m roll covers 50 m². Divide the area by the roll coverage '
           'and round up. Thickness and type describe the product and do not '
           'change the number of rolls.',
-      formula: 'rolls = ⌈area ÷ 50⌉',
+      formula: 'rolls = round up(area ÷ 50)',
     ),
     InfoSection(
       'Cost',
@@ -98,7 +98,7 @@ const Map<String, List<InfoSection>> materialSolutions = {
       'Cans and cost',
       'Paint is sold in whole gallons, so the gallons are rounded up before '
           'multiplying by the price per gallon.',
-      formula: 'cost = ⌈gallons⌉ × price per gallon',
+      formula: 'cost = round up(gallons) × price per gallon',
     ),
   ],
   'tiles': [
@@ -111,7 +111,7 @@ const Map<String, List<InfoSection>> materialSolutions = {
       'Tiles needed',
       'Divide the area by the area of one tile, for example 30 cm × 30 cm = '
           '0.09 m². Round up, since tiles are not sold in fractions.',
-      formula: 'tiles = ⌈area ÷ tile area⌉',
+      formula: 'tiles = round up(area ÷ tile area)',
     ),
     _contingency,
     InfoSection(
@@ -130,7 +130,7 @@ const Map<String, List<InfoSection>> materialSolutions = {
     InfoSection(
       'Ribbed sheets',
       'Each ribbed sheet covers its full width times its length.',
-      formula: 'sheets = ⌈area ÷ (sheet width × sheet length)⌉',
+      formula: 'sheets = round up(area ÷ (sheet width × sheet length))',
     ),
     InfoSection(
       'Corrugated sheets',
@@ -139,7 +139,7 @@ const Map<String, List<InfoSection>> materialSolutions = {
           'full width. Lengthwise end laps are not included.',
       formula:
           'covered width = sheet width − 0.0762 m × corrugations\n'
-          'sheets = ⌈area ÷ (covered width × sheet length)⌉',
+          'sheets = round up(area ÷ (covered width × sheet length))',
     ),
     InfoSection(
       'Cost',
@@ -157,7 +157,7 @@ const Map<String, List<InfoSection>> materialSolutions = {
       'Carpets needed',
       'Divide the area by the size of one carpet, for example 1.6 m × 2.3 m '
           '= 3.68 m², and round up.',
-      formula: 'carpets = ⌈area ÷ carpet size⌉',
+      formula: 'carpets = round up(area ÷ carpet size)',
     ),
     _contingency,
     InfoSection(
@@ -175,7 +175,7 @@ const Map<String, List<InfoSection>> materialSolutions = {
     InfoSection(
       'Rolls needed',
       'Divide the wall area by the area one roll covers and round up.',
-      formula: 'rolls = ⌈area ÷ roll coverage⌉',
+      formula: 'rolls = round up(area ÷ roll coverage)',
     ),
     _contingency,
     InfoSection(

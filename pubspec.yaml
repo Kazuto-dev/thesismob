@@ -28,12 +28,30 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "lib/assets/images/allen.png"
+  image_path: "assets/launcher/allen.png"
 
 flutter:
   uses-material-design: true
 
   assets:
+    # Legacy screens; removed with them.
     - lib/assets/logos/
     - lib/assets/images/
     - lib/assets/inspic/
+    - assets/images/brand/
+    - assets/images/categories/
+    - assets/images/materials/
+    - assets/images/help/
+    - assets/fonts/poppins/OFL.txt
+
+  # Subset to Latin; the peso sign falls back to the bundled Roboto.
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/poppins/Poppins-Regular.ttf
+        - asset: assets/fonts/poppins/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/poppins/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/poppins/Poppins-Bold.ttf
+          weight: 700
