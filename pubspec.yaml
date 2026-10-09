@@ -12,12 +12,13 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^2.0.0
-  google_fonts: ^9.0.0
-  google_nav_bar: ^5.0.6
   http: ^1.1.0
   provider: ^6.1.1
   shared_preferences: ^2.2.2
   intl: ^0.20.3
+  go_router: ^18.0.2
+  url_launcher: ^6.3.3
+  material_ui: ^1.6.0
 
 dev_dependencies:
   flutter_test:
@@ -34,10 +35,6 @@ flutter:
   uses-material-design: true
 
   assets:
-    # Legacy screens; removed with them.
-    - lib/assets/logos/
-    - lib/assets/images/
-    - lib/assets/inspic/
     - assets/images/brand/
     - assets/images/categories/
     - assets/images/materials/

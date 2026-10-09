@@ -155,8 +155,9 @@ class SheetsExportService {
   String? _serverMessage(http.Response response) {
     try {
       final body = jsonDecode(response.body);
-      if (body is Map && body['error'] is String)
+      if (body is Map && body['error'] is String) {
         return body['error'] as String;
+      }
     } catch (_) {}
     return null;
   }

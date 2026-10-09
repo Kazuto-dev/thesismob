@@ -44,8 +44,9 @@ class EstimatesController extends ChangeNotifier {
       return _history.first;
     }
     _history.insert(0, estimate);
-    if (_history.length > historyLimit)
+    if (_history.length > historyLimit) {
       _history.removeRange(historyLimit, _history.length);
+    }
     _persistHistory();
     notifyListeners();
     return estimate;

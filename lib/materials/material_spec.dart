@@ -74,8 +74,9 @@ class NumberField {
     if (text.isEmpty) return 'Enter ${_article(label)}';
     final value = double.tryParse(text);
     if (value == null || !value.isFinite) return 'Enter a number, like 2.5';
-    if (integer && value != value.roundToDouble())
+    if (integer && value != value.roundToDouble()) {
       return 'Enter a whole number';
+    }
     if (value <= 0) return 'Must be more than 0';
     if (value > max) return 'Must be ${_formatLimit(max)} or less';
     return null;

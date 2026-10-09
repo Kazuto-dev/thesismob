@@ -110,7 +110,7 @@ class Estimate {
 
   static String newId(DateTime at) =>
       '${at.microsecondsSinceEpoch.toRadixString(36)}-'
-      '${_random.nextInt(1 << 32).toRadixString(36)}';
+      '${_random.nextInt(0x3fffffff).toRadixString(36)}';
 
   /// True when [other] came from the same calculator with the same inputs.
   bool sameCalculationAs(Estimate other) =>
