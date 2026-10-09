@@ -15,10 +15,33 @@ jobs:
           flutter-version: 3.47.7
           cache: true
       - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test
       # Linux is case-sensitive, so a mis-cased import fails here.
-      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter analyze
+      # Unit, widget and golden tests (goldens are generated on Linux).
       - run: flutter test
+      # The same pure-Dart tests compiled to JavaScript, where integers
+      # behave differently than on the VM.
+      - run: flutter test --platform chrome test/data test/materials test/state
       - run: flutter build web --release --no-web-resources-cdn
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: tool/smoke/package-lock.json
+      - name: Browser smoke test
+        working-directory: tool/smoke
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          python3 -m http.server 8090 --directory ../../build/web &
+          sleep 2
+          BASE_URL=http://127.0.0.1:8090/ node smoke.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: build/web
+          retention-days: 7
 
   sheets-proxy:
     runs-on: ubuntu-latest

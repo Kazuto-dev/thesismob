@@ -30,6 +30,9 @@ ThemeData buildTheme() {
   final base = ThemeData(
     colorScheme: scheme,
     fontFamily: 'Poppins',
+    // Poppins has no peso sign; Roboto (bundled on web, system on Android)
+    // draws it.
+    fontFamilyFallback: const ['Roboto'],
     scaffoldBackgroundColor: Brand.surface,
     // Keep 48 px touch targets on desktop browsers too.
     visualDensity: VisualDensity.standard,
