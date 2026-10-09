@@ -54,7 +54,9 @@ async function tap(page, predicate, description) {
   for (let i = 0; i < 20; i++) {
     const node = (await nodes(page)).find(predicate);
     if (node) {
-      await page.mouse.click(node.x + node.w / 2, node.y + node.h / 2);
+      // Text fields' nodes also cover their error message, so aim high.
+      const y = node.role === 'textbox' ? node.y + Math.min(node.h / 2, 24) : node.y + node.h / 2;
+      await page.mouse.click(node.x + node.w / 2, y);
       return true;
     }
     await page.waitForTimeout(250);
@@ -97,9 +99,20 @@ try {
   {
     const { context, page, errors } = await open(browser, viewports.phone, '#/category/structural/chb');
     const field = (label) => (n) => n.role === 'textbox' && n.label.startsWith(label);
+    // Flutter creates the DOM <input> only once a field has focus, so wait
+    // for it and confirm the text arrived before moving on.
     const fill = async (label, value) => {
-      await tap(page, field(label), label);
-      await page.keyboard.type(value);
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await tap(page, field(label), label);
+        await page
+          .waitForFunction(() => document.activeElement?.tagName === 'INPUT', null, { timeout: 3000 })
+          .catch(() => {});
+        await page.keyboard.press('Control+A');
+        await page.keyboard.press('Backspace');
+        await page.keyboard.type(value, { delay: 20 });
+        if ((await page.evaluate(() => document.activeElement?.value)) === value) return;
+      }
+      throw new Error(`could not type into ${label}`);
     };
 
     await tap(page, (n) => n.label === 'Calculate', 'Calculate');
