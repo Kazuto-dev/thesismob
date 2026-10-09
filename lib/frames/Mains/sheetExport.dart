@@ -17,7 +17,6 @@ Future<void> exportRowToSheet(
     rows: [row],
   );
   if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(result.message)),
-  );
+  ScaffoldMessenger.of(context)
+      .showSnackBar(SnackBar(content: Text(result.message)));
 }

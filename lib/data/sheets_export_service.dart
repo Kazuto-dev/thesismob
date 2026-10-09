@@ -34,8 +34,8 @@ class SheetsExportResult {
 ///     flutter build web --dart-define=SHEETS_PROXY_URL=https://...
 class SheetsExportService {
   SheetsExportService({http.Client? client, String? endpoint})
-      : _client = client ?? http.Client(),
-        endpoint = endpoint ?? const String.fromEnvironment('SHEETS_PROXY_URL');
+    : _client = client ?? http.Client(),
+      endpoint = endpoint ?? const String.fromEnvironment('SHEETS_PROXY_URL');
 
   /// Column headers written to an empty sheet. Unchanged from the original
   /// app so existing sheets keep lining up.
@@ -49,8 +49,9 @@ class SheetsExportService {
   );
 
   static final _spreadsheetIdPattern = RegExp(r'^[A-Za-z0-9_-]{20,128}$');
-  static final _spreadsheetUrlPattern =
-      RegExp(r'/spreadsheets/d/([A-Za-z0-9_-]+)');
+  static final _spreadsheetUrlPattern = RegExp(
+    r'/spreadsheets/d/([A-Za-z0-9_-]+)',
+  );
 
   final http.Client _client;
   final String endpoint;
@@ -154,7 +155,8 @@ class SheetsExportService {
   String? _serverMessage(http.Response response) {
     try {
       final body = jsonDecode(response.body);
-      if (body is Map && body['error'] is String) return body['error'] as String;
+      if (body is Map && body['error'] is String)
+        return body['error'] as String;
     } catch (_) {}
     return null;
   }

@@ -87,9 +87,8 @@ void main() {
         ['CHB', 30, 375, 9375],
       ];
       Future<SheetsExportStatus> statusFor(int code) async => (await _service(
-            code,
-          ).appendRows(spreadsheetId: _id, sheetName: 'Sheet1', rows: rows))
-              .status;
+        code,
+      ).appendRows(spreadsheetId: _id, sheetName: 'Sheet1', rows: rows)).status;
 
       expect(await statusFor(403), SheetsExportStatus.permissionDenied);
       expect(await statusFor(404), SheetsExportStatus.notFound);
