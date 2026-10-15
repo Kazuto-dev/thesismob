@@ -1,7 +1,7 @@
 import 'items.dart';
 
 // Paint, tiles, floor and wall coverings, doors and windows. Prices are
-// Metro Manila retail in pesos; see docs/calculations.md for sources.
+// Metro Manila retail in pesos; see docs/prices-and-costing.md for sources.
 
 /// Tile sizes sold in the Philippines, with the usual pieces per box and an
 /// estimated price per piece.

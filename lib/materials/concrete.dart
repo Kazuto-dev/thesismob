@@ -398,16 +398,19 @@ final slab = MaterialSpec(
       formula:
           'volume = length × width × thickness × (1 + waste)\n'
           'cement = round up(volume × bags per m³)\n'
-          'sand = volume × 0.5;  gravel = volume × 1.0',
+          'sand = volume × 0.5;  gravel = volume × 1.0, bought by the '
+          'half m³',
     ),
     InfoSection(
       'Bars',
       'Bars run both ways inside a cover of 40 mm on fill or 20 mm when '
-          'suspended. Runs shorter than 6 m are cut from 6 m bars; longer '
-          'runs are spliced.',
+          'suspended. Runs up to 6 m are cut whole from 6 m bars, as many '
+          'as fit, and the offcuts are not reused. Longer runs are spliced '
+          'with the chosen lap.',
       formula:
           'runs = round down((width − 2 × cover) ÷ spacing) + 1\n'
-          'bars = runs × run length ÷ 6 m, spliced with 40 d laps',
+          'run ≤ 6 m: bars = round up(runs ÷ round down(6 ÷ run length))\n'
+          'run > 6 m: bars = round up(runs × (run + laps) ÷ 6)',
     ),
     InfoSection(
       'Tie wire',
@@ -584,6 +587,15 @@ final footing = MaterialSpec(
           'larger bars, at 53 m per kg.',
       formula: 'tie wire = crossings × length per tie ÷ 53',
     ),
+    InfoSection(
+      'Side forms',
+      'When chosen, plywood lines the four sides of each footing, reused '
+          'the chosen number of times, with the column table\'s frame lumber '
+          'per sheet and 0.20 kg of nails per m².',
+      formula:
+          'form area = count × 2 × (length + width) × thickness\n'
+          'plywood = round up(form area ÷ 2.88 ÷ uses)',
+    ),
   ],
   references: const [
     'Max B. Fajardo Jr., Simplified Construction Estimate, Table 1-2',
@@ -672,6 +684,10 @@ final column = MaterialSpec(
     }
     final tieBars = stockBars(count * tiesEach, tieLength, 0);
     final crossings = count * tiesEach * perColumn;
+    final tieWire = buy(
+      'tie_wire',
+      crossings * tieWirePerTie(barMm) / tieWireMetresPerKg,
+    );
 
     final formArea = count * (2 * (width + depth) + 0.20) * height;
     final uses = input.choice('reuse').value;
@@ -705,7 +721,7 @@ final column = MaterialSpec(
         buy('gravel', concrete.gravel),
         buy(rebarKey(barMm), mainBars.toDouble()),
         buy(rebarKey(tieMm), tieBars.toDouble()),
-        _tieWire(crossings, tieMm),
+        tieWire,
         ..._forms(
           formArea,
           plywood: plywood,
@@ -764,6 +780,12 @@ final column = MaterialSpec(
       formula:
           'ties = round down(height ÷ spacing) + 1\n'
           'tie length = 2 × (width − 0.08) + 2 × (depth − 0.08) + 2 × hook',
+    ),
+    InfoSection(
+      'Tie wire',
+      'Each tie is wired to every main bar: about 30 cm of wire per crossing '
+          'for 12 mm main bars, 40 cm for larger ones, at 53 m per kg.',
+      formula: 'tie wire = ties × main bars × length per tie ÷ 53',
     ),
     InfoSection(
       'Forms',
@@ -865,6 +887,10 @@ final beam = MaterialSpec(
         2 * hookLength(tieMm);
     final stirrupBars = stockBars(count * stirrupsEach, stirrupLength, 0);
     final crossings = count * stirrupsEach * perBeam;
+    final tieWire = buy(
+      'tie_wire',
+      crossings * tieWirePerTie(barMm) / tieWireMetresPerKg,
+    );
 
     final formArea = count * (2 * depth + width + 0.10) * length;
     final uses = input.choice('reuse').value;
@@ -898,7 +924,7 @@ final beam = MaterialSpec(
         buy('gravel', concrete.gravel),
         buy(rebarKey(barMm), mainBars.toDouble()),
         buy(rebarKey(tieMm), stirrupBars.toDouble()),
-        _tieWire(crossings, tieMm),
+        tieWire,
         ..._forms(
           formArea,
           plywood: plywood,
@@ -949,6 +975,13 @@ final beam = MaterialSpec(
           'stirrups = round down(length ÷ spacing) + 1\n'
           'stirrup length = 2 × (width − 0.08) + 2 × (depth − 0.08) + '
           '2 × hook',
+    ),
+    InfoSection(
+      'Tie wire',
+      'Each stirrup is wired to every main bar: about 30 cm of wire per '
+          'crossing for 12 mm main bars, 40 cm for larger ones, at 53 m per '
+          'kg.',
+      formula: 'tie wire = stirrups × main bars × length per tie ÷ 53',
     ),
     InfoSection(
       'Forms',

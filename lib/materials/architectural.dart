@@ -291,9 +291,10 @@ final paint = MaterialSpec(
     ),
     InfoSection(
       'Coverage',
-      'How much surface one coat from a 4 L gallon covers. Latex covers '
-          'about 30–35 m² as a top coat; enamel about 25–30 m². The app uses '
-          'the low end, since rough walls take more paint.',
+      'How much surface one coat from a 4 L gallon covers. Boysen gives '
+          'about 30–35 m² for both latex and quick-drying enamel; retailers '
+          'quote as little as 20–25 m² for enamel on rough surfaces. The app '
+          'uses lower figures, since real walls take more paint.',
     ),
     InfoSection(
       'Coats and primer',
@@ -1485,10 +1486,11 @@ final wallpaper = MaterialSpec(
     ),
     InfoSection(
       'Rolls',
-      'Strips across the walls, divided among the rolls.',
+      'Strips across the walls, divided among the rolls, plus the waste '
+          'allowance rounded up separately.',
       formula:
           'strips = round up(wall width ÷ roll width)\n'
-          'rolls = round up(strips ÷ per roll)',
+          'rolls = round up(strips ÷ per roll) + round up(rolls × waste)',
     ),
     InfoSection(
       'Paste',

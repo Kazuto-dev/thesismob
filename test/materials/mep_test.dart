@@ -129,13 +129,11 @@ void main() {
           expect(r.quantity, greaterThan(0), reason: '${m.id} $selected');
           expect(r.total, closeTo(r.quantity * 3, 0.005), reason: m.id);
           expect(itemByKey(r.itemKey ?? ''), isNotNull, reason: m.id);
-          if (!(m == roughIn && selected['panel'] == 'auto')) {
-            expect(
-              r.itemKey,
-              m.priceRef!(selected)!.itemKey,
-              reason: '${m.id} $selected',
-            );
-          }
+          expect(
+            r.itemKey,
+            m.priceRef!(selected)!.itemKey,
+            reason: '${m.id} $selected',
+          );
           for (final c in r.companions) {
             expect(c.quantity, greaterThan(0), reason: '${m.id} ${c.itemKey}');
             expect(itemByKey(c.itemKey), isNotNull, reason: c.itemKey);
@@ -432,7 +430,16 @@ void main() {
       });
       // 1 lighting + 2 outlet + 1 laundry = 4 → 5 spaces → 6 branches.
       expect(detail(r, 'Circuits'), '4 circuits');
-      expect(r.itemKey, 'panel_6');
+      expect(detail(r, 'Recommended panel'), '6 branches');
+      expect(r.itemKey, 'panel_12', reason: 'the form starts at 12');
+      expect(
+        run(
+          roughIn,
+          {'lights': 3, 'outlets': 3, 'homeRun': 10, 'price': 2000},
+          {'panel': '6'},
+        ).itemKey,
+        'panel_6',
+      );
       // 2.0 mm²: (3 + 2) × 5 + 10 = 35 m × 3.3 = 115.5 m → 1 box.
       expect(bought(r, 'thhn_2_0_box'), 1);
       expect(bought(r, 'thhn_2_0_m'), isNull);
@@ -446,7 +453,7 @@ void main() {
     test('a chosen panel is used, but must hold the circuits', () {
       expect(run(roughIn, house, {'panel': '16'}).itemKey, 'panel_16');
       expect(roughIn.priceRef!({'panel': '16'})!.itemKey, 'panel_16');
-      expect(roughIn.priceRef!({'panel': 'auto'})!.itemKey, 'panel_12');
+      expect(roughIn.priceRef!(roughIn.initialChoices)!.itemKey, 'panel_12');
       expect(() => run(roughIn, house, {'panel': '8'}), throwsArgumentError);
       expect(
         () => run(roughIn, {...house, 'lights': 100, 'outlets': 100}),

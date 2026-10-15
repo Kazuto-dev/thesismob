@@ -207,7 +207,8 @@ void main() {
     expect(qty(r, 'gravel'), 1.5);
     expect(qty(r, 'rebar_16'), 16); // 3.64 m bars, one per stock bar
     expect(qty(r, 'rebar_10'), 17); // 84 ties of 1.09 m, 5 per bar
-    expect(qty(r, 'tie_wire'), 2);
+    // 84 ties × 4 bars × 0.40 m for 16 mm bars ÷ 53 m per kg = 2.5 kg.
+    expect(qty(r, 'tie_wire'), 3);
     expect(qty(r, 'marine_plywood_12'), 2); // 16.8 m² ÷ 2.88 ÷ 3 uses
     expect(qty(r, 'coco_lumber'), 41); // 2 × 20.33
     expect(qty(r, 'nails'), 4); // 16.8 × 0.20

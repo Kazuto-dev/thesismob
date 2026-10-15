@@ -676,13 +676,17 @@ final ceiling = MaterialSpec(
       formula:
           'furring = round up(area × 2.5 × 1.05 ÷ 5)\n'
           'channels = round up(area × 0.83 × 1.05 ÷ 5)\n'
-          'wall angle = round up(perimeter ÷ 3)',
+          'wall angle = round up(perimeter ÷ 3)\n'
+          'hangers = round up(area ÷ 1.44);  wire = hangers × 0.071 kg',
     ),
     InfoSection(
       'Wood framing',
       'A 40 × 60 cm grid of 2" × 2" needs 4.17 m of lumber per m², or 4.56 '
-          'board feet, plus about 1.1 board feet per hanger and 5% waste.',
-      formula: 'lumber = (area × 4.56 + hangers × 1.094) × 1.05 bd ft',
+          'board feet, plus about 1.1 board feet per hanger and 5% waste, '
+          'and about 0.08 kg of nails per m².',
+      formula:
+          'lumber = (area × 4.56 + hangers × 1.094) × 1.05 bd ft\n'
+          'nails = area × 0.08 kg',
     ),
     InfoSection(
       'Screws',

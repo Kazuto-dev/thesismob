@@ -56,7 +56,7 @@ class Item {
   final double step;
 
   /// Suggested Metro Manila retail price in pesos, or 0 when the user must
-  /// enter one. See [priceListLabel] and docs/calculations.md.
+  /// enter one. See [priceListLabel] and docs/prices-and-costing.md.
   final double price;
 
   /// True when [price] is our own estimate rather than a published or

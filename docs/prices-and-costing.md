@@ -44,21 +44,21 @@ exports. For how quantities are worked out, see
 
 The default prices were gathered for **Metro Manila, August to October
 2026** (`priceListLabel` in [`items.dart`](../lib/materials/items.dart)). Of
-the 166 items listed, 27 come from DTI's monitored prices, 22 from retailer
-listings and cost blogs, and 117 are our own estimates.
+the 166 items listed, 27 come from DTI's monitored prices, 21 from retailer
+listings and cost blogs, and 118 are our own estimates.
 
 | Group | Where the defaults come from |
 | --- | --- |
 | Cement and aggregates | Cement: DTI e-Presyo, NCR, August 2026 (₱208–280; brands prevail at ₱230–265) and AEDO 2026 (₱240–300). Sand and gravel: constructioncost.ph, PHILCON PRICES Q1 2026 (pick-up, VAT excluded) and totalcalchub 2026; delivered prices run about 30% above pick-up. Gravel bedding: estimate. |
 | Masonry | 4" and 6" blocks: DTI, NCR, August 2026 prevailing prices. 8" blocks: estimate. |
-| Reinforcing steel | 10 and 12 mm: DTI, August 2026, CALABARZON and Central Luzon, because DTI has no NCR rebar data. 16 and 20 mm: AEDO (August 2026) and Cebu Steel (March 2026), about ₱40/kg. 25 mm: not in the research notes; ₱940 matches about ₱40/kg (3.85 kg/m × 6 m) but is not flagged as an estimate. Tie wire: DTI, NCR. |
-| Lumber and boards | Plywood: DTI, August 2026, CALABARZON and Cebu (no NCR data), and a 2026 plywood price list; 9 mm is an estimate. Coco lumber: retailer listings, partly dated (₱27–48 per bd ft). Good lumber: estimate based on a 2019–2021 list. Nails: DTI, NCR. Fiber cement and gypsum boards: Citizen Flanges, Cebu Home Builders and Wilcon (₱495 for 9 mm gypsum). |
+| Reinforcing steel | 10 and 12 mm: DTI, August 2026, CALABARZON and Central Luzon, because DTI has no NCR rebar entries for June to August 2026. 16 and 20 mm: AEDO (August 2026) and Cebu Steel (March 2026), about ₱40/kg. 25 mm: not in the research notes; ₱940 matches about ₱40/kg (3.85 kg/m × 6 m) and is flagged as an estimate. Tie wire: DTI, NCR. |
+| Lumber and boards | Plywood: DTI, August 2026, CALABARZON, Central Luzon and Cebu (DTI has no recent NCR plywood data), and a 2026 plywood price list; 9 mm is an estimate. Coco lumber: retailer listings, partly dated (₱27–48 per bd ft). Good lumber: estimate based on a 2019–2021 list. Nails: DTI, NCR. Fiber cement and gypsum boards: Citizen Flanges, Cebu Home Builders and Wilcon (₱495 for 9 mm gypsum). |
 | Ceiling framing | Furring, carrying channel and wall angle: hardware listings (Topmost, Citizen Flanges, Hardware Zone); the channel's gauge was not stated. Board screws and hanger wire: estimates. |
 | Roofing and insulation | Corrugated GI: DTI, NCR, June–August 2026 (8 ft gauge 26 at ₱450–820), set at ₱78 per foot of length. Long-span: Citizen Flanges and Ranflex (September 2026); sources disagree by about 2×. Tek screws, C-purlins, ridge roll, gutter and 50 m foam: retailer listings, 2025–2026. Downspout, 25 m foam, foil tape and umbrella nails: estimates. |
 | Paint and finishes | Boysen as the reference brand, from Wilcon and DIY Hardware listings (latex ₱688–740, enamel ₱896, primer ₱829–960). Putty: a Tacloban dealer (₱282). Neutralizer: a 1 L Lazada listing (₱318–446). Semi-gloss (only a 1 L price was found), skim coat, thinner, sandpaper, wallpaper and paste: estimates. |
 | Tiles and floor finishes | All estimates. |
 | Doors and windows | All estimates. The window rate is ₱450 per ft² supplied and installed, about ₱4,850 per m². |
-| Electrical | LED bulbs: DTI, NCR, August 2026 (9 W prevails at ₱90–159). Switch: DTI, NCR (snap switches ₱45–50, tumbler switches ₱120–150). Wire, conduit, boxes, devices, breakers and panels: estimates. Check wire first, because it follows copper prices. |
+| Electrical | LED bulbs: DTI, NCR, August 2026 (9 W prevails at ₱90–159). Switch: DTI, NCR (snap switches ₱45–50, tumbler switches ₱120–150). Wire, conduit, boxes, devices, breakers and panels: estimates; wire cut by the metre is the box price ÷ 150 + 15%. Check wire first, because it follows copper prices. |
 | Plumbing and plumbing fixtures | All estimates. |
 
 Main sources:
@@ -83,13 +83,13 @@ Main sources:
 Prices were read from search-result excerpts in October 2026, because most
 retailer sites could not be opened directly. Prices drift: DTI's prevailing
 cement price in NCR rose from about ₱180–245 in 2025 to ₱210–265 in June to
-August 2026, and PSA's construction materials index for NCR rose about 1.2–1.3%
-a year in early 2026.
+August 2026, and PSA's construction materials retail price index for NCR was up
+1.2–1.3% year on year in early 2026.
 
 ### Regional factors
 
-Pick where the project is in **Price book → Where is the project?**. One
-factor scales every default price
+Choose the project's region at the top of the price book (**Where is the
+project?**). One factor scales every default price
 ([`PriceRegion`](../lib/materials/items.dart)).
 
 | Region | Factor |
@@ -131,7 +131,7 @@ book shows them. Prices are Metro Manila; multiply by the region factor.
 **Estimate: yes** marks our own estimates. **†** marks items no calculator
 uses yet; they are there for your own pricing.
 
-### Cement and aggregates
+#### Cement and aggregates
 
 | Item | Unit | Price (₱) | Estimate |
 | --- | --- | ---: | :---: |
@@ -140,7 +140,7 @@ uses yet; they are there for your own pricing.
 | Gravel, ¾" | m³ | 1,800 |  |
 | Gravel bedding | m³ | 1,000 | yes |
 
-### Masonry
+#### Masonry
 
 | Item | Unit | Price (₱) | Estimate |
 | --- | --- | ---: | :---: |
@@ -148,7 +148,7 @@ uses yet; they are there for your own pricing.
 | Concrete hollow block 6" | pc | 32 |  |
 | Concrete hollow block 8" | pc | 45 | yes |
 
-### Reinforcing steel
+#### Reinforcing steel
 
 | Item | Unit | Price (₱) | Estimate |
 | --- | --- | ---: | :---: |
@@ -156,10 +156,10 @@ uses yet; they are there for your own pricing.
 | Deformed bar 12 mm × 6 m | pc | 215 |  |
 | Deformed bar 16 mm × 6 m | pc | 390 |  |
 | Deformed bar 20 mm × 6 m | pc | 600 |  |
-| Deformed bar 25 mm × 6 m | pc | 940 |  |
+| Deformed bar 25 mm × 6 m | pc | 940 | yes |
 | Tie wire, #16 GI | kg | 85 |  |
 
-### Lumber and boards
+#### Lumber and boards
 
 | Item | Unit | Price (₱) | Estimate |
 | --- | --- | ---: | :---: |
@@ -177,7 +177,7 @@ uses yet; they are there for your own pricing.
 | Fiber cement board 4.5 mm 4×8 | sheet | 560 |  |
 | Gypsum board 9 mm 4×8 | sheet | 500 |  |
 
-### Ceiling framing
+#### Ceiling framing
 
 | Item | Unit | Price (₱) | Estimate |
 | --- | --- | ---: | :---: |
@@ -187,7 +187,7 @@ uses yet; they are there for your own pricing.
 | Board screws, box of 100 | box | 120 | yes |
 | Hanger wire, #10 GI | kg | 90 | yes |
 
-### Roofing and insulation
+#### Roofing and insulation
 
 | Item | Unit | Price (₱) | Estimate |
 | --- | --- | ---: | :---: |
@@ -209,7 +209,7 @@ uses yet; they are there for your own pricing.
 | PE foam insulation 1 × 25 m | roll | 1,000 | yes |
 | Aluminium foil tape, 50 m | roll | 250 | yes |
 
-### Paint and finishes
+#### Paint and finishes
 
 | Item | Unit | Price (₱) | Estimate |
 | --- | --- | ---: | :---: |
@@ -227,7 +227,7 @@ uses yet; they are there for your own pricing.
 | Wallpaper 0.45 × 10 m | roll | 700 | yes |
 | Wallpaper paste, 200 g | pack | 150 | yes |
 
-### Tiles and floor finishes
+#### Tiles and floor finishes
 
 | Item | Unit | Price (₱) | Estimate |
 | --- | --- | ---: | :---: |
@@ -252,7 +252,7 @@ uses yet; they are there for your own pricing.
 | Carpet gripper strip | m | 60 | yes |
 | Carpet seam tape | m | 50 | yes |
 
-### Doors and windows
+#### Doors and windows
 
 | Item | Unit | Price (₱) | Estimate |
 | --- | --- | ---: | :---: |
@@ -266,7 +266,7 @@ uses yet; they are there for your own pricing.
 | Aluminium sliding window, 6 mm glass, installed | m² | 4,850 | yes |
 | Silicone sealant, 300 ml | tube | 180 | yes |
 
-### Electrical
+#### Electrical
 
 | Item | Unit | Price (₱) | Estimate |
 | --- | --- | ---: | :---: |
@@ -316,7 +316,7 @@ uses yet; they are there for your own pricing.
 | Ground rod 16 mm × 2.4 m with clamp | set | 650 | yes |
 | Electrical tape | roll | 35 | yes |
 
-### Plumbing
+#### Plumbing
 
 | Item | Unit | Price (₱) | Estimate |
 | --- | --- | ---: | :---: |
@@ -334,7 +334,7 @@ uses yet; they are there for your own pricing.
 | Cleanout plug, 4" † | pc | 150 | yes |
 | Float valve, ¾" | pc | 450 | yes |
 
-### Plumbing fixtures
+#### Plumbing fixtures
 
 | Item | Unit | Price (₱) | Estimate |
 | --- | --- | ---: | :---: |
@@ -363,9 +363,9 @@ have no unit price of their own.
 ## Project cost build-up
 
 Calculators price materials only. A project adds labour, tools, hauling,
-contingency, markups and VAT in its **Budget** section (a tab on phones). The model is in
-[`lib/data/project.dart`](../lib/data/project.dart) (`CostSettings` and
-`CostBreakdown.of`).
+contingency, markups and VAT in its **Budget** section (a tab on phones).
+The model is in [`lib/data/project.dart`](../lib/data/project.dart)
+(`CostSettings` and `CostBreakdown.of`).
 
 ### Materials by trade
 
@@ -404,7 +404,6 @@ total          = subtotal + VAT
 
 | Setting | Owner | Contractor | DPWH |
 | --- | ---: | ---: | ---: |
-| Labour, % of materials | 40 | 40 | 40 |
 | Minor tools, % of labour | 0 | 10 | 10 |
 | Contingency, % of direct cost | 10 | 5 | 0 |
 | Overhead (OCM), % of direct cost | 0 | 10 | 15, 12, 10 or 8 |
@@ -418,8 +417,9 @@ total          = subtotal + VAT
   (`CostSettings.dpwh` and `dpwhMarkups`). The contingency is inside the OCM.
 - A new project starts as **Owner budget** or **Contractor bid**, chosen when
   it is created.
-- Labour starts at 40% in a new project. Switching presets keeps the
-  project's own labour percentages and hauling.
+- Presets do not set labour or hauling. Labour starts at 40% of materials
+  in a new project, and switching presets keeps the project's own labour
+  percentages and hauling.
 - Any setting can be changed; the preset then shows as none.
 
 The DPWH preset sets OCM and profit by the size of the direct cost:
@@ -453,7 +453,7 @@ to re-size it.
 | VAT | – | ₱216,000 (12%) | ₱90,000 (5%) |
 | **Total** | **₱1,540,000** | **₱2,016,000** | **₱1,890,000** |
 
-The DPWH column is the worked example in our DPWH research notes, and
+The DPWH column follows the DO 197 s.2016 build-up, and
 [`test/data/project_test.dart`](../test/data/project_test.dart) checks it to
 the peso: a direct cost of ₱1,440,000 falls in the "up to ₱5M" bracket, so
 OCM is 15% and profit 10%; VAT at 5% gives ₱1,890,000. At 12% VAT the same
@@ -475,10 +475,10 @@ job would be ₱2,016,000.
 ### What the model leaves out
 
 - Labour from crews and days. DPWH's detailed unit price analysis (DUPA)
-  prices labour as crew-days × daily rates (DO 125 s.2025 sets the rates from
-  the regional minimum wage times a labour cost factor; the NCR minimum is
-  ₱755 a day since 26 September 2026). The
-  app uses a percentage of materials instead.
+  prices labour as crew-days × daily rates. DO 125 s.2025 sets the rates
+  from the regional minimum wage times a labour cost factor; the NCR minimum
+  is ₱755 a day since 26 September 2026. The app uses a percentage of
+  materials instead.
 - Equipment rental other than minor tools.
 - Mobilization and demobilization, permits and clearances, and the service
   vehicle. Under DPWH rules these are not marked up with OCM or profit; add
@@ -507,7 +507,8 @@ plaster and a slab appears once.
 ## Exports
 
 The project menu has **Download PDF**, **Download for Excel (CSV)**,
-**Copy as text** and **Send to Google Sheet**. Settings makes a backup file. The layouts are in
+**Copy as text** and **Send to Google Sheet**. Settings makes a backup
+file. The layouts are in
 [`lib/export/project_documents.dart`](../lib/export/project_documents.dart)
 and [`lib/export/project_pdf.dart`](../lib/export/project_pdf.dart).
 

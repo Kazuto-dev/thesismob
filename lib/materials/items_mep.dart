@@ -1,7 +1,7 @@
 import 'items.dart';
 
 // Electrical, plumbing and plumbing fixtures. Prices are Metro Manila
-// retail in pesos; see docs/calculations.md for sources.
+// retail in pesos; see docs/prices-and-costing.md for sources.
 
 /// THHN/THWN building wire sizes in mm².
 const wireSizes = ['2.0', '3.5', '5.5', '8.0', '14', '22', '30'];

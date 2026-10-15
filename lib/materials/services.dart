@@ -52,7 +52,7 @@ const wireBoxMinimum = 100.0;
 /// Circuits one roll of electrical tape covers.
 const circuitsPerTapeRoll = 4;
 
-/// The panel size priced when the size is left on Auto.
+/// The panel size a form starts with; it suits most houses.
 const typicalPanelBranches = 12;
 
 /// One kind of branch circuit in the schedule.
@@ -185,13 +185,11 @@ final roughIn = MaterialSpec(
     ChoiceField(
       id: 'panel',
       label: 'Panel board',
-      initial: 'auto',
+      initial: '$typicalPanelBranches',
       helper:
-          'Auto sizes it from the circuits plus 25% spare and suggests the '
-          'price of a $typicalPanelBranches-branch panel. Pick a size for '
-          'its own price.',
+          'The breakdown recommends a size with 25% spare spaces; pick it '
+          'to price that panel.',
       options: [
-        const ChoiceOption('auto', 'Auto'),
         for (final n in panelBranches)
           ChoiceOption('$n', '$n branches', n.toDouble()),
       ],
@@ -261,26 +259,17 @@ final roughIn = MaterialSpec(
 
     final circuits = schedule.fold(0, (sum, c) => sum + c.count);
     final spaces = ceilCount(circuits * (1 + panelSpare));
-    final chosen = input.choice('panel');
-    final int branches;
-    if (chosen.id == 'auto') {
-      final fit = panelBranches.where((n) => n >= spaces);
-      if (fit.isEmpty) {
-        throw ArgumentError(
-          'This house needs about $spaces panel spaces, more than a '
-          '${panelBranches.last}-branch panel holds. Ask an electrician to '
-          'split it over two panels.',
-        );
-      }
-      branches = fit.first;
-    } else {
-      branches = chosen.value.round();
-      if (branches < circuits) {
-        throw ArgumentError(
-          'A $branches-branch panel cannot hold $circuits circuits. Choose a '
-          'bigger panel or Auto.',
-        );
-      }
+    final recommended = panelBranches.where((n) => n >= spaces).firstOrNull;
+    final branches = input.choice('panel').value.round();
+    if (branches < circuits) {
+      throw ArgumentError(
+        recommended == null
+            ? 'This house needs about $spaces panel spaces, more than a '
+                  '${panelBranches.last}-branch panel holds. Ask an '
+                  'electrician to split it over two panels'
+            : 'A $branches-branch panel cannot hold $circuits circuits. '
+                  'Choose $recommended branches',
+      );
     }
 
     final conduitRun = schedule.fold(0.0, (sum, c) => sum + c.conduit);
@@ -337,7 +326,11 @@ final roughIn = MaterialSpec(
           'Panel spaces with 25% spare',
           formatNumber(spaces.toDouble()),
         ),
-        ResultDetail('Panel board', '$branches branches'),
+        ResultDetail(
+          'Recommended panel',
+          recommended == null ? 'Two panels' : '$recommended branches',
+        ),
+        ResultDetail('Panel board chosen', '$branches branches'),
         ResultDetail('Conduit per point', formatLength(perPoint)),
         ResultDetail('Conduit run', formatLength(roundUp(conduitRun, 1))),
         for (final size in sizes)
@@ -411,9 +404,12 @@ final roughIn = MaterialSpec(
     InfoSection(
       'Panel board',
       'Add 25% spare spaces and round up to a panel size: 4, 6, 8, 12, 16, '
-          '20, 24 or 30 branches. This panel is the main item and its price '
-          'is the main cost.',
-      formula: 'spaces = round up(circuits × 1.25)',
+          '20, 24 or 30 branches. That is the recommended panel; the form '
+          'starts at 12 branches, so pick the recommended size to price it. '
+          'The panel is the main item.',
+      formula:
+          'spaces = round up(circuits × 1.25)\n'
+          'recommended = smallest panel ≥ spaces',
     ),
     InfoSection(
       'Conduit',
@@ -444,7 +440,8 @@ final roughIn = MaterialSpec(
       formula:
           'utility boxes = switches + outlets + aircons + appliances\n'
           'junction boxes = lights\n'
-          'outlets bought = outlets + appliances',
+          'outlets bought = outlets + appliances\n'
+          'aircon outlets = aircons',
     ),
     InfoSection(
       'Breakers, ground and tape',
@@ -858,10 +855,12 @@ final septicTank = MaterialSpec(
     ),
     InfoSection(
       'Size',
-      'NPC Table B-2 sizes a house by bedrooms: 2,838 L for 1 or 2 bedrooms, '
-          '3,785 L for 3, 4,542 L for 4, 5,678 L for 5 or 6, and 568 L more '
-          'for each extra bedroom. A large household is sized at 0.15 m³ per '
-          'person if that is more.',
+      'The plumbing code sizes a house by bedrooms: 2,838 L for 1 or 2 '
+          'bedrooms (NPC Table B-2). Larger sizes follow the US plumbing code '
+          'table the NPC is based on: 3,785 L for 3, 4,542 L for 4, 5,678 L '
+          'for 5 or 6, and 568 L more for each extra bedroom; confirm them '
+          'with your sanitary engineer. A large household is sized at 0.15 m³ '
+          'per person if that is more.',
     ),
     InfoSection(
       'Polyethylene tank',

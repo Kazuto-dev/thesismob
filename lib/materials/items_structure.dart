@@ -1,7 +1,7 @@
 import 'items.dart';
 
 // Concrete, masonry, steel, lumber, ceilings and roofing. Prices are
-// Metro Manila retail in pesos; see docs/calculations.md for sources.
+// Metro Manila retail in pesos; see docs/prices-and-costing.md for sources.
 
 /// Deformed bar sizes sold in the Philippines, in millimetres.
 const rebarSizes = [10, 12, 16, 20, 25];
@@ -20,6 +20,7 @@ String corrugatedKey(int ft) => 'gi_corrugated_${ft}ft';
 String plywoodKey(String mm) => 'plywood_$mm';
 String marinePlywoodKey(String mm) => 'marine_plywood_$mm';
 
+// 25 mm has no quoted price; it is priced at about ₱40/kg like the rest.
 const _rebarPrices = {10: 150.0, 12: 215.0, 16: 390.0, 20: 600.0, 25: 940.0};
 
 final List<Item> structureItems = [
@@ -94,6 +95,7 @@ final List<Item> structureItems = [
       ItemGroup.steel,
       plural: 'pcs',
       price: _rebarPrices[mm]!,
+      estimate: mm == 25,
     ),
   const Item('tie_wire', 'Tie wire, #16 GI', 'kg', ItemGroup.steel, price: 85),
 

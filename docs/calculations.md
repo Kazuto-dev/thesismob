@@ -7,7 +7,8 @@ and engineer before buying.
 
 The formulas live in [`lib/materials/`](../lib/materials). Each calculator's
 **Definitions** and **Solution** sheets in the app show the same formulas;
-where a sheet and the code differ, this page follows the code.
+where a sheet and the code differ, this page follows the code. Default
+prices and their sources are in [Prices and costing](prices-and-costing.md).
 
 ## How a result is built
 
@@ -18,10 +19,10 @@ in the price field. The price field is filled from the price book (see
 use it instead.
 
 **Rounding.** Counts always round **up**, because you cannot buy 0.3 of a
-block. Rounding ignores floating-point noise, so an exact 375.0000001 stays
-375. A waste allowance is rounded up on its own and added:
-total = count + ⌈count × waste⌉. Costs are quantity × unit price, rounded to
-the centavo.
+block. Rounding ignores floating-point noise, so 30 ÷ 0.08, which a
+computer works out as 375.00000000000006, counts as 375. A waste allowance
+is rounded up on its own and added: total = count + ⌈count × waste⌉.
+Costs are quantity × unit price, rounded to the centavo.
 
 **Companion materials.** Most calculators also list the other materials the
 job needs: cement and sand for blocks, bars and tie wire for concrete,
@@ -62,7 +63,7 @@ Several calculators share these factors, kept in
 | Plaster 16 mm, per m² of each face | 0.192 bags + 0.016 m³ | Fajardo |
 | Blocks per m² | 12.5 (0.40 × 0.20 m with its joint) | AEDO CHB sizes |
 | Reinforcing bars | 6 m stock length | What retail hardware stocks (AEDO 2026 price list). 7.5–12 m bars exist but are not offered. |
-| Tie wire, #16 GI | 0.30 m per crossing for bars up to 12 mm, 0.40 m for larger; 53 m per kg | 20–40 cm per tie is from PH course notes in Fajardo's wording. 53 m/kg is widely quoted as Fajardo but not confirmed. A #16 wire weighs about 60 m/kg, so 53 includes some waste. |
+| Tie wire, #16 GI | 0.30 m per crossing for bars up to 12 mm, 0.40 m for larger; 53 m per kg | 20–40 cm per tie is from PH course notes in Fajardo's wording. 53 m/kg is widely quoted as Fajardo but not confirmed. #16 wire runs about 60 m per kg, so 53 includes some waste. |
 | 4' × 8' sheet | 2.977 m² (1.22 × 2.44 m) for plywood and ceiling boards; 2.88 m² for forms | Fajardo counts form plywood at 1.20 × 2.40 m |
 | Concrete cover | 75 mm against earth (footings); 40 mm in columns, beams and slabs on fill; 20 mm in suspended slabs | NSCP 2015 Table 420.6.1.3.1 gives 75, 40 and 20 mm. 40 mm for a slab on fill is the app's simplification. |
 | Tie and stirrup hook | 135°, max(6d, 75 mm) + 3d for the bend: 0.105 m for a 10 mm tie | NSCP 2015 Sec. 425.3, which follows ACI 318-14. Recalled, not checked against the code text. The 3d bend allowance is derived. |
@@ -253,8 +254,10 @@ Sources: [Lazada PE foam listing](https://www.lazada.com.ph/products/pe-foam-ins
 | Thinner (enamel) | (enamel litres + primer litres) ÷ 8 + 0.5 L |
 
 A Philippine paint "gallon" is **4 litres**. Coverage per 4 L per coat is
-30 m² for latex flat and semi-gloss and 25 m² for enamel, the low end of
-Boysen's ranges, since rough walls take more paint. The surface is a
+30 m² for latex flat and semi-gloss, the low end of Boysen's 30–35 m², and
+25 m² for enamel, below Boysen's theoretical 30–35 m² and within a
+retailer's 20–25 m². Rough walls take more paint than the theoretical
+figure. The surface is a
 repaint, new masonry or wood and metal [new masonry]. Sanding passes are one
 for the putty plus one per skim coat on masonry, one on bare wood or metal,
 and none for a repaint.
@@ -493,12 +496,10 @@ else is a companion.
 
 Points are lights and switches on lighting circuits, outlets on outlet
 circuits, and one per aircon or appliance circuit. The laundry circuit has a
-home run only, because its outlet is counted with the outlets. A chosen
-panel size must hold at least the circuits; Auto picks the smallest panel
-with 25% spare.
-
-On Auto, the price field suggests the price of a 12-branch panel whatever
-size is picked; pick the size to get its own price.
+home run only, because its outlet is counted with the outlets. The
+breakdown recommends the smallest panel with 25% spare spaces. The form
+starts at 12 branches; pick the recommended size to book and price that
+panel. A panel smaller than the circuit count is refused.
 
 PEC 2.40.1.4(D) caps 2.0 mm² at 15 A, 3.5 mm² at 20 A and 5.5 mm² at 30 A.
 The rest is practice, not code: the PEC sets no outlet count per circuit (it
@@ -656,7 +657,7 @@ Some of the hand-worked cases:
 | --- | --- |
 | 10 × 3 m wall of 4" CHB, defaults | 394 blocks, 28 bags, 2.5 m³ sand, 22 bars of 10 mm, 1 kg tie wire |
 | Slab on fill 10 × 5 × 0.10 m | 40 bags (Class B), 3 m³ sand, 5.5 m³ gravel, 5 m³ bedding, 48 bars, 2 kg tie wire |
-| 4 columns 0.30 × 0.30 × 3 m | 11 bags, 16 bars of 16 mm, 17 bars of 10 mm, 2 plywood sheets, 41 bd ft, 4 kg nails |
+| 4 columns 0.30 × 0.30 × 3 m | 11 bags, 16 bars of 16 mm, 17 bars of 10 mm, 3 kg tie wire, 2 plywood sheets, 41 bd ft, 4 kg nails |
 | Latex on 10 × 3 m new masonry | 3 gallons, 2 gallons primer, 1 L neutralizer, 2 gallons putty, 4 sheets sandpaper |
 | 5 × 4 m floor, 60 × 60 cm tiles | 70 tiles (18 boxes), 4 bags adhesive, 2 packs grout, 2 packs spacers |
 | Gable roof 10 m × 4 m rafter, 8 ft corrugated | 60 sheets, 640 tek screws, 5 ridge rolls |
@@ -678,8 +679,8 @@ that a factor is right for your site.
   fittings by count (an allowance is used instead); paint or varnish on doors.
 - **Bars.** Offcuts are not reused, which slightly overstates short bars. The
   40 d lap suits Grade 33–40 bars; Grade 60 bars need about 57 d in tension.
-  Column and beam tie wire uses 0.30 m per crossing, sized on the 10 mm tie,
-  although footings use 0.40 m for bars over 12 mm. 10 mm bars at 0.40 m on a
+  Tie wire is 0.30 m per crossing up to 12 mm bars and 0.40 m for larger
+  bars, by the main bar size in footings, columns and beams. 10 mm bars at 0.40 m on a
   slab on fill pass the minimum steel ratio but exceed the 0.30 m maximum
   spacing for a structural 100 mm slab, so they suit only a non-structural
   slab on grade.
