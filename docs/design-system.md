@@ -59,8 +59,9 @@ columns line up.
 - Radii: 10 (chips), 14 (fields, icon tiles), 20 (cards), 28 (panels and
   sheets). Buttons are pills.
 - Breakpoints: under 600 px a bottom navigation bar; 600–1023 px a labelled
-  rail; 1024 px and up an extended rail with the project total, a two-pane
-  calculator, a summary table with a pinned total, and a list–detail history.
+  rail; 1024 px and up an extended rail with the active project's total, a
+  two-pane calculator, a project page with the budget beside the items, and
+  a list–detail history.
 - Content is centred with a 16 px gutter on phones and 32 px elsewhere, and
   capped at 1,040 px (680 px for single-column forms).
 - Touch targets are at least 48 px on every platform.

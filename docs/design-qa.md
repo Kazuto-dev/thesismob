@@ -51,3 +51,14 @@ task, **Medium** hurts clarity or trust, **Low** is polish.
 - Category art comes from the original illustrations, tinted; a custom icon
   set would sharpen it further.
 - Android and iOS projects were not rebuilt in this pass.
+
+## Projects update
+
+The Summary tab became the Project tab. Each project shows its budget on the
+brand panel (total, materials, labour, markups, materials by trade), then
+tabs for the items by trade, the merged shopping list and the budget
+settings; on desktops the budget sits beside the items. Calculator results
+now list every material for the job with its price, and the price field
+says where its price came from. New screens (Projects, Price book, Backup
+and restore) reuse the same cards, section headers and tabular figures.
+
