@@ -179,4 +179,16 @@ void main() {
     expect(back.breakdown.total, p.breakdown.total);
     expect(() => Project.fromJson({'name': 'x'}), throwsFormatException);
   });
+
+  test('a checklist and what is not needed are saved', () {
+    final p = Project.create('House').copyWith(
+      checklist: const ['footing', 'column', 'chb'],
+      notNeeded: const {'column'},
+    );
+    final back = Project.fromJson(p.toJson());
+    expect(back.checklist, ['footing', 'column', 'chb']);
+    expect(back.notNeeded, {'column'});
+    expect(back.checklistToDo, ['footing', 'chb']);
+    expect(Project.fromJson(Project.create('x').toJson()).checklist, isEmpty);
+  });
 }

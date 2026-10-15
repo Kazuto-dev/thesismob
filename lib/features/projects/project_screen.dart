@@ -7,6 +7,7 @@ import '../../core/format.dart';
 import '../../core/layout.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
+import '../../data/checklists.dart';
 import '../../data/project.dart';
 import '../../export/project_documents.dart';
 import '../../materials/items.dart';
@@ -18,6 +19,7 @@ import '../../state/google_account_controller.dart';
 import '../common/price_dialog.dart';
 import '../common/tiles.dart';
 import 'boq_grid.dart';
+import 'checklist_card.dart';
 import 'material_picker.dart';
 import 'project_actions.dart';
 import 'project_items.dart';
@@ -69,6 +71,28 @@ class _ProjectScreenState extends State<ProjectScreen> {
         _ProjectMenu(project: project),
       ],
     );
+
+    if (project.items.isEmpty && project.checklist.isNotEmpty) {
+      return PageTitle(
+        title: project.name,
+        child: Scaffold(
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(bottom: bottomClearance(context)),
+              child: ContentWidth(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    header,
+                    ChecklistCard(project: project),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     if (project.items.isEmpty) {
       return PageTitle(
@@ -164,6 +188,10 @@ class _ProjectScreenState extends State<ProjectScreen> {
                   header,
                   if (!isActive) ...[
                     _NotActiveBanner(project: project),
+                    const SizedBox(height: Space.lg),
+                  ],
+                  if (project.checklist.isNotEmpty) ...[
+                    ChecklistCard(project: project),
                     const SizedBox(height: Space.lg),
                   ],
                   if (wide)
@@ -318,6 +346,20 @@ class _ProjectMenu extends StatelessWidget {
           onPressed: () => duplicateProject(context, project),
           child: const Text('Duplicate'),
         ),
+        if (project.checklist.isEmpty)
+          SubmenuButton(
+            leadingIcon: const Icon(Icons.checklist),
+            menuChildren: [
+              for (final t in checklistTemplates)
+                MenuItemButton(
+                  onPressed: () => context
+                      .read<ProjectsController>()
+                      .addChecklist(project.id, t.materials),
+                  child: Text('${t.name} checklist'),
+                ),
+            ],
+            child: const Text('Add a checklist'),
+          ),
         const Divider(),
         MenuItemButton(
           leadingIcon: const Icon(Icons.picture_as_pdf_outlined),

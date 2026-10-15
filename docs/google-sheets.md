@@ -1,9 +1,9 @@
-# Saving to Google Sheets
+# Google Sheets and Drive backups
 
-Users sign in with their own Google account and BuildQuantify saves each
-project as a spreadsheet in their Google Drive. There is no server and no
-service account; the browser talks to Google directly with the user's
-permission.
+Users sign in with their own Google account. BuildQuantify saves each
+project as a spreadsheet in their Google Drive and can keep a backup of
+everything there. There is no server and no service account; the browser
+talks to Google directly with the user's permission.
 
 ## What users see
 
@@ -32,6 +32,19 @@ The app only remembers the account's name and email. The access token is
 kept in memory and lasts about an hour; after that, or after a reload, the
 next save asks Google again, usually with a single click.
 
+### Backups in Google Drive
+
+Settings → Backup and restore → **Back up to Drive** saves every project,
+custom price and history entry as **BuildQuantify backup.json** in the
+user's Drive, the same file each time. **Restore from Drive** reads it
+back on any device, adding projects that are not already there.
+
+With **Back up automatically** on, changes are saved to that file about 20
+seconds after the user stops editing, for as long as the last sign-in's
+token lasts (about 50 minutes). The app never opens Google's window by
+itself, so after that the next manual backup or save to Sheets starts
+another hour. Signing out turns automatic backups off.
+
 ### Permissions
 
 | Scope | Why |
@@ -50,8 +63,9 @@ You need a Google account and about ten minutes.
 
 1. **Create a project.** Open <https://console.cloud.google.com/>, then
    create a project, for example "BuildQuantify".
-2. **Turn on the Sheets API.** Go to APIs & Services → Library, search for
-   **Google Sheets API** and choose **Enable**.
+2. **Turn on the Sheets and Drive APIs.** Go to APIs & Services → Library,
+   search for **Google Sheets API** and choose **Enable**, then do the same
+   for **Google Drive API** (used for backups).
 3. **Set up the consent screen.** Go to Google Auth Platform (APIs &
    Services → OAuth consent screen):
    - **Branding:** app name "BuildQuantify", a support email and a developer
@@ -97,6 +111,7 @@ including PDF and Excel downloads, works as usual.
 | Google's window says `invalid_client` or `origin_mismatch` | The client ID is wrong, or the page's address is not in **Authorized JavaScript origins**. Add it exactly, e.g. `https://example.com`, with no trailing slash. |
 | "Access blocked: this app has not completed the Google verification process" | The consent screen is in Testing and the account is not a test user. Add it, or publish the app. |
 | "The Google Sheets API isn't enabled for this app yet." | Enable the Google Sheets API in the same Cloud project as the client ID (step 2). |
+| "The Google Drive API isn't enabled for this app yet." | Enable the Google Drive API in that project too (step 2). |
 | The window doesn't open | The browser blocked the pop-up. Allow pop-ups for the site and tap the button again. |
 | "Your Google sign-in expired." | The hour-long token ran out or access was removed in the Google account. Tap again to sign in. |
 
@@ -106,9 +121,9 @@ including PDF and Excel downloads, works as usual.
 | --- | --- |
 | [`lib/features/auth/login_screen.dart`](../lib/features/auth/login_screen.dart) | The login screen; the router in [`lib/router.dart`](../lib/router.dart) shows it until the user signs in or continues |
 | [`lib/data/google_auth.dart`](../lib/data/google_auth.dart) | Gets access tokens through Google Identity Services (`google_sign_in`) |
-| [`lib/data/google_sheets_client.dart`](../lib/data/google_sheets_client.dart) | Calls the user info and Sheets REST APIs: create, update, format |
+| [`lib/data/google_sheets_client.dart`](../lib/data/google_sheets_client.dart) | Calls the user info, Sheets and Drive REST APIs: create, update, format; find, save and read the backup |
 | [`lib/export/project_sheets.dart`](../lib/export/project_sheets.dart) | Turns a project into the three tabs |
-| [`lib/state/google_account_controller.dart`](../lib/state/google_account_controller.dart) | Sign in, sign out, save; turns Google errors into messages |
+| [`lib/state/google_account_controller.dart`](../lib/state/google_account_controller.dart) | Sign in, sign out, save, back up and restore; turns Google errors into messages |
 
 Google only lets the sign-in window open in direct response to a tap, so
 every save asks for the token first, before anything else is awaited. The

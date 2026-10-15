@@ -53,6 +53,40 @@ void main() {
     expect(find.text('No matches'), findsOneWidget);
   });
 
+  testWidgets('a first visit offers to plan a house with a checklist', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    expect(find.text('Get started'), findsOneWidget);
+    await tester.tap(find.text('Plan a house'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Project name'),
+      'Reyes house',
+    );
+    await tester.tap(find.text('Create'));
+    await tester.pumpAndSettle();
+    expect(find.text('Checklist'), findsOneWidget);
+    expect(find.text('0 of 23 done · next: Footings'), findsOneWidget);
+
+    // Not every house needs everything.
+    await tester.tap(find.byTooltip('Footings not needed'));
+    await tester.pumpAndSettle();
+    expect(find.text('0 of 22 done · next: Columns'), findsOneWidget);
+
+    await tester.tap(find.text('Estimate').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Column height'), findsOneWidget);
+    expect(projectsOf(tester).active.name, 'Reyes house');
+  });
+
+  testWidgets('"Not now" hides the first-visit card for good', (tester) async {
+    await pumpApp(tester);
+    await tester.tap(find.text('Not now'));
+    await tester.pumpAndSettle();
+    expect(find.text('Get started'), findsNothing);
+  });
+
   testWidgets('a category card opens its materials', (tester) async {
     await pumpApp(tester);
     await tester.ensureVisible(find.text('Electrical'));

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
@@ -9,10 +11,12 @@ import 'data/google_auth.dart';
 import 'data/google_sheets_client.dart';
 import 'router.dart';
 import 'data/project_repository.dart';
+import 'export/project_documents.dart';
 import 'state/appearance_controller.dart';
 import 'state/estimates_controller.dart';
 import 'state/price_book_controller.dart';
 import 'state/projects_controller.dart';
+import 'state/tips_controller.dart';
 import 'state/google_account_controller.dart';
 
 class BuildQuantifyApp extends StatefulWidget {
@@ -42,17 +46,52 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
     widget.googleAuth ?? GoogleSignInAuth(),
     widget.sheetsClient ?? GoogleSheetsClient(),
   );
+  late final _estimates = EstimatesController(EstimateRepository(widget.prefs));
+  late final _projects = ProjectsController(ProjectRepository(widget.prefs));
+  late final _prices = PriceBookController(widget.prefs);
   late final GoRouter _router = createRouter(
     initialLocation: widget.initialLocation,
     account: _google,
   );
   final _light = buildTheme();
   final _dark = buildTheme(Brightness.dark);
+  Timer? _backupTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _projects.addListener(_scheduleBackup);
+    _prices.addListener(_scheduleBackup);
+  }
+
+  /// Backs up to Google Drive a little after the user stops changing
+  /// things, when automatic backups are on.
+  void _scheduleBackup() {
+    if (!_google.autoBackup) return;
+    _backupTimer?.cancel();
+    _backupTimer = Timer(const Duration(seconds: 20), () {
+      unawaited(
+        _google.autoBackUp(
+          backupJson(
+            projects: _projects.projects,
+            prices: _prices.custom,
+            history: _estimates.history,
+          ),
+        ),
+      );
+    });
+  }
 
   @override
   void dispose() {
+    _backupTimer?.cancel();
+    _projects.removeListener(_scheduleBackup);
+    _prices.removeListener(_scheduleBackup);
     _router.dispose();
     _google.dispose();
+    _estimates.dispose();
+    _projects.dispose();
+    _prices.dispose();
     super.dispose();
   }
 
@@ -60,18 +99,13 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => EstimatesController(EstimateRepository(widget.prefs)),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => ProjectsController(ProjectRepository(widget.prefs)),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => PriceBookController(widget.prefs),
-        ),
+        ChangeNotifierProvider.value(value: _estimates),
+        ChangeNotifierProvider.value(value: _projects),
+        ChangeNotifierProvider.value(value: _prices),
         ChangeNotifierProvider(
           create: (_) => AppearanceController(widget.prefs),
         ),
+        ChangeNotifierProvider(create: (_) => TipsController(widget.prefs)),
         ChangeNotifierProvider.value(value: _google),
       ],
       child: Builder(

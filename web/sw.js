@@ -6,13 +6,15 @@
 // so a new release shows up on the next visit; other files are served from
 // the cache and refreshed in the background.
 
-const CACHE = 'buildquantify-v2';
+const CACHE = 'buildquantify-v3';
 
 const SHELL = [
   './',
   'index.html',
   'flutter_bootstrap.js',
   'main.dart.js',
+  // The PDF library, loaded when a PDF is first downloaded.
+  'main.dart.js_1.part.js',
   'manifest.json',
   'favicon.png',
   'icons/mark-64.png',

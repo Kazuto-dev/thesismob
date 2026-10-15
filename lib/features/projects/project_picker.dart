@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/format.dart';
 import '../../core/theme.dart';
+import '../../data/checklists.dart';
 import '../../data/project.dart';
 import '../../state/projects_controller.dart';
 
@@ -12,6 +13,7 @@ typedef ProjectDetails = ({
   String client,
   String location,
   bool contractor,
+  ChecklistTemplate? checklist,
 });
 
 /// Asks for a project's name, client and location. With no [project] it
@@ -19,15 +21,19 @@ typedef ProjectDetails = ({
 Future<ProjectDetails?> showProjectDetailsDialog(
   BuildContext context, {
   Project? project,
+  ChecklistTemplate? checklist,
 }) => showDialog<ProjectDetails>(
   context: context,
-  builder: (_) => _ProjectDetailsDialog(project: project),
+  builder: (_) => _ProjectDetailsDialog(project: project, checklist: checklist),
 );
 
 class _ProjectDetailsDialog extends StatefulWidget {
-  const _ProjectDetailsDialog({this.project});
+  const _ProjectDetailsDialog({this.project, this.checklist});
 
   final Project? project;
+
+  /// The checklist chosen to begin with, for a new project.
+  final ChecklistTemplate? checklist;
 
   @override
   State<_ProjectDetailsDialog> createState() => _ProjectDetailsDialogState();
@@ -38,6 +44,7 @@ class _ProjectDetailsDialogState extends State<_ProjectDetailsDialog> {
   late final _client = TextEditingController(text: widget.project?.client);
   late final _location = TextEditingController(text: widget.project?.location);
   bool _contractor = false;
+  late ChecklistTemplate? _checklist = widget.checklist;
   String? _error;
 
   @override
@@ -59,6 +66,7 @@ class _ProjectDetailsDialogState extends State<_ProjectDetailsDialog> {
       client: _client.text.trim(),
       location: _location.text.trim(),
       contractor: _contractor,
+      checklist: _checklist,
     ));
   }
 
@@ -137,6 +145,39 @@ class _ProjectDetailsDialogState extends State<_ProjectDetailsDialog> {
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
+              const SizedBox(height: Space.lg),
+              Text('Checklist', style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(height: Space.sm),
+              Wrap(
+                spacing: Space.sm,
+                runSpacing: Space.sm,
+                children: [
+                  ChoiceChip(
+                    label: const Text('None'),
+                    selected: _checklist == null,
+                    showCheckmark: false,
+                    onSelected: (_) => setState(() => _checklist = null),
+                  ),
+                  for (final t in checklistTemplates)
+                    ChoiceChip(
+                      label: Text(t.name),
+                      selected: _checklist?.id == t.id,
+                      showCheckmark: false,
+                      onSelected: (_) => setState(() => _checklist = t),
+                    ),
+                ],
+              ),
+              const SizedBox(height: Space.xs),
+              Text(
+                _checklist == null
+                    ? 'Add estimates as you go.'
+                    : '${_checklist!.description}: '
+                          '${_checklist!.materials.length} calculators to '
+                          'work through.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
             ],
           ],
         ),
@@ -156,14 +197,18 @@ class _ProjectDetailsDialogState extends State<_ProjectDetailsDialog> {
 }
 
 /// Creates a project from the details dialog and makes it active.
-Future<Project?> createProject(BuildContext context) async {
-  final details = await showProjectDetailsDialog(context);
+Future<Project?> createProject(
+  BuildContext context, {
+  ChecklistTemplate? checklist,
+}) async {
+  final details = await showProjectDetailsDialog(context, checklist: checklist);
   if (details == null || !context.mounted) return null;
   return context.read<ProjectsController>().create(
     details.name,
     client: details.client,
     location: details.location,
     costs: details.contractor ? CostSettings.contractor : CostSettings.owner,
+    checklist: details.checklist?.materials ?? const [],
   );
 }
 

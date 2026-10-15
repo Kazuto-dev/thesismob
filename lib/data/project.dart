@@ -367,6 +367,8 @@ class Project {
     this.items = const [],
     this.costs = CostSettings.owner,
     this.sheetId,
+    this.checklist = const [],
+    this.notNeeded = const {},
   });
 
   factory Project.create(String name, {DateTime? now}) {
@@ -409,6 +411,14 @@ class Project {
           ? CostSettings.fromJson(json['costs'] as Map<String, dynamic>)
           : CostSettings.owner,
       sheetId: json['sheetId'] is String ? json['sheetId'] as String : null,
+      checklist: List.unmodifiable([
+        for (final id in json['checklist'] as List? ?? const [])
+          if (id is String) id,
+      ]),
+      notNeeded: Set.unmodifiable({
+        for (final id in json['notNeeded'] as List? ?? const [])
+          if (id is String) id,
+      }),
     );
   }
 
@@ -426,6 +436,23 @@ class Project {
   /// The Google spreadsheet this project was last saved to, if any.
   final String? sheetId;
 
+  /// Calculators the job needs, by material id, from a checklist such as
+  /// the house checklist. Empty when the project has no checklist.
+  final List<String> checklist;
+
+  /// Checklist entries the user marked as not needed for this job.
+  final Set<String> notNeeded;
+
+  /// Whether the checklist entry [materialId] has an estimate.
+  bool isEstimated(String materialId) =>
+      items.any((e) => e.materialId == materialId);
+
+  /// Checklist entries still to estimate, in order.
+  List<String> get checklistToDo => [
+    for (final id in checklist)
+      if (!isEstimated(id) && !notNeeded.contains(id)) id,
+  ];
+
   /// Cost of all materials, companions included.
   double get materialsTotal =>
       _centavos(items.fold<double>(0, (sum, e) => sum + e.grandTotal));
@@ -442,6 +469,8 @@ class Project {
     List<Estimate>? items,
     CostSettings? costs,
     String? sheetId,
+    List<String>? checklist,
+    Set<String>? notNeeded,
     DateTime? updatedAt,
   }) => Project(
     id: id ?? this.id,
@@ -453,6 +482,8 @@ class Project {
     items: items ?? this.items,
     costs: costs ?? this.costs,
     sheetId: sheetId ?? this.sheetId,
+    checklist: checklist ?? this.checklist,
+    notNeeded: notNeeded ?? this.notNeeded,
   );
 
   Map<String, dynamic> toJson() => {
@@ -465,5 +496,7 @@ class Project {
     'items': [for (final e in items) e.toJson()],
     'costs': costs.toJson(),
     if (sheetId != null) 'sheetId': sheetId,
+    if (checklist.isNotEmpty) 'checklist': checklist,
+    if (notNeeded.isNotEmpty) 'notNeeded': notNeeded.toList(),
   };
 }

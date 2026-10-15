@@ -340,9 +340,38 @@ class _BackupSection extends StatelessWidget {
     );
   }
 
+  String _json(BuildContext context) => backupJson(
+    projects: context.read<ProjectsController>().projects,
+    prices: context.read<PriceBookController>().custom,
+    history: context.read<EstimatesController>().history,
+  );
+
+  Future<void> _backUpToDrive(BuildContext context) async {
+    // Straight from the tap, so Google's window may open.
+    final result = await context.read<GoogleAccountController>().backUp(
+      _json(context),
+    );
+    if (context.mounted) showMessage(context, result.message);
+  }
+
+  Future<void> _restoreFromDrive(BuildContext context) async {
+    final backup = await context.read<GoogleAccountController>().fetchBackup();
+    if (!context.mounted) return;
+    final content = backup.content;
+    if (content == null) {
+      showMessage(context, backup.result.message);
+      return;
+    }
+    await _restoreText(context, content);
+  }
+
   Future<void> _restore(BuildContext context) async {
     final text = await pickTextFile(accept: '.json,application/json');
     if (text == null || !context.mounted) return;
+    await _restoreText(context, text);
+  }
+
+  Future<void> _restoreText(BuildContext context, String text) async {
     final Backup backup;
     try {
       backup = parseBackup(text);
@@ -387,6 +416,7 @@ class _BackupSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final google = context.watch<GoogleAccountController>();
     return _Section(
       icon: Icons.backup_outlined,
       title: 'Backup and restore',
@@ -416,6 +446,56 @@ class _BackupSection extends StatelessWidget {
             ),
           ],
         ),
+        if (google.isConfigured) ...[
+          const SizedBox(height: Space.xl),
+          Text('Google Drive', style: theme.textTheme.titleSmall),
+          const SizedBox(height: Space.xs),
+          Text(
+            !google.isSignedIn
+                ? 'Sign in with Google above to keep a backup in your own '
+                      'Google Drive.'
+                : google.lastBackup == null
+                ? 'Keep a backup in your Google Drive, as '
+                      '"BuildQuantify backup.json", to restore on any device.'
+                : 'Last backed up ${formatDateTime(google.lastBackup!.toLocal())}.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          if (google.isSignedIn) ...[
+            const SizedBox(height: Space.md),
+            Wrap(
+              spacing: Space.sm,
+              runSpacing: Space.sm,
+              children: [
+                FilledButton.tonalIcon(
+                  onPressed: google.isBusy
+                      ? null
+                      : () => _backUpToDrive(context),
+                  icon: const Icon(Icons.cloud_upload_outlined),
+                  label: const Text('Back up to Drive'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: google.isBusy
+                      ? null
+                      : () => _restoreFromDrive(context),
+                  icon: const Icon(Icons.cloud_download_outlined),
+                  label: const Text('Restore from Drive'),
+                ),
+              ],
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: google.autoBackup,
+              onChanged: google.setAutoBackup,
+              title: const Text('Back up automatically'),
+              subtitle: const Text(
+                'Saves changes to Drive within a minute, for an hour after '
+                'each sign-in or backup',
+              ),
+            ),
+          ],
+        ],
       ],
     );
   }

@@ -11,8 +11,11 @@ import '../../materials/catalog.dart';
 import '../../materials/material_spec.dart';
 import '../../router.dart';
 import '../../state/estimates_controller.dart';
+import '../../data/checklists.dart';
 import '../../state/projects_controller.dart';
+import '../../state/tips_controller.dart';
 import '../common/tiles.dart';
+import '../projects/project_picker.dart';
 
 /// Calculators most people start with.
 const _popular = ['chb', 'paint', 'tiles', 'roof'];
@@ -61,6 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (searching)
                     _SearchResults(query: _query)
                   else ...[
+                    const _GetStarted(),
                     const SectionHeader('Categories'),
                     const _CategoryGrid(),
                     const SectionHeader('Popular calculators'),
@@ -395,6 +399,114 @@ class _Recent extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// Three steps for someone who has not estimated anything yet, and a
+/// quick way into a house project with its checklist.
+class _GetStarted extends StatelessWidget {
+  const _GetStarted();
+
+  static const _steps = [
+    (Icons.calculate_outlined, 'Pick a calculator and type your measurements'),
+    (Icons.add_task, 'Add the result to a project'),
+    (Icons.picture_as_pdf_outlined, 'Download a PDF or save to Google Sheets'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final fresh = context.select<EstimatesController, bool>(
+      (c) => c.history.isEmpty,
+    );
+    final empty = context.select<ProjectsController, bool>(
+      (c) => c.projects.every((p) => p.items.isEmpty && p.checklist.isEmpty),
+    );
+    final dismissed = context.select<TipsController, bool>(
+      (c) => c.isDismissed(TipsController.getStarted),
+    );
+    if (!fresh || !empty || dismissed) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: Space.xl),
+      child: Card(
+        color: scheme.primaryContainer,
+        child: Padding(
+          padding: const EdgeInsets.all(Space.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Semantics(
+                header: true,
+                child: Text(
+                  'Get started',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: scheme.onPrimaryContainer,
+                  ),
+                ),
+              ),
+              const SizedBox(height: Space.md),
+              for (final (i, (icon, text)) in _steps.indexed)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: Space.sm),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 14,
+                        backgroundColor: scheme.primary,
+                        foregroundColor: scheme.onPrimary,
+                        child: Text(
+                          '${i + 1}',
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: scheme.onPrimary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: Space.md),
+                      Icon(icon, size: 20, color: scheme.onPrimaryContainer),
+                      const SizedBox(width: Space.sm),
+                      Expanded(
+                        child: Text(
+                          text,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: scheme.onPrimaryContainer,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: Space.sm),
+              Wrap(
+                spacing: Space.sm,
+                runSpacing: Space.sm,
+                children: [
+                  FilledButton.icon(
+                    onPressed: () async {
+                      final created = await createProject(
+                        context,
+                        checklist: houseChecklist,
+                      );
+                      if (created != null && context.mounted) {
+                        context.go(Routes.project);
+                      }
+                    },
+                    icon: const Icon(Icons.house_outlined),
+                    label: const Text('Plan a house'),
+                  ),
+                  TextButton(
+                    onPressed: () => context.read<TipsController>().dismiss(
+                      TipsController.getStarted,
+                    ),
+                    child: const Text('Not now'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

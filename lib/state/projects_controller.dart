@@ -67,10 +67,17 @@ class ProjectsController extends ChangeNotifier {
     String client = '',
     String location = '',
     CostSettings costs = CostSettings.owner,
+    List<String> checklist = const [],
   }) {
-    final project = Project.create(
-      name.trim().isEmpty ? ProjectRepository.defaultName : name.trim(),
-    ).copyWith(client: client.trim(), location: location.trim(), costs: costs);
+    final project =
+        Project.create(
+          name.trim().isEmpty ? ProjectRepository.defaultName : name.trim(),
+        ).copyWith(
+          client: client.trim(),
+          location: location.trim(),
+          costs: costs,
+          checklist: checklist,
+        );
     _projects.add(project);
     _activeId = project.id;
     unawaited(_repository.saveActiveId(project.id));
@@ -104,6 +111,8 @@ class ProjectsController extends ChangeNotifier {
       location: source.location,
       costs: source.costs,
       items: [for (final e in source.items) e.withId(Estimate.newId(now))],
+      checklist: source.checklist,
+      notNeeded: source.notNeeded,
     );
     _projects.add(copy);
     setActive(copy.id);
@@ -253,6 +262,35 @@ class ProjectsController extends ChangeNotifier {
       ],
     ),
   );
+
+  /// Gives a project a checklist of the calculators its job needs, keeping
+  /// any it already has.
+  void addChecklist(String projectId, List<String> materials) => _update(
+    projectId,
+    (p) => p.copyWith(
+      checklist: [
+        ...p.checklist,
+        for (final id in materials)
+          if (!p.checklist.contains(id)) id,
+      ],
+    ),
+  );
+
+  void removeChecklist(String projectId) => _update(
+    projectId,
+    (p) => p.copyWith(checklist: const [], notNeeded: const {}),
+  );
+
+  /// Marks a checklist entry as not needed for the job, or needed again.
+  void setNeeded(String projectId, String materialId, {required bool needed}) =>
+      _update(
+        projectId,
+        (p) => p.copyWith(
+          notNeeded: needed
+              ? ({...p.notNeeded}..remove(materialId))
+              : {...p.notNeeded, materialId},
+        ),
+      );
 
   /// Remembers the Google spreadsheet a project was saved to.
   void setSheetId(String projectId, String sheetId) =>

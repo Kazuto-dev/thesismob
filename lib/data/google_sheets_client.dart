@@ -61,8 +61,11 @@ typedef SpreadsheetRef = ({String id, String url});
 String spreadsheetUrl(String id) =>
     'https://docs.google.com/spreadsheets/d/$id/edit';
 
-/// Calls Google's user info and Sheets APIs with the user's access token.
-/// The app only ever touches spreadsheets it created.
+/// A backup file the app keeps in the user's Drive.
+typedef DriveFile = ({String id, DateTime? modified});
+
+/// Calls Google's user info, Sheets and Drive APIs with the user's access
+/// token. The app only ever touches files it created.
 class GoogleSheetsClient {
   GoogleSheetsClient({http.Client? client}) : _http = client ?? http.Client();
 
@@ -72,6 +75,107 @@ class GoogleSheetsClient {
   static final _userInfo = Uri.parse(
     'https://www.googleapis.com/oauth2/v3/userinfo',
   );
+  static final _drive = Uri.parse('https://www.googleapis.com/drive/v3/');
+  static final _upload = Uri.parse(
+    'https://www.googleapis.com/upload/drive/v3/',
+  );
+
+  /// The backup file's name in the user's Drive.
+  static const backupName = 'BuildQuantify backup.json';
+
+  static DriveFile _file(Map<String, dynamic> json) {
+    final id = json['id'];
+    if (id is! String) {
+      throw const GoogleSheetsException(GoogleSheetsFailure.failed);
+    }
+    final modified = json['modifiedTime'];
+    return (
+      id: id,
+      modified: modified is String ? DateTime.tryParse(modified) : null,
+    );
+  }
+
+  /// The newest backup the app saved in the user's Drive, if any. With the
+  /// `drive.file` scope, Drive only lists files this app created.
+  Future<DriveFile?> findBackup(String token) async {
+    final json = await _send(
+      'GET',
+      _drive
+          .resolve('files')
+          .replace(
+            queryParameters: {
+              'q': "name = '$backupName' and trashed = false",
+              'spaces': 'drive',
+              'orderBy': 'modifiedTime desc',
+              'pageSize': '1',
+              'fields': 'files(id,modifiedTime)',
+            },
+          ),
+      token,
+    );
+    final files = json['files'];
+    if (files is! List || files.isEmpty || files.first is! Map) return null;
+    return _file(Map<String, dynamic>.from(files.first as Map));
+  }
+
+  /// Saves [content] as the backup file, replacing the one with [id] or
+  /// creating a new one.
+  Future<DriveFile> saveBackup(
+    String token,
+    String content, {
+    String? id,
+  }) async {
+    if (id != null) {
+      return _file(
+        await _send(
+          'PATCH',
+          _upload
+              .resolve('files/$id')
+              .replace(
+                queryParameters: {
+                  'uploadType': 'media',
+                  'fields': 'id,modifiedTime',
+                },
+              ),
+          token,
+          raw: (content: content, type: 'application/json; charset=UTF-8'),
+        ),
+      );
+    }
+    const boundary = 'buildquantify-backup-boundary';
+    final body =
+        '--$boundary\r\n'
+        'Content-Type: application/json; charset=UTF-8\r\n\r\n'
+        '${jsonEncode({'name': backupName, 'mimeType': 'application/json'})}'
+        '\r\n--$boundary\r\n'
+        'Content-Type: application/json; charset=UTF-8\r\n\r\n'
+        '$content\r\n--$boundary--';
+    return _file(
+      await _send(
+        'POST',
+        _upload
+            .resolve('files')
+            .replace(
+              queryParameters: {
+                'uploadType': 'multipart',
+                'fields': 'id,modifiedTime',
+              },
+            ),
+        token,
+        raw: (content: body, type: 'multipart/related; boundary=$boundary'),
+      ),
+    );
+  }
+
+  /// The contents of the backup file [id].
+  Future<String> readBackup(String token, String id) async {
+    final response = await _request(
+      'GET',
+      _drive.resolve('files/$id').replace(queryParameters: {'alt': 'media'}),
+      token,
+    );
+    return utf8.decode(response.bodyBytes);
+  }
 
   /// Who the token belongs to.
   Future<GoogleAccount> userInfo(String token) async {
@@ -306,6 +410,22 @@ class GoogleSheetsClient {
     Uri uri,
     String token, {
     Object? body,
+    ({String content, String type})? raw,
+  }) async {
+    final response = await _request(method, uri, token, body: body, raw: raw);
+    if (response.body.isEmpty) return const {};
+    final json = jsonDecode(response.body);
+    return json is Map<String, dynamic> ? json : const {};
+  }
+
+  /// Sends a request with [body] as JSON, or [raw] as is, and returns the
+  /// response when it succeeded.
+  Future<http.Response> _request(
+    String method,
+    Uri uri,
+    String token, {
+    Object? body,
+    ({String content, String type})? raw,
   }) async {
     final request = http.Request(method, uri)
       ..headers['Authorization'] = 'Bearer $token';
@@ -313,6 +433,10 @@ class GoogleSheetsClient {
       request
         ..headers['Content-Type'] = 'application/json'
         ..body = jsonEncode(body);
+    } else if (raw != null) {
+      request
+        ..headers['Content-Type'] = raw.type
+        ..body = raw.content;
     }
     final http.Response response;
     try {
@@ -325,9 +449,7 @@ class GoogleSheetsClient {
       throw GoogleSheetsException(GoogleSheetsFailure.offline, '$e');
     }
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      if (response.body.isEmpty) return const {};
-      final json = jsonDecode(response.body);
-      return json is Map<String, dynamic> ? json : const {};
+      return response;
     }
     final detail = response.body;
     throw GoogleSheetsException(switch (response.statusCode) {

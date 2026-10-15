@@ -145,4 +145,26 @@ void main() {
       ),
     );
   });
+
+  test('keeps one backup file in Drive', () async {
+    expect(await client.findBackup('t'), isNull);
+    final created = await client.saveBackup('t', '{"version":1}');
+    expect(api.driveFiles[created.id], '{"version":1}');
+    expect(created.modified, DateTime.utc(2026, 10, 15, 8));
+    final created1 = api.requests.last;
+    expect(created1.url.queryParameters['uploadType'], 'multipart');
+    expect(created1.body, contains('"name":"BuildQuantify backup.json"'));
+
+    final found = await client.findBackup('t');
+    expect(found?.id, created.id);
+    expect(
+      api.requests.last.url.queryParameters['q'],
+      "name = 'BuildQuantify backup.json' and trashed = false",
+    );
+
+    await client.saveBackup('t', '{"version":2}', id: created.id);
+    expect(api.requests.last.method, 'PATCH');
+    expect(api.driveFiles, hasLength(1));
+    expect(await client.readBackup('t', created.id), '{"version":2}');
+  });
 }

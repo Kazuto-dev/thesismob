@@ -10,7 +10,8 @@ import '../../data/project.dart';
 import '../../data/google_sheets_client.dart';
 import '../../export/files.dart';
 import '../../export/project_documents.dart';
-import '../../export/project_pdf.dart';
+// Loaded on first use: the PDF library is large and few visits need it.
+import '../../export/project_pdf.dart' deferred as pdf;
 import '../../router.dart';
 import '../../state/google_account_controller.dart';
 import '../../state/projects_controller.dart';
@@ -19,7 +20,8 @@ import '../../state/projects_controller.dart';
 Future<void> downloadProjectPdf(BuildContext context, Project project) async {
   showMessage(context, 'Preparing the PDF…');
   try {
-    final bytes = await projectPdf(project);
+    await pdf.loadLibrary();
+    final bytes = await pdf.projectPdf(project);
     final saved = await saveFile(
       '${fileSlug(project, 'boq')}.pdf',
       bytes,

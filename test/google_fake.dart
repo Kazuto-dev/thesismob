@@ -11,6 +11,9 @@ class FakeGoogleApi {
   /// Spreadsheet id → its tab titles.
   final spreadsheets = <String, List<String>>{};
 
+  /// Drive file id → its contents.
+  final driveFiles = <String, String>{};
+
   /// When set, the next request fails with this status and [failBody].
   int? failNext;
   String failBody = '{}';
@@ -54,6 +57,10 @@ class FakeGoogleApi {
     if (failNext case final status?) {
       failNext = null;
       return http.Response(failBody, status);
+    }
+    if (request.url.path.startsWith('/drive/') ||
+        request.url.path.startsWith('/upload/drive/')) {
+      return _drive(request);
     }
     if (request.url.host == 'www.googleapis.com') {
       return _json({
@@ -102,5 +109,40 @@ class FakeGoogleApi {
       return _json({'spreadsheetId': id, 'replies': replies});
     }
     return _json({'spreadsheetId': id});
+  }
+
+  http.Response _drive(http.Request request) {
+    final path = request.url.path;
+    const modified = '2026-10-15T08:00:00.000Z';
+    if (request.method == 'GET' && path == '/drive/v3/files') {
+      return _json({
+        'files': [
+          for (final id in driveFiles.keys.toList().reversed)
+            {'id': id, 'modifiedTime': modified},
+        ],
+      });
+    }
+    if (request.method == 'GET' && path.startsWith('/drive/v3/files/')) {
+      final content = driveFiles[path.split('/').last];
+      return content == null
+          ? _json({}, 404)
+          : http.Response.bytes(utf8.encode(content), 200);
+    }
+    if (request.method == 'POST' && path == '/upload/drive/v3/files') {
+      // Multipart: the file's metadata, then its contents.
+      final parts = request.body.split('\r\n\r\n');
+      final content = parts.last.substring(0, parts.last.lastIndexOf('\r\n'));
+      final id = 'file${driveFiles.length + 1}';
+      driveFiles[id] = content;
+      return _json({'id': id, 'modifiedTime': modified});
+    }
+    if (request.method == 'PATCH' &&
+        path.startsWith('/upload/drive/v3/files/')) {
+      final id = path.split('/').last;
+      if (!driveFiles.containsKey(id)) return _json({}, 404);
+      driveFiles[id] = request.body;
+      return _json({'id': id, 'modifiedTime': modified});
+    }
+    return _json({}, 400);
   }
 }

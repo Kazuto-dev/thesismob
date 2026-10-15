@@ -33,6 +33,8 @@ void main() {
   late FakeGoogleApi api;
   late SharedPreferences prefs;
 
+  var now = DateTime(2026, 10, 15, 9);
+
   Future<GoogleAccountController> setup([
     Map<String, Object> values = const {},
   ]) async {
@@ -40,10 +42,12 @@ void main() {
     prefs = await SharedPreferences.getInstance();
     auth = FakeGoogleAuth();
     api = FakeGoogleApi();
+    now = DateTime(2026, 10, 15, 9);
     return GoogleAccountController(
       prefs,
       auth,
       GoogleSheetsClient(client: api.client),
+      clock: () => now,
     );
   }
 
@@ -135,5 +139,51 @@ void main() {
     );
     expect(c.isConfigured, isFalse);
     expect((await c.signIn()).message, contains("isn't set up"));
+  });
+
+  test('backs up to Drive and restores from it', () async {
+    final c = await setup();
+    final none = await c.fetchBackup();
+    expect(none.content, isNull);
+    expect(none.result.message, contains('no BuildQuantify backup'));
+
+    final saved = await c.backUp('{"version":1}');
+    expect(saved.ok, isTrue);
+    expect(c.lastBackup, DateTime.utc(2026, 10, 15, 8));
+    expect(api.driveFiles.values, ['{"version":1}']);
+
+    // The same file is updated, and remembered across visits.
+    final again = GoogleAccountController(
+      prefs,
+      auth,
+      GoogleSheetsClient(client: api.client),
+    );
+    await again.backUp('{"version":2}');
+    expect(api.driveFiles.values, ['{"version":2}']);
+    expect((await again.fetchBackup()).content, '{"version":2}');
+  });
+
+  test('automatic backups reuse a recent sign-in and never ask', () async {
+    final c = await setup();
+    await c.autoBackUp('{"a":1}');
+    expect(api.driveFiles, isEmpty, reason: 'off until turned on');
+
+    c.setAutoBackup(true);
+    await c.autoBackUp('{"a":1}');
+    expect(api.driveFiles, isEmpty, reason: 'no token yet');
+
+    await c.signIn();
+    final asked = auth.authorizations;
+    await c.autoBackUp('{"a":2}');
+    expect(api.driveFiles.values, ['{"a":2}']);
+    expect(auth.authorizations, asked, reason: 'no Google window');
+
+    now = now.add(const Duration(hours: 1));
+    await c.autoBackUp('{"a":3}');
+    expect(api.driveFiles.values, ['{"a":2}'], reason: 'the token expired');
+
+    await c.signOut();
+    expect(c.autoBackup, isFalse);
+    expect(c.lastBackup, isNull);
   });
 }

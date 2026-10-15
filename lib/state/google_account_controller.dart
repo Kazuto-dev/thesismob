@@ -12,16 +12,25 @@ import '../export/project_sheets.dart';
 /// The outcome of a Google action, with a message for the user.
 typedef GoogleResult = ({bool ok, String message, SpreadsheetRef? sheet});
 
+/// A backup read from Google Drive: its contents, or why there are none.
+typedef DriveBackup = ({GoogleResult result, String? content});
+
 /// The user's Google account, and saving projects to Google Sheets in it.
 ///
 /// Only the account's name and email are remembered between visits. The
 /// access token stays in memory, so after a reload the first save asks
 /// Google again, usually with one click.
 class GoogleAccountController extends ChangeNotifier {
-  GoogleAccountController(this._prefs, this._auth, this._sheets)
-    : _account = _load(_prefs),
-      _skipped = _prefs.getBool(skippedKey) ?? false {
+  GoogleAccountController(
+    this._prefs,
+    this._auth,
+    this._sheets, {
+    DateTime Function()? clock,
+  }) : _account = _load(_prefs),
+       _skipped = _prefs.getBool(skippedKey) ?? false,
+       _now = clock ?? DateTime.now {
     _auth.warmUp();
+    _loadBackup();
   }
 
   static const key = 'google_account_v1';
@@ -29,12 +38,135 @@ class GoogleAccountController extends ChangeNotifier {
   /// Set when the user chose to continue without signing in.
   static const skippedKey = 'google_sign_in_skipped_v1';
 
+  /// The Drive backup file, when it was last saved, and whether to keep it
+  /// up to date automatically.
+  static const backupKey = 'drive_backup_v1';
+
+  /// How long a token is reused for automatic backups. Google's tokens
+  /// last an hour.
+  static const tokenLife = Duration(minutes: 50);
+
   final SharedPreferences _prefs;
   final GoogleAuth _auth;
   final GoogleSheetsClient _sheets;
   GoogleAccount? _account;
   bool _skipped;
   bool _busy = false;
+  final DateTime Function() _now;
+
+  /// The latest access token, kept in memory for automatic backups.
+  String? _token;
+  DateTime? _tokenAt;
+
+  String? _backupId;
+  DateTime? _backedUpAt;
+  bool _autoBackup = false;
+  bool _backingUp = false;
+
+  void _loadBackup() {
+    final raw = _prefs.getString(backupKey);
+    if (raw == null) return;
+    try {
+      final json = jsonDecode(raw) as Map<String, dynamic>;
+      _backupId = json['id'] as String?;
+      _backedUpAt = DateTime.tryParse(json['at'] as String? ?? '');
+      _autoBackup = json['auto'] == true;
+    } on Object {
+      // Start afresh; the next backup finds the file again.
+    }
+  }
+
+  void _saveBackupState() => unawaited(
+    _prefs.setString(
+      backupKey,
+      jsonEncode({
+        'id': ?_backupId,
+        if (_backedUpAt != null) 'at': _backedUpAt!.toIso8601String(),
+        'auto': _autoBackup,
+      }),
+    ),
+  );
+
+  /// When the projects were last backed up to Google Drive.
+  DateTime? get lastBackup => _backedUpAt;
+
+  /// Whether changes are backed up to Drive by themselves while the user
+  /// is signed in.
+  bool get autoBackup => _autoBackup;
+
+  void setAutoBackup(bool on) {
+    if (on == _autoBackup) return;
+    _autoBackup = on;
+    _saveBackupState();
+    notifyListeners();
+  }
+
+  /// Saves [content] to the backup file in the user's Drive, creating it
+  /// the first time. Call it straight from a button press.
+  Future<GoogleResult> backUp(String content) => _run((token) async {
+    await _identify(token);
+    await _writeBackup(token, content);
+    return (ok: true, message: 'Backed up to your Google Drive.', sheet: null);
+  }, drive: true);
+
+  /// Reads the backup file from the user's Drive. Call it straight from a
+  /// button press.
+  Future<DriveBackup> fetchBackup() async {
+    String? content;
+    final result = await _run((token) async {
+      await _identify(token);
+      final file = await _sheets.findBackup(token);
+      if (file == null) {
+        return (
+          ok: false,
+          message: 'There is no BuildQuantify backup in this Google Drive yet.',
+          sheet: null,
+        );
+      }
+      content = await _sheets.readBackup(token, file.id);
+      _backupId = file.id;
+      _saveBackupState();
+      return (ok: true, message: 'Found your backup.', sheet: null);
+    }, drive: true);
+    return (result: result, content: content);
+  }
+
+  /// Backs up [content] without asking the user, when automatic backups
+  /// are on and a recent sign-in left a token to use. Does nothing
+  /// otherwise; a failure waits for the next change or a manual backup.
+  Future<void> autoBackUp(String content) async {
+    final token = _token;
+    final at = _tokenAt;
+    if (!_autoBackup || !isSignedIn || _busy || _backingUp) return;
+    if (token == null || at == null || _now().difference(at) > tokenLife) {
+      return;
+    }
+    _backingUp = true;
+    try {
+      await _writeBackup(token, content);
+      notifyListeners();
+    } on GoogleSheetsException catch (e) {
+      if (e.failure == GoogleSheetsFailure.unauthorized) _token = null;
+    } finally {
+      _backingUp = false;
+    }
+  }
+
+  Future<void> _writeBackup(String token, String content) async {
+    var id = _backupId ?? (await _sheets.findBackup(token))?.id;
+    DriveFile file;
+    try {
+      file = await _sheets.saveBackup(token, content, id: id);
+    } on GoogleSheetsException catch (e) {
+      // Deleted from Drive since: make a new one.
+      if (id == null || e.failure != GoogleSheetsFailure.notFound) rethrow;
+      id = null;
+      file = await _sheets.saveBackup(token, content);
+    }
+    _backupId = file.id;
+    _backedUpAt = file.modified ?? _now();
+    _saveBackupState();
+  }
 
   static GoogleAccount? _load(SharedPreferences prefs) {
     final raw = prefs.getString(key);
@@ -79,6 +211,12 @@ class GoogleAccountController extends ChangeNotifier {
   Future<void> signOut() async {
     _account = null;
     _skipped = false;
+    _token = null;
+    // The backup belongs to that account.
+    _backupId = null;
+    _backedUpAt = null;
+    unawaited(_prefs.remove(backupKey));
+    _autoBackup = false;
     unawaited(_prefs.remove(key));
     unawaited(_prefs.remove(skippedKey));
     notifyListeners();
@@ -125,8 +263,9 @@ class GoogleAccountController extends ChangeNotifier {
   }
 
   Future<GoogleResult> _run(
-    Future<GoogleResult> Function(String token) action,
-  ) async {
+    Future<GoogleResult> Function(String token) action, {
+    bool drive = false,
+  }) async {
     if (_busy) {
       return (ok: false, message: 'Still working on it…', sheet: null);
     }
@@ -137,14 +276,25 @@ class GoogleAccountController extends ChangeNotifier {
       // First, before anything else is awaited, so the browser allows
       // Google's window to open.
       token = await _auth.authorize();
+      _token = token;
+      _tokenAt = _now();
       return await action(token);
     } on GoogleAuthException catch (e) {
       return (ok: false, message: _authMessage(e.failure), sheet: null);
     } on GoogleSheetsException catch (e) {
       if (e.failure == GoogleSheetsFailure.unauthorized && token != null) {
+        _token = null;
         await _auth.forget(token);
       }
-      return (ok: false, message: _sheetsMessage(e.failure), sheet: null);
+      return (
+        ok: false,
+        message: drive && e.failure == GoogleSheetsFailure.apiDisabled
+            ? "The Google Drive API isn't enabled for this app yet."
+            : drive && e.failure == GoogleSheetsFailure.failed
+            ? "Couldn't reach your Google Drive backup. Try again."
+            : _sheetsMessage(e.failure),
+        sheet: null,
+      );
     } finally {
       _busy = false;
       notifyListeners();
