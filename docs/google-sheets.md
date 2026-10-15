@@ -7,8 +7,14 @@ permission.
 
 ## What users see
 
-1. On a project, they choose **Google Sheets** (or Settings → **Sign in
-   with Google**).
+The app opens on a login screen with **Sign in with Google** and **Continue
+without signing in**. It appears on the first visit and after signing out;
+once the user signs in or chooses to continue, it steps aside and they land
+where they were going (a shared calculator link, for example). Builds
+without a client ID skip it.
+
+1. On the login screen, a project's **Google Sheets** button, or Settings →
+   **Sign in with Google**, they sign in.
 2. Google asks them to pick an account and allow BuildQuantify to "see,
    edit, create and delete only the specific Google Drive files you use
    with this app".
@@ -98,6 +104,7 @@ including PDF and Excel downloads, works as usual.
 
 | File | Role |
 | --- | --- |
+| [`lib/features/auth/login_screen.dart`](../lib/features/auth/login_screen.dart) | The login screen; the router in [`lib/router.dart`](../lib/router.dart) shows it until the user signs in or continues |
 | [`lib/data/google_auth.dart`](../lib/data/google_auth.dart) | Gets access tokens through Google Identity Services (`google_sign_in`) |
 | [`lib/data/google_sheets_client.dart`](../lib/data/google_sheets_client.dart) | Calls the user info and Sheets REST APIs: create, update, format |
 | [`lib/export/project_sheets.dart`](../lib/export/project_sheets.dart) | Turns a project into the three tabs |

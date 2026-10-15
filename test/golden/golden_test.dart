@@ -115,6 +115,11 @@ void main() {
       await _snapshot(tester, 'calculator_$label');
     });
 
+    testWidgets('login on $label', skip: _skip != null, (tester) async {
+      await pumpApp(tester, size: size, googleAuth: FakeGoogleAuth());
+      await _snapshot(tester, 'login_$label');
+    });
+
     testWidgets('project on $label', skip: _skip != null, (tester) async {
       await pumpApp(
         tester,

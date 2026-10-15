@@ -37,8 +37,14 @@ class BuildQuantifyApp extends StatefulWidget {
 }
 
 class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
+  late final _google = GoogleAccountController(
+    widget.prefs,
+    widget.googleAuth ?? GoogleSignInAuth(),
+    widget.sheetsClient ?? GoogleSheetsClient(),
+  );
   late final GoRouter _router = createRouter(
     initialLocation: widget.initialLocation,
+    account: _google,
   );
   final _light = buildTheme();
   final _dark = buildTheme(Brightness.dark);
@@ -46,6 +52,7 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
   @override
   void dispose() {
     _router.dispose();
+    _google.dispose();
     super.dispose();
   }
 
@@ -65,13 +72,7 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
         ChangeNotifierProvider(
           create: (_) => AppearanceController(widget.prefs),
         ),
-        ChangeNotifierProvider(
-          create: (_) => GoogleAccountController(
-            widget.prefs,
-            widget.googleAuth ?? GoogleSignInAuth(),
-            widget.sheetsClient ?? GoogleSheetsClient(),
-          ),
-        ),
+        ChangeNotifierProvider.value(value: _google),
       ],
       child: Builder(
         builder: (context) => MaterialApp.router(

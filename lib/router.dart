@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'features/auth/login_screen.dart';
 import 'features/calculator/calculator_screen.dart';
 import 'features/category/category_screen.dart';
 import 'features/help/help_screen.dart';
@@ -14,6 +15,7 @@ import 'features/settings/price_book_screen.dart';
 import 'features/home/home_screen.dart';
 import 'materials/catalog.dart';
 import 'materials/material_spec.dart';
+import 'state/google_account_controller.dart';
 
 /// Locations the original app used, so old bookmarks still land somewhere
 /// sensible.
@@ -82,6 +84,7 @@ abstract final class Routes {
   static const settings = '/settings';
   static const help = '/settings/help';
   static const prices = '/settings/prices';
+  static const login = '/login';
 
   static String projectById(String id) => '/project/$id';
 
@@ -92,21 +95,61 @@ abstract final class Routes {
       '${fromEstimate == null ? '' : '?estimate=$fromEstimate'}';
 }
 
-GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
+/// Where a link really leads: old bookmarks and short material links
+/// resolve to today's paths.
+String _resolve(Uri uri) {
+  final path = uri.path;
+  final target = _legacyRedirects[path] ?? path;
+  if (target.startsWith('/material/')) {
+    final spec = materialById(target.substring('/material/'.length));
+    return spec == null ? target : Routes.material(spec);
+  }
+  return target == path ? uri.toString() : target;
+}
+
+/// Only paths inside the app, so a crafted link cannot send users away.
+String _safeReturn(String? from) =>
+    from != null &&
+        from.startsWith('/') &&
+        !from.startsWith('//') &&
+        !from.startsWith(Routes.login)
+    ? from
+    : Routes.home;
+
+/// The app's routes. With [account], the login screen comes first until
+/// the user signs in with Google or chooses to continue without it, then
+/// they land where they were going.
+GoRouter createRouter({
+  String initialLocation = Routes.home,
+  GoogleAccountController? account,
+}) => GoRouter(
   initialLocation: initialLocation,
+  refreshListenable: account,
   redirect: (context, state) {
-    final path = state.uri.path;
     // Resolve in one step: chained redirects are not re-run.
-    final target = _legacyRedirects[path] ?? path;
-    // Short material links resolve to their category.
-    if (target.startsWith('/material/')) {
-      final spec = materialById(target.substring('/material/'.length));
-      return spec == null ? null : Routes.material(spec);
+    final current = state.uri.toString();
+    if (state.uri.path == Routes.login) {
+      return account == null || account.needsSignIn
+          ? null
+          : _safeReturn(state.uri.queryParameters['from']);
     }
-    return target == path ? null : target;
+    final target = _resolve(state.uri);
+    if (account != null && account.needsSignIn) {
+      return target == Routes.home
+          ? Routes.login
+          : Uri(
+              path: Routes.login,
+              queryParameters: {'from': target},
+            ).toString();
+    }
+    return target == current ? null : target;
   },
   errorBuilder: (context, state) => const NotFoundScreen(),
   routes: [
+    GoRoute(
+      path: Routes.login,
+      builder: (context, state) => const LoginScreen(),
+    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, shell) => AppShell(shell: shell),
       branches: [

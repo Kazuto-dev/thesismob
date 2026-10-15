@@ -19,16 +19,21 @@ typedef GoogleResult = ({bool ok, String message, SpreadsheetRef? sheet});
 /// Google again, usually with one click.
 class GoogleAccountController extends ChangeNotifier {
   GoogleAccountController(this._prefs, this._auth, this._sheets)
-    : _account = _load(_prefs) {
+    : _account = _load(_prefs),
+      _skipped = _prefs.getBool(skippedKey) ?? false {
     _auth.warmUp();
   }
 
   static const key = 'google_account_v1';
 
+  /// Set when the user chose to continue without signing in.
+  static const skippedKey = 'google_sign_in_skipped_v1';
+
   final SharedPreferences _prefs;
   final GoogleAuth _auth;
   final GoogleSheetsClient _sheets;
   GoogleAccount? _account;
+  bool _skipped;
   bool _busy = false;
 
   static GoogleAccount? _load(SharedPreferences prefs) {
@@ -48,6 +53,19 @@ class GoogleAccountController extends ChangeNotifier {
 
   bool get isSignedIn => _account != null;
 
+  /// Whether to show the login screen: Google sign-in is available, and
+  /// the user has neither signed in nor chosen to continue without it.
+  bool get needsSignIn => isConfigured && !isSignedIn && !_skipped;
+
+  /// Uses the app without a Google account; the login screen stops
+  /// appearing until the user signs out of an account.
+  void skipSignIn() {
+    if (_skipped) return;
+    _skipped = true;
+    unawaited(_prefs.setBool(skippedKey, true));
+    notifyListeners();
+  }
+
   /// True while talking to Google.
   bool get isBusy => _busy;
 
@@ -60,7 +78,9 @@ class GoogleAccountController extends ChangeNotifier {
 
   Future<void> signOut() async {
     _account = null;
+    _skipped = false;
     unawaited(_prefs.remove(key));
+    unawaited(_prefs.remove(skippedKey));
     notifyListeners();
     try {
       await _auth.signOut();

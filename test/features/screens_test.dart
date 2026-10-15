@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:thesismob/core/format.dart';
 import 'package:thesismob/data/google_sheets_client.dart';
 import 'package:thesismob/data/project.dart';
+import 'package:thesismob/state/google_account_controller.dart';
 
 import '../google_fake.dart';
 import '../helpers.dart';
@@ -130,7 +131,10 @@ void main() {
       await pumpApp(
         tester,
         location: '/project',
-        prefs: projectPrefs(items),
+        prefs: {
+          ...projectPrefs(items),
+          GoogleAccountController.skippedKey: true,
+        },
         googleAuth: FakeGoogleAuth(),
         sheetsClient: GoogleSheetsClient(client: api.client),
       );
@@ -232,6 +236,7 @@ void main() {
         location: '/settings',
         googleAuth: FakeGoogleAuth(),
         sheetsClient: GoogleSheetsClient(client: FakeGoogleApi().client),
+        prefs: {GoogleAccountController.skippedKey: true},
       );
       expect(find.text('Signed out'), findsOneWidget);
       await tester.ensureVisible(find.text('Sign in with Google'));
@@ -246,6 +251,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Sign out'));
       await tester.pumpAndSettle();
+      // Signing out shows the login screen again.
+      expect(find.text('Welcome'), findsOneWidget);
       expect(find.text('Sign in with Google'), findsOneWidget);
     });
 

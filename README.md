@@ -16,12 +16,13 @@ projects. A project builds:
   with owner, contractor and DPWH presets.
 
 Projects export to PDF, Excel (CSV) or plain text, save to Google Sheets
-after signing in with Google, and can be backed up to a file. After the first visit the app works fully offline, in
+after signing in with Google on the login screen, and can be backed up to a
+file. After the first visit the app works fully offline, in
 light or dark mode.
 
-| Phone | Project on a desktop | Calculator, dark |
+| Login | Project on a phone | Project on a desktop |
 | --- | --- | --- |
-| ![Project on a phone](test/golden/goldens/project_phone.png) | ![Project on a desktop](test/golden/goldens/project_desktop.png) | ![Calculator in dark mode](test/golden/goldens/calculator_phone_dark.png) |
+| ![Login on a phone](test/golden/goldens/login_phone.png) | ![Project on a phone](test/golden/goldens/project_phone.png) | ![Project on a desktop](test/golden/goldens/project_desktop.png) |
 
 - [How each material is calculated, with sources](docs/calculations.md)
 - [Prices, budgets and exports](docs/prices-and-costing.md)
