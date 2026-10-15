@@ -5,28 +5,31 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/theme.dart';
 import 'data/estimate_repository.dart';
-import 'data/sheet_settings.dart';
-import 'data/sheets_export_service.dart';
+import 'data/google_auth.dart';
+import 'data/google_sheets_client.dart';
 import 'router.dart';
 import 'data/project_repository.dart';
 import 'state/appearance_controller.dart';
 import 'state/estimates_controller.dart';
 import 'state/price_book_controller.dart';
 import 'state/projects_controller.dart';
-import 'state/sheet_settings_controller.dart';
+import 'state/google_account_controller.dart';
 
 class BuildQuantifyApp extends StatefulWidget {
   const BuildQuantifyApp({
     super.key,
     required this.prefs,
-    this.exporter,
+    this.googleAuth,
+    this.sheetsClient,
     this.initialLocation = Routes.home,
   });
 
   final SharedPreferences prefs;
 
-  /// Overridable for tests; defaults to the proxy from the build config.
-  final SheetsExportService? exporter;
+  /// Overridable for tests; default to Google sign-in with the client ID
+  /// from the build config, and Google's APIs.
+  final GoogleAuth? googleAuth;
+  final GoogleSheetsClient? sheetsClient;
   final String initialLocation;
 
   @override
@@ -63,9 +66,10 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
           create: (_) => AppearanceController(widget.prefs),
         ),
         ChangeNotifierProvider(
-          create: (_) => SheetSettingsController(
-            SheetSettingsRepository(widget.prefs),
-            widget.exporter ?? SheetsExportService(),
+          create: (_) => GoogleAccountController(
+            widget.prefs,
+            widget.googleAuth ?? GoogleSignInAuth(),
+            widget.sheetsClient ?? GoogleSheetsClient(),
           ),
         ),
       ],

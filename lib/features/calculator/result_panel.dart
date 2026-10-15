@@ -18,10 +18,8 @@ class ResultPanel extends StatelessWidget {
     required this.estimate,
     required this.projectName,
     required this.inProject,
-    required this.exporting,
     required this.onAdd,
     required this.onChangeProject,
-    required this.onExport,
     required this.onSetPrice,
   });
 
@@ -32,10 +30,8 @@ class ResultPanel extends StatelessWidget {
   final Estimate estimate;
   final String projectName;
   final bool inProject;
-  final bool exporting;
   final VoidCallback onAdd;
   final VoidCallback onChangeProject;
-  final VoidCallback onExport;
 
   /// Changes the price book price of a companion material.
   final void Function(EstimateLine line) onSetPrice;
@@ -62,17 +58,6 @@ class ResultPanel extends StatelessWidget {
       icon: const Icon(Icons.swap_horiz, size: 18),
       label: const Text('Change project'),
     );
-    final export = OutlinedButton.icon(
-      onPressed: exporting ? null : onExport,
-      icon: exporting
-          ? const SizedBox.square(
-              dimension: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : const Icon(Icons.table_chart_outlined),
-      label: const Text('Send to Google Sheet'),
-    );
-
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -237,14 +222,12 @@ class ResultPanel extends StatelessWidget {
                 if (compact) ...[
                   add,
                   change,
-                  const SizedBox(height: Space.xs),
-                  export,
                 ] else
                   Wrap(
                     spacing: Space.sm,
                     runSpacing: Space.sm,
                     crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [add, export, change],
+                    children: [add, change],
                   ),
               ],
             ),

@@ -15,8 +15,8 @@ projects. A project builds:
 - a budget with labour, contingency and, for bids, overhead, profit and VAT,
   with owner, contractor and DPWH presets.
 
-Projects export to PDF, Excel (CSV), plain text or Google Sheets, and can be
-backed up to a file. After the first visit the app works fully offline, in
+Projects export to PDF, Excel (CSV) or plain text, save to Google Sheets
+after signing in with Google, and can be backed up to a file. After the first visit the app works fully offline, in
 light or dark mode.
 
 | Phone | Project on a desktop | Calculator, dark |
@@ -25,6 +25,7 @@ light or dark mode.
 
 - [How each material is calculated, with sources](docs/calculations.md)
 - [Prices, budgets and exports](docs/prices-and-costing.md)
+- [Saving to Google Sheets](docs/google-sheets.md)
 - [Design system](docs/design-system.md) and [design QA](docs/design-qa.md)
 
 - **Structural:** concrete hollow blocks (adjustable rebar spacing),
@@ -41,12 +42,10 @@ light or dark mode.
   sinks, toilets, faucets, showers, water tanks, septic tanks (block or
   polyethylene)
 
-> [!IMPORTANT]
-> Earlier versions embedded a Google service-account private key in the
-> source code and web build. It has been removed, but it is still in git
-> history. Revoke it in Google Cloud Console → IAM & Admin → Service
-> Accounts → `flutter-test@qualified-tea-408701.iam.gserviceaccount.com` →
-> Keys (key `ea91bc…`). The app no longer needs any key; see
+> [!NOTE]
+> Earlier versions embedded a Google service-account private key, which is
+> still in git history. That key has been revoked, and the app no longer
+> uses a service account or any key; see
 > [Google Sheets export](#google-sheets-export).
 
 ## Run it
@@ -62,14 +61,16 @@ flutter run -d chrome
 
 ```sh
 flutter build web --release --no-web-resources-cdn \
-  --dart-define=SHEETS_PROXY_URL=https://REGION-PROJECT.cloudfunctions.net/sheets-proxy
+  --dart-define=GOOGLE_CLIENT_ID=1234567890-abc.apps.googleusercontent.com
 ```
 
 - `--no-web-resources-cdn` serves the CanvasKit renderer and fallback fonts
   with the app instead of from a Google CDN, so the app still loads on
   networks that block it.
-- Without `SHEETS_PROXY_URL` the app works fully offline; the export
-  buttons explain that Google Sheets export is not set up.
+- `GOOGLE_CLIENT_ID` is the OAuth client ID that lets users sign in with
+  Google and save projects to Google Sheets; see
+  [docs/google-sheets.md](docs/google-sheets.md). Without it, everything
+  else works and Settings explains that Google sign-in isn't set up.
 - `web/sw.js` is a service worker that caches the app as it loads, so after
   one visit it starts without a connection. It is skipped on `localhost`
   unless the URL has `?offline`, so debug builds are never served stale.
@@ -78,11 +79,12 @@ flutter build web --release --no-web-resources-cdn \
 
 ## Google Sheets export
 
-The browser never holds Google credentials. Rows are sent to a small Cloud
-Function in [`functions/sheets-proxy`](functions/sheets-proxy/README.md),
-which runs as the service account without a key file and appends them to the
-user's sheet. Users share their spreadsheet with the service account as an
-Editor; Settings and the Help screen walk them through it.
+Users sign in with their own Google account and each project is saved as a
+spreadsheet in their Google Drive, with the bill of quantities, the materials
+list and the budget on separate tabs. The app asks only for the `drive.file`
+permission, so it can open the spreadsheets it creates and nothing else, and
+Google does not require an app review. There is no server and no key. Setup
+for the Google client ID is in [docs/google-sheets.md](docs/google-sheets.md).
 
 ## Test
 
@@ -125,7 +127,6 @@ lib/
                            projects, settings, price book, help, shell
 assets/                    images and the Plus Jakarta Sans font (OFL)
 docs/                      calculations, design system, design QA
-functions/sheets-proxy/    Cloud Function for Google Sheets
 tool/smoke/                Playwright smoke test
 test/                      unit, widget and golden tests
 ```
@@ -152,12 +153,12 @@ automatically.
 
 ## Data
 
-Projects, prices, history and sheet details are saved in the browser
-(SharedPreferences / localStorage). Settings → Backup and restore downloads
-them as a JSON file and restores them on another device. On first start the
-app imports the history, summary and sheet details saved by the original
-version, and an earlier summary becomes the project "My project"; the old
-entries are left in place.
+Projects, prices, history and the name of the signed-in Google account are
+saved in the browser (SharedPreferences / localStorage). Settings → Backup
+and restore downloads them as a JSON file and restores them on another
+device. On first start the app imports the history and summary saved by the
+original version, and an earlier summary becomes the project "My project";
+the old entries are left in place.
 
 ## Calculation changes
 

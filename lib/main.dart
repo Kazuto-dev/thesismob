@@ -28,8 +28,7 @@ void _warmUpAssets() {
       for (final c in MaterialCategory.values)
         'assets/images/categories/${c.name}.png',
       'assets/images/brand/house.png',
-      for (final step in const [1, 2, 3, 4, 5, 6, 8, 9])
-        'assets/images/help/step_${step.toString().padLeft(2, '0')}.webp',
+      'assets/images/brand/google_g.png',
     };
     for (final path in paths) {
       try {

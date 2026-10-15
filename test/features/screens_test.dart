@@ -2,8 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:thesismob/core/format.dart';
+import 'package:thesismob/data/google_sheets_client.dart';
 import 'package:thesismob/data/project.dart';
 
+import '../google_fake.dart';
 import '../helpers.dart';
 
 void main() {
@@ -121,6 +123,33 @@ void main() {
       expect(projectsOf(tester).active.costs, CostSettings.contractor);
     });
 
+    testWidgets('saves to Google Sheets, then updates the same sheet', (
+      tester,
+    ) async {
+      final api = FakeGoogleApi();
+      await pumpApp(
+        tester,
+        location: '/project',
+        prefs: projectPrefs(items),
+        googleAuth: FakeGoogleAuth(),
+        sheetsClient: GoogleSheetsClient(client: api.client),
+      );
+      await tester.tap(find.text('Google Sheets'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text(
+          'Saved "BuildQuantify – Santos residence" to your Google Drive.',
+        ),
+        findsOneWidget,
+      );
+      expect(projectsOf(tester).active.sheetId, 'sheet1');
+      expect(find.text('Update Google Sheet'), findsOneWidget);
+
+      await tester.tap(find.text('Update Google Sheet'));
+      await tester.pumpAndSettle();
+      expect(api.spreadsheets, hasLength(1));
+    });
+
     testWidgets('desktops show the budget beside the items', (tester) async {
       await pumpApp(
         tester,
@@ -188,39 +217,36 @@ void main() {
   });
 
   group('settings', () {
-    testWidgets('accepts a sheet link and rejects other text', (tester) async {
+    testWidgets('explains when Google sign-in is not set up', (tester) async {
       await pumpApp(tester, location: '/settings');
       expect(
-        find.textContaining("isn't set up for this build"),
+        find.textContaining("Google sign-in isn't set up"),
         findsOneWidget,
       );
+      expect(find.text('Sign in with Google'), findsNothing);
+    });
 
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Spreadsheet link or ID'),
-        'not a sheet',
+    testWidgets('signs in and out of Google', (tester) async {
+      await pumpApp(
+        tester,
+        location: '/settings',
+        googleAuth: FakeGoogleAuth(),
+        sheetsClient: GoogleSheetsClient(client: FakeGoogleApi().client),
       );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Sheet tab name'),
-        'Sheet1',
-      );
-      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Save'));
+      expect(find.text('Signed out'), findsOneWidget);
+      await tester.ensureVisible(find.text('Sign in with Google'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.tap(find.text('Sign in with Google'));
       await tester.pumpAndSettle();
-      expect(
-        find.text('That does not look like a spreadsheet link or ID.'),
-        findsOneWidget,
-      );
+      expect(find.text('Maria Santos'), findsOneWidget);
+      expect(find.text('maria@example.com'), findsOneWidget);
+      expect(find.text('Signed in'), findsOneWidget);
 
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Spreadsheet link or ID'),
-        'https://docs.google.com/spreadsheets/d/1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789/edit',
-      );
-      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Save'));
+      await tester.ensureVisible(find.text('Sign out'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+      await tester.tap(find.text('Sign out'));
       await tester.pumpAndSettle();
-      expect(find.text('Sending to "Sheet1"'), findsOneWidget);
+      expect(find.text('Sign in with Google'), findsOneWidget);
     });
 
     testWidgets('switches between light and dark themes', (tester) async {

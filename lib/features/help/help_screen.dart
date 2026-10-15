@@ -1,19 +1,15 @@
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/layout.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
-import '../../data/sheets_export_service.dart';
 import '../../router.dart';
 
 class _Step {
-  const _Step(this.text, [this.image, this.imageLabel]);
+  const _Step(this.text);
 
   final String text;
-  final String? image;
-  final String? imageLabel;
 }
 
 const _estimateSteps = [
@@ -45,46 +41,20 @@ const _estimateSteps = [
 
 const _sheetSteps = [
   _Step(
-    'Open or create a spreadsheet in the Google Sheets app.',
-    'assets/images/help/step_01.webp',
-    'An empty spreadsheet open in the Google Sheets app.',
+    'Open a project and choose Google Sheets (or Settings → Sign in with '
+    'Google).',
   ),
   _Step(
-    'Tap the More menu (three dots) in the top-right corner.',
-    'assets/images/help/step_02.webp',
-    'The More menu button highlighted in the top-right corner.',
+    'Pick your Google account and allow BuildQuantify to create files in '
+    'your Drive. It can only open the spreadsheets it creates.',
   ),
   _Step(
-    'Choose "Share & export", then "Share".',
-    'assets/images/help/step_03.webp',
-    'The Share & export menu with Share highlighted.',
+    'The app makes "BuildQuantify – your project" in your Drive with three '
+    'tabs: Bill of quantities, Materials and Budget. Choose Open to see it.',
   ),
   _Step(
-    'Tap the Add people icon.',
-    'assets/images/help/step_04.webp',
-    'The Manage access screen with the Add people icon highlighted.',
-  ),
-  _Step(
-    "Type the app's email address (shown below and in Settings), keep it "
-        'as Editor, and tap Send.',
-    'assets/images/help/step_06.webp',
-    'The Share screen with the email entered and the Send button highlighted.',
-  ),
-  _Step(
-    "The app's account now appears under People with access as an Editor.",
-    'assets/images/help/step_05.webp',
-    'People with access listing the app account as Editor.',
-  ),
-  _Step(
-    'Copy the link to the spreadsheet: More, "Share & export", "Copy link".',
-    'assets/images/help/step_08.webp',
-    'The Share & export menu with Copy link highlighted.',
-  ),
-  _Step(
-    'In Settings, paste the link (or just the ID between /d/ and /edit), '
-        'enter the name of the tab and select Save.',
-    'assets/images/help/step_09.webp',
-    'A spreadsheet link with the ID part highlighted.',
+    'After you change the project, choose Update Google Sheet to rewrite '
+    'the same spreadsheet. Edit or share it in Google Sheets as usual.',
   ),
 ];
 
@@ -132,44 +102,9 @@ class HelpScreen extends StatelessWidget {
                   'Settings → Backup and restore to keep a copy or move it to '
                   'another device.',
                 ),
-                const SectionHeader('Send estimates to Google Sheets'),
-                paragraph(
-                  'Share your spreadsheet with this address as an Editor:',
-                ),
-                const SizedBox(height: Space.sm),
-                Card(
-                  child: ListTile(
-                    title: SelectableText(
-                      breakable(SheetsExportService.serviceAccountEmail),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    trailing: IconButton(
-                      tooltip: 'Copy email address',
-                      icon: const Icon(Icons.content_copy_outlined),
-                      onPressed: () async {
-                        await Clipboard.setData(
-                          const ClipboardData(
-                            text: SheetsExportService.serviceAccountEmail,
-                          ),
-                        );
-                        if (context.mounted) {
-                          showMessage(context, 'Email address copied.');
-                        }
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(height: Space.lg),
-                ResponsiveGrid(
-                  columnsFor: (w) => w >= 700 ? 2 : 1,
-                  gap: Space.lg,
-                  children: [
-                    for (final (i, s) in _sheetSteps.indexed)
-                      _PictureStep(number: i + 1, step: s),
-                  ],
-                ),
+                const SectionHeader('Save to Google Sheets'),
+                for (final (i, s) in _sheetSteps.indexed)
+                  _StepTile(number: i + 1, step: s),
                 const SizedBox(height: Space.xl),
                 Align(
                   alignment: Alignment.centerLeft,
@@ -238,53 +173,6 @@ class _StepTile extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PictureStep extends StatelessWidget {
-  const _PictureStep({required this.number, required this.step});
-
-  final int number;
-  final _Step step;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.all(Space.lg),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _StepNumber(number),
-                  const SizedBox(height: Space.md),
-                  Text(step.text, style: theme.textTheme.bodyMedium),
-                ],
-              ),
-            ),
-            if (step.image != null) ...[
-              const SizedBox(width: Space.lg),
-              Expanded(
-                flex: 2,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(Radii.md),
-                  child: Image.asset(
-                    step.image!,
-                    semanticLabel: step.imageLabel,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
       ),
     );
   }

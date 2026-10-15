@@ -7,13 +7,13 @@ import 'package:provider/provider.dart';
 
 import '../../core/widgets.dart';
 import '../../data/project.dart';
-import '../../data/sheets_export_service.dart';
+import '../../data/google_sheets_client.dart';
 import '../../export/files.dart';
 import '../../export/project_documents.dart';
 import '../../export/project_pdf.dart';
 import '../../router.dart';
+import '../../state/google_account_controller.dart';
 import '../../state/projects_controller.dart';
-import '../../state/sheet_settings_controller.dart';
 
 /// Downloads the project's bill of quantities as a PDF.
 Future<void> downloadProjectPdf(BuildContext context, Project project) async {
@@ -59,22 +59,34 @@ Future<void> copyProjectText(BuildContext context, Project project) async {
   if (context.mounted) showMessage(context, 'Copied the project as text.');
 }
 
-/// Appends the project's estimates to the configured Google Sheet.
-Future<void> sendProjectToSheet(BuildContext context, Project project) async {
-  final result = await context.read<SheetSettingsController>().export(
-    project.items,
+/// Saves the project to a spreadsheet in the user's Google Drive, signing
+/// in first if needed. Call it straight from a button press: Google's
+/// sign-in window may only open in direct response to a tap.
+Future<void> saveProjectToSheets(BuildContext context, Project project) async {
+  final projects = context.read<ProjectsController>();
+  final result = await context.read<GoogleAccountController>().saveProject(
+    project,
   );
+  final sheet = result.sheet;
+  if (sheet != null) projects.setSheetId(project.id, sheet.id);
   if (!context.mounted) return;
   showMessage(
     context,
     result.message,
-    action: result.status == SheetsExportStatus.missingSheetInfo
-        ? SnackBarAction(
-            label: 'Set up',
+    action: sheet != null
+        ? SnackBarAction(label: 'Open', onPressed: () => openUrl(sheet.url))
+        : context.read<GoogleAccountController>().isConfigured
+        ? null
+        : SnackBarAction(
+            label: 'Settings',
             onPressed: () => context.go(Routes.settings),
-          )
-        : null,
+          ),
   );
+}
+
+/// Opens the spreadsheet the project was last saved to.
+void openProjectSheet(Project project) {
+  if (project.sheetId case final id?) openUrl(spreadsheetUrl(id));
 }
 
 /// Asks before deleting a project, then offers undo.

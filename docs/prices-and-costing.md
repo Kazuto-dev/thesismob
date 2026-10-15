@@ -579,12 +579,12 @@ with "Planning estimate made with BuildQuantify."
 
 ### Google Sheets
 
-When the app is built with a Sheets proxy, a calculator result or a whole
-project can be appended to your own spreadsheet. Each estimate adds a row for
-the main material and an indented row for each companion: Item, Quantity,
-Unit, Unit cost (₱), Amount (₱). The header is written to an empty sheet.
-There is no cost summary in this export. See the
-[README](../README.md#google-sheets-export) for set-up.
+After signing in with Google, a project is saved as a spreadsheet in your
+own Google Drive, "BuildQuantify – project name", with three formatted tabs:
+the bill of quantities, the materials list and the budget, the same content
+as the PDF. Saving again updates the same spreadsheet. See
+[Saving to Google Sheets](google-sheets.md) for how it works and how to set
+up the Google client ID.
 
 ### Backup file
 

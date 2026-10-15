@@ -13,3 +13,7 @@ Future<bool> saveFile(String name, Uint8List bytes, String mimeType) =>
 /// cancel or picking is not supported.
 Future<String?> pickTextFile({String accept = '.json'}) =>
     platform.pickTextFile(accept: accept);
+
+/// Opens [url] in a new browser tab. Returns false where that is not
+/// supported.
+bool openUrl(String url) => platform.openUrl(url);

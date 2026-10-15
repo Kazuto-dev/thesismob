@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thesismob/data/estimate.dart';
 import 'package:thesismob/data/estimate_repository.dart';
-import 'package:thesismob/data/sheet_settings.dart';
 import 'package:thesismob/materials/material_spec.dart';
 
 Estimate sample(String id, {double total = 100}) => Estimate(
@@ -78,30 +77,5 @@ void main() {
   test('unreadable JSON is treated as empty', () async {
     final r = await repo({EstimateRepository.historyKey: '{nope'});
     expect(r.loadHistory(), isEmpty);
-  });
-
-  group('SheetSettingsRepository', () {
-    test('reads settings saved by the original app', () async {
-      SharedPreferences.setMockInitialValues({
-        'sheetInfo': jsonEncode({'sheetId': 'abc', 'sheetName': 'Sheet1'}),
-      });
-      final s = SheetSettingsRepository(await SharedPreferences.getInstance())
-          .load()!;
-      expect(s.spreadsheetId, 'abc');
-      expect(s.sheetName, 'Sheet1');
-    });
-
-    test('saves in the same shape and can clear', () async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final r = SheetSettingsRepository(prefs);
-      await r.save(const SheetSettings(spreadsheetId: 'id', sheetName: 'Tab'));
-      expect(jsonDecode(prefs.getString('sheetInfo')!), {
-        'sheetId': 'id',
-        'sheetName': 'Tab',
-      });
-      await r.clear();
-      expect(r.load(), isNull);
-    });
   });
 }

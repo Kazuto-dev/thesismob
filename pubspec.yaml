@@ -21,6 +21,7 @@ dependencies:
   material_ui: ^1.6.0
   pdf: ^3.13.1
   web: ^1.1.1
+  google_sign_in: ^7.2.0
 
 dev_dependencies:
   flutter_test:
@@ -40,7 +41,6 @@ flutter:
     - assets/images/brand/
     - assets/images/categories/
     - assets/images/materials/
-    - assets/images/help/
     - assets/fonts/jakarta/OFL.txt
 
   # Subset to Latin plus ₱, ×, ², ½ and arrows; keeps tabular figures (tnum).

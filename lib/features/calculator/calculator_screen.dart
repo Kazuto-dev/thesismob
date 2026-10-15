@@ -10,14 +10,12 @@ import '../../core/layout.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
 import '../../data/estimate.dart';
-import '../../data/sheets_export_service.dart';
 import '../../materials/items.dart';
 import '../../materials/material_spec.dart';
 import '../../router.dart';
 import '../../state/estimates_controller.dart';
 import '../../state/price_book_controller.dart';
 import '../../state/projects_controller.dart';
-import '../../state/sheet_settings_controller.dart';
 import '../common/price_dialog.dart';
 import '../projects/project_picker.dart';
 import 'info_sheet.dart';
@@ -305,25 +303,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     if (price != null) _prices.setPrice(line.itemKey, price);
   }
 
-  Future<void> _export() async {
-    final estimate = _ensureRecorded();
-    if (estimate == null) return;
-    final result = await context.read<SheetSettingsController>().export([
-      estimate,
-    ]);
-    if (!mounted) return;
-    showMessage(
-      context,
-      result.message,
-      action: result.status == SheetsExportStatus.missingSheetInfo
-          ? SnackBarAction(
-              label: 'Set up',
-              onPressed: () => context.go(Routes.settings),
-            )
-          : null,
-    );
-  }
-
   void _showInfo({required bool solution}) {
     showModalBottomSheet<void>(
       context: context,
@@ -370,9 +349,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           ),
         );
     final suggested = _suggestedPrice;
-    final exporting = context.select<SheetSettingsController, bool>(
-      (c) => c.isExporting,
-    );
 
     final form = _CalculatorForm(
       spec: spec,
@@ -406,10 +382,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               estimate: current!,
               projectName: projectName,
               inProject: inProject,
-              exporting: exporting,
               onAdd: _addToProject,
               onChangeProject: () => showProjectPicker(context),
-              onExport: _export,
               onSetPrice: _setLinePrice,
             ),
     );

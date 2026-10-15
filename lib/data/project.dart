@@ -366,6 +366,7 @@ class Project {
     this.location = '',
     this.items = const [],
     this.costs = CostSettings.owner,
+    this.sheetId,
   });
 
   factory Project.create(String name, {DateTime? now}) {
@@ -407,6 +408,7 @@ class Project {
       costs: json['costs'] is Map<String, dynamic>
           ? CostSettings.fromJson(json['costs'] as Map<String, dynamic>)
           : CostSettings.owner,
+      sheetId: json['sheetId'] is String ? json['sheetId'] as String : null,
     );
   }
 
@@ -420,6 +422,9 @@ class Project {
   /// The estimates in this project, in the order they were added.
   final List<Estimate> items;
   final CostSettings costs;
+
+  /// The Google spreadsheet this project was last saved to, if any.
+  final String? sheetId;
 
   /// Cost of all materials, companions included.
   double get materialsTotal =>
@@ -436,6 +441,7 @@ class Project {
     String? location,
     List<Estimate>? items,
     CostSettings? costs,
+    String? sheetId,
     DateTime? updatedAt,
   }) => Project(
     id: id ?? this.id,
@@ -446,6 +452,7 @@ class Project {
     updatedAt: updatedAt ?? DateTime.now(),
     items: items ?? this.items,
     costs: costs ?? this.costs,
+    sheetId: sheetId ?? this.sheetId,
   );
 
   Map<String, dynamic> toJson() => {
@@ -457,5 +464,6 @@ class Project {
     'updatedAt': updatedAt.toIso8601String(),
     'items': [for (final e in items) e.toJson()],
     'costs': costs.toJson(),
+    if (sheetId != null) 'sheetId': sheetId,
   };
 }

@@ -195,6 +195,10 @@ class ProjectsController extends ChangeNotifier {
     ),
   );
 
+  /// Remembers the Google spreadsheet a project was saved to.
+  void setSheetId(String projectId, String sheetId) =>
+      _update(projectId, (p) => p.copyWith(sheetId: sheetId));
+
   /// Applies [price] to every line of [itemKey] in a project, main
   /// materials and companions alike.
   void setPrice(String projectId, String itemKey, double price) => _update(

@@ -1,12 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/testing.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thesismob/app.dart';
 import 'package:thesismob/data/estimate.dart';
-import 'package:thesismob/data/sheets_export_service.dart';
+import 'package:thesismob/data/google_auth.dart';
+import 'package:thesismob/data/google_sheets_client.dart';
 import 'package:thesismob/materials/material_spec.dart';
 import 'package:thesismob/state/estimates_controller.dart';
 import 'package:thesismob/state/price_book_controller.dart';
@@ -22,7 +24,8 @@ Future<void> pumpApp(
   String location = '/',
   Size size = phone,
   Map<String, Object> prefs = const {},
-  SheetsExportService? exporter,
+  GoogleAuth? googleAuth,
+  GoogleSheetsClient? sheetsClient,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -33,11 +36,48 @@ Future<void> pumpApp(
     BuildQuantifyApp(
       prefs: instance,
       initialLocation: location,
-      exporter: exporter ?? SheetsExportService(endpoint: ''),
+      googleAuth: googleAuth ?? FakeGoogleAuth(configured: false),
+      sheetsClient: sheetsClient ?? GoogleSheetsClient(client: _offline),
     ),
   );
   await tester.pumpAndSettle();
 }
+
+/// Google sign-in that never opens a window: it hands out [token], or
+/// fails with [failure].
+class FakeGoogleAuth implements GoogleAuth {
+  FakeGoogleAuth({this.configured = true, this.failure});
+
+  final bool configured;
+  GoogleAuthFailure? failure;
+  int authorizations = 0;
+  final forgotten = <String>[];
+  bool signedOut = false;
+
+  @override
+  bool get isConfigured => configured;
+
+  @override
+  void warmUp() {}
+
+  @override
+  Future<String> authorize() async {
+    if (!configured) {
+      throw const GoogleAuthException(GoogleAuthFailure.notConfigured);
+    }
+    if (failure case final f?) throw GoogleAuthException(f);
+    authorizations++;
+    return 'token-$authorizations';
+  }
+
+  @override
+  Future<void> forget(String token) async => forgotten.add(token);
+
+  @override
+  Future<void> signOut() async => signedOut = true;
+}
+
+final _offline = MockClient((_) async => throw Exception('offline in tests'));
 
 EstimatesController estimatesOf(WidgetTester tester) =>
     tester.element(find.byType(Scaffold).last).read<EstimatesController>();

@@ -45,3 +45,8 @@ Future<String?> pickTextFile({String accept = '.json'}) {
   input.click();
   return completer.future;
 }
+
+bool openUrl(String url) {
+  web.window.open(url, '_blank', 'noopener');
+  return true;
+}

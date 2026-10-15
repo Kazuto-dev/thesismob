@@ -16,7 +16,7 @@ import '../../materials/material_spec.dart';
 import '../../router.dart';
 import '../../state/price_book_controller.dart';
 import '../../state/projects_controller.dart';
-import '../../state/sheet_settings_controller.dart';
+import '../../state/google_account_controller.dart';
 import '../common/price_dialog.dart';
 import '../common/tiles.dart';
 import 'project_actions.dart';
@@ -285,8 +285,8 @@ class _ProjectMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasItems = project.items.isNotEmpty;
-    final exporting = context.select<SheetSettingsController, bool>(
-      (c) => c.isExporting,
+    final saving = context.select<GoogleAccountController, bool>(
+      (c) => c.isBusy,
     );
     return MenuAnchor(
       builder: (context, controller, _) => IconButton(
@@ -338,11 +338,21 @@ class _ProjectMenu extends StatelessWidget {
         ),
         MenuItemButton(
           leadingIcon: const Icon(Icons.table_chart_outlined),
-          onPressed: hasItems && !exporting
-              ? () => sendProjectToSheet(context, project)
+          onPressed: hasItems && !saving
+              ? () => saveProjectToSheets(context, project)
               : null,
-          child: const Text('Send to Google Sheet'),
+          child: Text(
+            project.sheetId == null
+                ? 'Save to Google Sheets'
+                : 'Update Google Sheet',
+          ),
         ),
+        if (project.sheetId != null)
+          MenuItemButton(
+            leadingIcon: const Icon(Icons.open_in_new),
+            onPressed: () => openProjectSheet(project),
+            child: const Text('Open in Google Sheets'),
+          ),
         const Divider(),
         MenuItemButton(
           leadingIcon: const Icon(Icons.delete_sweep_outlined),
@@ -371,6 +381,7 @@ class _BudgetHero extends StatelessWidget {
     final bid = project.costs.isContractorBid;
     final count = project.items.length;
     final markups = b.contingency + b.overhead + b.profit + b.vat;
+    final google = context.watch<GoogleAccountController>();
     return InkPanel(
       child: Builder(
         builder: (context) {
@@ -466,6 +477,23 @@ class _BudgetHero extends StatelessWidget {
                     icon: const Icon(Icons.grid_on_outlined),
                     label: const Text('Excel'),
                   ),
+                  if (google.isConfigured)
+                    OutlinedButton.icon(
+                      onPressed: google.isBusy
+                          ? null
+                          : () => saveProjectToSheets(context, project),
+                      icon: google.isBusy
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.table_chart_outlined),
+                      label: Text(
+                        project.sheetId == null
+                            ? 'Google Sheets'
+                            : 'Update Google Sheet',
+                      ),
+                    ),
                 ],
               ),
             ],
