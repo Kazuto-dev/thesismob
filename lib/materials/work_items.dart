@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 
+import 'interiors.dart';
 import 'material_spec.dart';
+import 'sitework.dart';
+import 'utilities.dart';
 
 /// Who and what a work item needs for one day: workers by trade level and
 /// rented equipment, each priced from the project's daily rates.
@@ -47,6 +50,7 @@ abstract final class DailyRates {
   static const vibrator = 'vibrator';
   static const compactor = 'compactor';
   static const scaffold = 'scaffold';
+  static const welding = 'welding';
 
   static const defaults = <String, double>{
     foreman: 1400,
@@ -56,6 +60,7 @@ abstract final class DailyRates {
     vibrator: 1000,
     compactor: 2000,
     scaffold: 600,
+    welding: 800,
   };
 
   static const labels = <String, String>{
@@ -66,6 +71,7 @@ abstract final class DailyRates {
     vibrator: 'Concrete vibrator',
     compactor: 'Plate compactor',
     scaffold: 'Scaffolding set',
+    welding: 'Welding machine',
   };
 
   /// Whether [key] is a worker rather than equipment.
@@ -532,6 +538,9 @@ const workItems = <WorkItem>[
     output: 0.5,
     reference: '1203',
   ),
+  ...siteworkWorkItems,
+  ...interiorsWorkItems,
+  ...utilitiesWorkItems,
 ];
 
 final _byKey = {for (final w in workItems) w.key: w};

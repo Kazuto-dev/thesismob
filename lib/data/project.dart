@@ -4,6 +4,7 @@ import '../materials/catalog.dart';
 import '../materials/items.dart';
 import '../materials/material_spec.dart';
 import '../materials/work_items.dart';
+import 'contract.dart';
 import 'estimate.dart';
 import 'unit_prices.dart';
 
@@ -55,6 +56,7 @@ class CostSettings {
     this.rates = const {},
     this.productivityPct = 100,
     this.general = const {},
+    this.escalationPct = 0,
   });
 
   /// For an owner hiring workers directly: materials, labour, a margin for
@@ -91,6 +93,7 @@ class CostSettings {
       rates: from?.rates ?? const {},
       productivityPct: from?.productivityPct ?? 100,
       general: from?.general ?? const {},
+      escalationPct: from?.escalationPct ?? 0,
     );
   }
 
@@ -113,6 +116,7 @@ class CostSettings {
     rates: job.rates,
     productivityPct: job.productivityPct,
     general: job.general,
+    escalationPct: job.escalationPct,
   );
 
   factory CostSettings.fromJson(Map<String, dynamic> json) {
@@ -139,6 +143,7 @@ class CostSettings {
       rates: amounts('rates'),
       productivityPct: pct('productivityPct', 100),
       general: amounts('general'),
+      escalationPct: pct('escalationPct', 0),
       labourPct: pct('labourPct', 40),
       labourByTrade: {
         for (final e in (json['labourByTrade'] as Map? ?? const {}).entries)
@@ -190,6 +195,10 @@ class CostSettings {
   /// General requirements in pesos, by [generalRequirements] key.
   final Map<String, double> general;
 
+  /// Expected rise in prices before the work is bought, as a percentage of
+  /// the direct cost.
+  final double escalationPct;
+
   /// Every daily rate, the project's own where set.
   Map<String, double> get dailyRates => {...DailyRates.defaults, ...rates};
 
@@ -214,6 +223,7 @@ class CostSettings {
     Map<String, double>? rates,
     double? productivityPct,
     Map<String, double>? general,
+    double? escalationPct,
   }) => CostSettings(
     labourPct: labourPct ?? this.labourPct,
     labourByTrade: labourByTrade ?? this.labourByTrade,
@@ -227,6 +237,7 @@ class CostSettings {
     rates: rates ?? this.rates,
     productivityPct: productivityPct ?? this.productivityPct,
     general: general ?? this.general,
+    escalationPct: escalationPct ?? this.escalationPct,
   );
 
   Map<String, dynamic> toJson() => {
@@ -242,6 +253,7 @@ class CostSettings {
     if (rates.isNotEmpty) 'rates': rates,
     if (productivityPct != 100) 'productivityPct': productivityPct,
     if (general.isNotEmpty) 'general': general,
+    if (escalationPct != 0) 'escalationPct': escalationPct,
   };
 
   @override
@@ -258,7 +270,8 @@ class CostSettings {
       other.labourMethod == labourMethod &&
       mapEquals(other.rates, rates) &&
       other.productivityPct == productivityPct &&
-      mapEquals(other.general, general);
+      mapEquals(other.general, general) &&
+      other.escalationPct == escalationPct;
 
   @override
   int get hashCode => Object.hash(
@@ -274,6 +287,7 @@ class CostSettings {
     Object.hashAllUnordered(rates.entries.map((e) => e.toString())),
     productivityPct,
     Object.hashAllUnordered(general.entries.map((e) => e.toString())),
+    escalationPct,
   );
 }
 
@@ -289,6 +303,7 @@ class CostBreakdown {
     this.equipment = 0,
     this.general = 0,
     this.crewDays = 0,
+    this.escalation = 0,
     required this.contingency,
     required this.overhead,
     required this.profit,
@@ -329,11 +344,13 @@ class CostBreakdown {
       general: general,
       crewDays: days,
       hauling: _centavos(s.hauling),
+      escalation: _centavos(direct * s.escalationPct / 100),
       contingency: _centavos(direct * s.contingencyPct / 100),
       overhead: _centavos(direct * s.overheadPct / 100),
       profit: _centavos(direct * s.profitPct / 100),
       vat: _centavos(
         (direct +
+                direct * s.escalationPct / 100 +
                 direct * s.contingencyPct / 100 +
                 direct * s.overheadPct / 100 +
                 direct * s.profitPct / 100) *
@@ -359,6 +376,9 @@ class CostBreakdown {
 
   /// Crew-days of work, when labour is priced by crews.
   final double crewDays;
+
+  /// Price escalation until the work is bought.
+  final double escalation;
   final double contingency;
   final double overhead;
   final double profit;
@@ -370,7 +390,8 @@ class CostBreakdown {
       _centavos(materials + labour + tools + equipment + hauling + general);
 
   /// Before tax.
-  double get subtotal => _centavos(direct + contingency + overhead + profit);
+  double get subtotal =>
+      _centavos(direct + escalation + contingency + overhead + profit);
 
   double get total => _centavos(subtotal + vat);
 }
@@ -486,11 +507,13 @@ class Project {
     required this.updatedAt,
     this.client = '',
     this.location = '',
+    this.floorArea,
     this.items = const [],
     this.costs = CostSettings.owner,
     this.sheetId,
     this.checklist = const [],
     this.notNeeded = const {},
+    this.contract = const ContractData(),
   });
 
   factory Project.create(String name, {DateTime? now}) {
@@ -526,6 +549,9 @@ class Project {
       name: name,
       client: json['client'] is String ? json['client'] as String : '',
       location: json['location'] is String ? json['location'] as String : '',
+      floorArea: json['floorArea'] is num && (json['floorArea'] as num) > 0
+          ? (json['floorArea'] as num).toDouble()
+          : null,
       createdAt: date('createdAt'),
       updatedAt: date('updatedAt'),
       items: List.unmodifiable(items),
@@ -541,6 +567,9 @@ class Project {
         for (final id in json['notNeeded'] as List? ?? const [])
           if (id is String) id,
       }),
+      contract: json['contract'] is Map<String, dynamic>
+          ? ContractData.fromJson(json['contract'] as Map<String, dynamic>)
+          : const ContractData(),
     );
   }
 
@@ -548,6 +577,9 @@ class Project {
   final String name;
   final String client;
   final String location;
+
+  /// Total floor area in m², for cost-per-m² checks.
+  final double? floorArea;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -564,6 +596,9 @@ class Project {
 
   /// Checklist entries the user marked as not needed for this job.
   final Set<String> notNeeded;
+
+  /// Quotation terms, schedule, billings, changes and actual costs.
+  final ContractData contract;
 
   /// Whether the checklist entry [materialId] has an estimate.
   bool isEstimated(String materialId) =>
@@ -588,17 +623,24 @@ class Project {
     String? name,
     String? client,
     String? location,
+    double? floorArea,
     List<Estimate>? items,
     CostSettings? costs,
     String? sheetId,
     List<String>? checklist,
     Set<String>? notNeeded,
+    ContractData? contract,
     DateTime? updatedAt,
   }) => Project(
     id: id ?? this.id,
     name: name ?? this.name,
     client: client ?? this.client,
     location: location ?? this.location,
+    floorArea: floorArea == null
+        ? this.floorArea
+        : floorArea <= 0
+        ? null
+        : floorArea,
     createdAt: createdAt,
     updatedAt: updatedAt ?? DateTime.now(),
     items: items ?? this.items,
@@ -606,6 +648,7 @@ class Project {
     sheetId: sheetId ?? this.sheetId,
     checklist: checklist ?? this.checklist,
     notNeeded: notNeeded ?? this.notNeeded,
+    contract: contract ?? this.contract,
   );
 
   Map<String, dynamic> toJson() => {
@@ -613,6 +656,7 @@ class Project {
     'name': name,
     if (client.isNotEmpty) 'client': client,
     if (location.isNotEmpty) 'location': location,
+    if (floorArea != null) 'floorArea': floorArea,
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
     'items': [for (final e in items) e.toJson()],
@@ -620,5 +664,6 @@ class Project {
     if (sheetId != null) 'sheetId': sheetId,
     if (checklist.isNotEmpty) 'checklist': checklist,
     if (notNeeded.isNotEmpty) 'notNeeded': notNeeded.toList(),
+    if (!contract.isEmpty) 'contract': contract.toJson(),
   };
 }

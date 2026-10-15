@@ -17,6 +17,7 @@ import '../../state/appearance_controller.dart';
 import '../../state/estimates_controller.dart';
 import '../../state/google_account_controller.dart';
 import '../../state/price_book_controller.dart';
+import '../../state/profile_controller.dart';
 import '../../state/projects_controller.dart';
 import '../common/google_button.dart';
 
@@ -45,6 +46,8 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                   _PricesSection(),
+                  SizedBox(height: Space.lg),
+                  _ProfileSection(),
                   SizedBox(height: Space.lg),
                   _BackupSection(),
                   SizedBox(height: Space.lg),
@@ -106,6 +109,147 @@ class _Section extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The business details printed on quotations and billings.
+class _ProfileSection extends StatelessWidget {
+  const _ProfileSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final p = context.watch<ProfileController>().profile;
+    return _Section(
+      icon: Icons.storefront_outlined,
+      title: context.tr('Business profile'),
+      children: [
+        Text(
+          p.isEmpty
+              ? context.tr(
+                  'Your business name and contact details, printed on '
+                  'quotations and progress billings.',
+                )
+              : [
+                  p.name,
+                  p.address,
+                  p.phone,
+                  p.email,
+                ].where((t) => t.isNotEmpty).join(' · '),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: Space.lg),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: FilledButton.tonalIcon(
+            onPressed: () => _edit(context, p),
+            icon: const Icon(Icons.edit_outlined),
+            label: Text(
+              context.tr(p.isEmpty ? 'Add your details' : 'Edit details'),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _edit(BuildContext context, BusinessProfile p) async {
+    final updated = await showDialog<BusinessProfile>(
+      context: context,
+      builder: (_) => _ProfileDialog(profile: p),
+    );
+    if (updated != null && context.mounted) {
+      context.read<ProfileController>().update(updated);
+    }
+  }
+}
+
+class _ProfileDialog extends StatefulWidget {
+  const _ProfileDialog({required this.profile});
+
+  final BusinessProfile profile;
+
+  @override
+  State<_ProfileDialog> createState() => _ProfileDialogState();
+}
+
+class _ProfileDialogState extends State<_ProfileDialog> {
+  static const _labels = {
+    'name': 'Business or contractor name',
+    'address': 'Address',
+    'phone': 'Phone',
+    'email': 'Email',
+    'tin': 'TIN',
+    'preparedBy': 'Prepared by (name and position)',
+  };
+
+  late final _fields = {
+    'name': TextEditingController(text: widget.profile.name),
+    'address': TextEditingController(text: widget.profile.address),
+    'phone': TextEditingController(text: widget.profile.phone),
+    'email': TextEditingController(text: widget.profile.email),
+    'tin': TextEditingController(text: widget.profile.tin),
+    'preparedBy': TextEditingController(text: widget.profile.preparedBy),
+  };
+
+  @override
+  void dispose() {
+    for (final c in _fields.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  void _save() {
+    String v(String k) => _fields[k]!.text.trim();
+    Navigator.of(context).pop(
+      BusinessProfile(
+        name: v('name'),
+        address: v('address'),
+        phone: v('phone'),
+        email: v('email'),
+        tin: v('tin'),
+        preparedBy: v('preparedBy'),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text(context.tr('Business profile')),
+    scrollable: true,
+    content: SizedBox(
+      width: 420,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final MapEntry(:key, :value) in _fields.entries) ...[
+            TextField(
+              controller: value,
+              textCapitalization: key == 'email'
+                  ? TextCapitalization.none
+                  : TextCapitalization.words,
+              keyboardType: key == 'email'
+                  ? TextInputType.emailAddress
+                  : key == 'phone'
+                  ? TextInputType.phone
+                  : TextInputType.text,
+              decoration: InputDecoration(labelText: context.tr(_labels[key]!)),
+            ),
+            const SizedBox(height: Space.md),
+          ],
+        ],
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.of(context).pop(),
+        child: Text(context.tr('Cancel')),
+      ),
+      FilledButton(onPressed: _save, child: Text(context.tr('Save'))),
+    ],
+  );
 }
 
 class _GoogleSection extends StatelessWidget {

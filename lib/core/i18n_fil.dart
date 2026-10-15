@@ -19,8 +19,8 @@ const filipino = <String, String>{
   'Planning estimates. Confirm quantities and prices with your engineer and supplier before buying.':
       'Pang-plano lamang ang mga estimate. Kumpirmahin ang dami at presyo sa '
       'inyong engineer at supplier bago bumili.',
-  '29 calculators, from concrete and rebar to wiring and plumbing':
-      '29 calculator, mula semento at bakal hanggang wiring at tubo',
+  '40 calculators, from earthworks and rebar to wiring and plumbing':
+      '40 calculator, mula paghuhukay at bakal hanggang wiring at tubo',
   'Every material priced from a 2026 Philippine price book':
       'May presyo ang bawat materyales mula sa 2026 price book ng Pilipinas',
   'Projects with a bill of quantities, a budget, PDF and Google Sheets':
@@ -360,6 +360,7 @@ const filipino = <String, String>{
   'Concrete vibrator': 'Vibrator ng konkreto',
   'Plate compactor': 'Plate compactor',
   'Scaffolding set': 'Set ng scaffolding',
+  'Welding machine': 'Makinang pang-weld',
   'Suggested rates are Metro Manila market rates for 2026, with meals and benefits. Enter what you pay.':
       'Ang mungkahing singil ay presyo sa Metro Manila sa 2026, kasama ang '
       'pagkain at benepisyo. Ilagay ang inyong ibinabayad.',
@@ -390,4 +391,131 @@ const filipino = <String, String>{
   'Markups, {pct}%': 'Markup, {pct}%',
   'VAT, {pct}%': 'VAT, {pct}%',
   'Unit price per {unit}': 'Unit price bawat {unit}',
+
+  // Quick budget, checks and contract
+  'Quick budget by floor area': 'Mabilis na budget ayon sa lawak ng sahig',
+  'A first idea of what a house costs, before measuring anything.':
+      'Unang tantiya ng gastos ng bahay, bago pa sumukat.',
+  'Quick budget': 'Mabilis na budget',
+  'A first idea of what a house costs from its floor area, before anything is measured. Estimate the items to get a real figure.':
+      'Unang tantiya ng gastos ng bahay batay sa lawak ng sahig, bago pa '
+      'sumukat. I-estimate ang bawat item para sa totoong halaga.',
+  'Floor area, all floors': 'Lawak ng sahig, lahat ng palapag',
+  'Storeys': 'Palapag',
+  'Finishes': 'Finishing',
+  'About': 'Mga',
+  "{low}–{high} a m², a contractor's price with VAT in Metro Manila":
+      '{low}–{high} bawat m², presyo ng kontratista kasama ang VAT sa Metro '
+      'Manila',
+  'Ranges are typical for houses in late 2026 and vary with the site, the design and the region. Use them for a first conversation, never for a contract.':
+      'Karaniwang saklaw ito para sa bahay sa huling bahagi ng 2026 at '
+      'nag-iiba ayon sa lote, disenyo at rehiyon. Gamitin sa unang usapan, '
+      'hindi sa kontrata.',
+  'Estimate this house item by item': 'I-estimate ang bahay na ito bawat item',
+  'Economy': 'Matipid',
+  'Standard': 'Karaniwan',
+  'Premium': 'Premium',
+  'Plain finishes, local fixtures': 'Simpleng finishing, lokal na fixture',
+  'Tiles throughout, mid-range fixtures':
+      'Tiles sa buong bahay, katamtamang fixture',
+  'Stone, engineered wood, imported fixtures':
+      'Bato, engineered wood, imported na fixture',
+  'Checks': 'Pagsusuri',
+  'Nothing looks out of the ordinary.': 'Walang mukhang kakaiba.',
+  '1 thing to look at before sending this out.':
+      '1 bagay na dapat tingnan bago ito ipadala.',
+  '{n} things to look at before sending this out.':
+      '{n} bagay na dapat tingnan bago ito ipadala.',
+  'Floor area': 'Lawak ng sahig',
+  'Optional. All floors, for cost-per-m² checks':
+      'Opsyonal. Lahat ng palapag, para sa pagsusuri ng gastos bawat m²',
+  'Price escalation': 'Pagtaas ng presyo',
+  'Contract': 'Kontrata',
+  'Quotation': 'Quotation',
+  'A quotation for the client: your business details, the scope by trade, the price, the payment terms and a schedule.':
+      'Quotation para sa kliyente: detalye ng inyong negosyo, saklaw ng '
+      'trabaho, presyo, paraan ng bayad at iskedyul.',
+  'Valid for': 'Bisa nang',
+  'Warranty': 'Warranty',
+  'months': 'buwan',
+  'Downpayment': 'Downpayment',
+  'Retention': 'Retention',
+  'Inclusions': 'Kasama',
+  'One per line, e.g. Supply of materials and labour':
+      'Isa bawat linya, hal. Materyales at labor',
+  'Exclusions': 'Hindi kasama',
+  'One per line, e.g. Building permit fees':
+      'Isa bawat linya, hal. Bayad sa building permit',
+  'Use common exclusions': 'Gamitin ang karaniwang hindi kasama',
+  'Download quotation': 'I-download ang quotation',
+  'Schedule': 'Iskedyul',
+  "Worked out from each item's crew-days and the crews working at once, six working days a week. A planning guide, not a promise.":
+      'Kinuwenta mula sa araw ng grupo ng bawat item at sa sabay-sabay na '
+      'grupo, anim na araw bawat linggo. Gabay sa pagpaplano, hindi pangako.',
+  'Add estimates to see a schedule.':
+      'Magdagdag ng estimate para makita ang iskedyul.',
+  'About {weeks} weeks ({days} working days)':
+      'Mga {weeks} linggo ({days} araw ng trabaho)',
+  'Set start date': 'Itakda ang petsa ng simula',
+  'Starts {date}': 'Magsisimula {date}',
+  'Finishes about {date}': 'Matatapos mga {date}',
+  'Crews working at once': 'Sabay-sabay na grupo',
+  'Schedule by phase': 'Iskedyul ayon sa yugto',
+  'Planned progress (S-curve)': 'Planong pag-usad (S-curve)',
+  'Week': 'Linggo',
+  'Progress billing': 'Progress billing',
+  "Bill the client for work done: each line's percent complete, less the downpayment recouped and the retention held.":
+      'Singilin ang kliyente sa natapos na trabaho: porsiyento ng bawat '
+      'linya, bawas ang naibalik na downpayment at retention.',
+  'Contract price': 'Presyo ng kontrata',
+  'Downpayment, {pct}%': 'Downpayment, {pct}%',
+  'Billing {n}': 'Billing {n}',
+  'Billing {n} · {date}': 'Billing {n} · {date}',
+  '{pct}% complete · net due {amount}': '{pct}% tapos · babayaran {amount}',
+  'Download billing {n}': 'I-download ang billing {n}',
+  'Edit billing {n}': 'I-edit ang billing {n}',
+  'New progress billing': 'Bagong progress billing',
+  'Enter how far each line is done, in percent, to date. Lines start from the last billing.':
+      'Ilagay kung ilang porsiyento na ang tapos sa bawat linya. Nagsisimula '
+      'ang mga linya sa huling billing.',
+  'All {pct}%': 'Lahat {pct}%',
+  'Accomplished to date': 'Natapos hanggang ngayon',
+  'This billing, before deductions': 'Billing na ito, bago ang bawas',
+  'Variation orders': 'Variation order',
+  'Work added or taken out after the contract was agreed. They change the contract price and can be billed.':
+      'Trabahong idinagdag o inalis matapos ang kontrata. Binabago nito ang '
+      'presyo ng kontrata at puwedeng singilin.',
+  'Revised contract price': 'Binagong presyo ng kontrata',
+  'Add a variation order': 'Magdagdag ng variation order',
+  'Variation order': 'Variation order',
+  'What changed': 'Ano ang nagbago',
+  'Extra window in the kitchen': 'Dagdag na bintana sa kusina',
+  'Taken out': 'Inalis',
+  'Amount, with markups and VAT': 'Halaga, kasama ang markup at VAT',
+  'Actual costs': 'Aktuwal na gastos',
+  'Record what you spend to compare it with the budget as the work goes on.':
+      'Itala ang ginagastos para maihambing sa budget habang tumatakbo ang '
+      'trabaho.',
+  'Spent': 'Nagastos',
+  'Spent {spent} of a {direct} direct cost ({pct}%); the work is {done}% complete by the last billing.':
+      'Nagastos ang {spent} sa {direct} na direktang gastos ({pct}%); {done}% '
+      'na ang tapos ayon sa huling billing.',
+  'Record an expense': 'Magtala ng gastos',
+  'What for': 'Para saan',
+  '50 bags of cement, week 2 payroll':
+      '50 bag ng semento, sahod sa ika-2 linggo',
+  'Amount': 'Halaga',
+  'Subcontract': 'Subcontract',
+  'Other': 'Iba pa',
+  'Business profile': 'Profile ng negosyo',
+  'Your business name and contact details, printed on quotations and progress billings.':
+      'Pangalan at contact ng inyong negosyo, nakalimbag sa quotation at '
+      'progress billing.',
+  'Add your details': 'Ilagay ang inyong detalye',
+  'Business or contractor name': 'Pangalan ng negosyo o kontratista',
+  'Address': 'Address',
+  'Phone': 'Telepono',
+  'Email': 'Email',
+  'TIN': 'TIN',
+  'Prepared by (name and position)': 'Inihanda ni (pangalan at posisyon)',
 };

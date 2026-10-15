@@ -38,7 +38,8 @@ enum QuantityUnit {
   kilograms('kg', 'kg'),
   sets('set', 'sets'),
   lengths('length', 'lengths'),
-  litres('L', 'L');
+  litres('L', 'L'),
+  pails('pail', 'pails');
 
   const QuantityUnit(this.singular, this.plural);
 

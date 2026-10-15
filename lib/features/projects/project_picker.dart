@@ -1,9 +1,11 @@
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/i18n.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
+import '../../core/widgets.dart';
 import '../../data/checklists.dart';
 import '../../data/project.dart';
 import '../../state/projects_controller.dart';
@@ -13,6 +15,7 @@ typedef ProjectDetails = ({
   String name,
   String client,
   String location,
+  double? floorArea,
   bool contractor,
   ChecklistTemplate? checklist,
 });
@@ -23,18 +26,26 @@ Future<ProjectDetails?> showProjectDetailsDialog(
   BuildContext context, {
   Project? project,
   ChecklistTemplate? checklist,
+  double? floorArea,
 }) => showDialog<ProjectDetails>(
   context: context,
-  builder: (_) => _ProjectDetailsDialog(project: project, checklist: checklist),
+  builder: (_) => _ProjectDetailsDialog(
+    project: project,
+    checklist: checklist,
+    floorArea: floorArea,
+  ),
 );
 
 class _ProjectDetailsDialog extends StatefulWidget {
-  const _ProjectDetailsDialog({this.project, this.checklist});
+  const _ProjectDetailsDialog({this.project, this.checklist, this.floorArea});
 
   final Project? project;
 
   /// The checklist chosen to begin with, for a new project.
   final ChecklistTemplate? checklist;
+
+  /// The floor area to begin with, for a new project.
+  final double? floorArea;
 
   @override
   State<_ProjectDetailsDialog> createState() => _ProjectDetailsDialogState();
@@ -44,6 +55,12 @@ class _ProjectDetailsDialogState extends State<_ProjectDetailsDialog> {
   late final _name = TextEditingController(text: widget.project?.name);
   late final _client = TextEditingController(text: widget.project?.client);
   late final _location = TextEditingController(text: widget.project?.location);
+  late final _area = TextEditingController(
+    text: switch (widget.project?.floorArea ?? widget.floorArea) {
+      null => '',
+      final a => formatNumber(a).replaceAll(',', ''),
+    },
+  );
   bool _contractor = false;
   late ChecklistTemplate? _checklist = widget.checklist;
   String? _error;
@@ -53,6 +70,7 @@ class _ProjectDetailsDialogState extends State<_ProjectDetailsDialog> {
     _name.dispose();
     _client.dispose();
     _location.dispose();
+    _area.dispose();
     super.dispose();
   }
 
@@ -66,6 +84,7 @@ class _ProjectDetailsDialogState extends State<_ProjectDetailsDialog> {
       name: name,
       client: _client.text.trim(),
       location: _location.text.trim(),
+      floorArea: double.tryParse(_area.text.trim()),
       contractor: _contractor,
       checklist: _checklist,
     ));
@@ -115,6 +134,25 @@ class _ProjectDetailsDialogState extends State<_ProjectDetailsDialog> {
                 labelText: context.tr('Location'),
                 hintText: context.tr('Lot 4, Antipolo, Rizal'),
                 helperText: context.tr('Optional'),
+              ),
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: Space.sm),
+            TextField(
+              controller: _area,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                const DecimalInputFormatter(),
+                LengthLimitingTextInputFormatter(8),
+              ],
+              decoration: InputDecoration(
+                labelText: context.tr('Floor area'),
+                suffixText: 'm²',
+                helperText: context.tr(
+                  'Optional. All floors, for cost-per-m² checks',
+                ),
               ),
               onSubmitted: (_) => _save(),
             ),
@@ -210,13 +248,19 @@ class _ProjectDetailsDialogState extends State<_ProjectDetailsDialog> {
 Future<Project?> createProject(
   BuildContext context, {
   ChecklistTemplate? checklist,
+  double? floorArea,
 }) async {
-  final details = await showProjectDetailsDialog(context, checklist: checklist);
+  final details = await showProjectDetailsDialog(
+    context,
+    checklist: checklist,
+    floorArea: floorArea,
+  );
   if (details == null || !context.mounted) return null;
   return context.read<ProjectsController>().create(
     details.name,
     client: details.client,
     location: details.location,
+    floorArea: details.floorArea,
     costs: details.contractor ? CostSettings.contractor : CostSettings.owner,
     checklist: details.checklist?.materials ?? const [],
   );

@@ -388,10 +388,11 @@ minor tools    = labour × tools %
 general        = Σ general requirement lump sums
 direct cost    = materials + labour + minor tools + equipment + hauling
                  + general requirements
+escalation     = direct cost × price escalation %
 contingency    = direct cost × contingency %
 overhead (OCM) = direct cost × overhead %
 profit         = direct cost × profit %
-subtotal       = direct cost + contingency + overhead + profit
+subtotal       = direct cost + escalation + contingency + overhead + profit
 VAT            = subtotal × VAT %
 total          = subtotal + VAT
 ```
@@ -537,6 +538,51 @@ health; the project signboard; and clean-up and disposal of debris.
 them to your own. They are part of the direct cost, so contingency,
 overhead and profit apply to them as to hauling.
 
+### Price escalation
+
+Prices rise between the estimate and the purchase. **Price escalation**
+under Budget adds a percentage of the direct cost, shown as its own line
+before contingency. As a guide, construction prices in the Philippines have
+risen about 3–6% a year: for work bought eight months from now, 3% is a
+reasonable allowance. Leave it at 0 when the prices are current.
+
+### Checks
+
+Under the budget, **Checks** compares the project with what is usual for
+houses, to catch a wrong input before the estimate goes out
+([`lib/data/checks.dart`](../lib/data/checks.dart)):
+
+| Check | Warns when | Usual |
+| --- | --- | --- |
+| Cost per m² of floor area (when the project has a floor area) | Below half the economy rate or above 1.5 × the premium rate | ₱36,000–50,000 a m² for a standard house |
+| Reinforcing steel per m³ of concrete (CHB wall bars left out) | Below 40 or above 250 kg/m³ | 80–150 kg/m³ in houses |
+| Formwork per m³ of concrete | Above 15 m²/m³ | 4–12 m²/m³ |
+| Labour as a share of materials | Below 15% or above 90% | 30–60% |
+| Materials without a price | Any | – |
+| Age of the prices | Six months or more since the oldest item was priced | – |
+| Scope that usually goes together | Concrete but no walls; walls but no paint; no electrical work | – |
+
+The last group are notes, not warnings: a job may rightly leave them out.
+
+### Quick budget by floor area
+
+Home → **Quick budget by floor area** gives a range before anything is
+measured: floor area × a rate per m² for the finish level, times 1.05 for
+two storeys and 1.10 for three (stairs and suspended slabs).
+
+| Finishes | Per m², contractor's price with VAT |
+| --- | ---: |
+| Economy: plain finishes, local fixtures | ₱28,000–36,000 |
+| Standard: tiles throughout, mid-range fixtures | ₱36,000–50,000 |
+| Premium: stone, engineered wood, imported fixtures | ₱50,000–75,000 |
+
+It splits the midpoint as houses usually do: structural 45%, architectural
+33%, electrical 8%, plumbing 9% and general requirements 5%. The rates are
+our own reading of published 2024–2025 Philippine cost-per-m² guides,
+raised for 2026; they are for a first conversation, never for a contract.
+**Estimate this house item by item** starts a project with the house
+checklist and the floor area filled in.
+
 ### Presets
 
 | Setting | Owner | Contractor | DPWH |
@@ -621,6 +667,99 @@ job would be ₱2,016,000.
   entrance.
 - DPWH's own engineering and administrative overhead (DO 7 s.2025), which is
   deducted from the appropriation and is not part of a contractor's price.
+
+## Contract
+
+The project's **Contract** tab carries the job past the estimate. Its
+model is in [`lib/data/contract.dart`](../lib/data/contract.dart) and
+[`lib/data/contract_math.dart`](../lib/data/contract_math.dart).
+
+### Contract lines
+
+Every line of the bill of quantities (each estimate's work items, then
+the general requirements and hauling as section F) gets its share of the
+contract price: its direct cost × total ÷ direct cost, so markups and VAT
+are spread in proportion and the lines add up to the total exactly (the
+centavo left over from rounding goes to the largest line). Variation orders
+follow as VO-1, VO-2…
+
+### Quotation
+
+**Download quotation** makes an A4 PDF for the client:
+
+- the business profile from Settings (name, address, phone, email, TIN)
+  and a quotation number and date, valid for the days set;
+- the scope and price by section (A–F), the total contract price and the
+  amount in words ("One Million … Pesos Only");
+- the payment terms: downpayment (30% by default, recouped from billings),
+  progress billings, retention (10% by default, released on acceptance or
+  at the end of the warranty) and the warranty (12 months by default);
+- the schedule by phase, and the inclusions and exclusions as typed
+  (**Use common exclusions** fills in permits and fees, utility
+  connections, furniture and unlisted work);
+- signature blocks for the contractor and the client (conforme);
+- the bill of quantities with unit prices that include markups and VAT.
+
+### Schedule
+
+The schedule is worked out from the crew-days of each work item:
+
+```
+lane days   = Σ crew-days of a trade's work in a phase ÷ crews in that trade
+phase days  = the longest lane in the phase (rounded up to half days)
+start       = the end of the phase before
+```
+
+Work is grouped into phases in building order: site preparation and
+earthworks; foundations; columns and ground slab; beams, upper slabs and
+stairs; walls and rough-ins; roofing; plastering, ceilings and
+waterproofing; finishes and openings; fixtures, testing and turnover.
+Bars and forms follow their element (a beam's rebar is with the beams).
+Trades in the same phase work side by side, so electrical and plumbing
+rough-ins run alongside the walls. Six working days a week, Monday to
+Saturday; the finish date skips Sundays. Items priced as a share of
+materials take their labour ÷ (skilled + helper rate) as crew-days.
+
+The **S-curve** is the planned cumulative value of the work week by week:
+each lane's direct cost spread evenly over its days, with general
+requirements and hauling spread over the whole job.
+
+The schedule is a planning guide: it has no weather, holidays, material
+lead times or curing waits, and phases do not overlap.
+
+### Progress billing
+
+Each billing records how far each contract line is done, as a cumulative
+percentage. A billing's statement:
+
+```
+accomplished to date = Σ line amount × percent done
+this billing         = accomplished to date − accomplished at the last billing
+downpayment recouped = this billing × downpayment %
+retention            = this billing × retention %
+amount due           = this billing − recouped − retention
+```
+
+The downpayment is billed on signing as contract price × downpayment %, so
+by 100% complete it has all been recouped. **Download billing** makes a PDF
+with the statement, the amount due in words and each line's previous and
+current percent. New billings start from the last one's percentages; the
+"All 25/50/75/100%" buttons raise every line to at least that.
+
+### Variation orders
+
+Changes after the contract: a description and an amount with markups and
+VAT, added or taken out. They change the contract price and become their
+own billable lines.
+
+### Actual costs
+
+Expenses are recorded by kind (materials, labour, equipment,
+subcontract, other) and compared with the budget: materials with
+materials, labour with labour and minor tools, equipment with equipment,
+other with hauling and general requirements. The card also shows the
+share of the direct cost spent against the percent complete of the last
+billing, the first sign of a job running over.
 
 ## Shopping list
 

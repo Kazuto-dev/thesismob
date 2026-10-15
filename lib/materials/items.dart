@@ -3,6 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'items_finishes.dart';
 import 'items_mep.dart';
 import 'items_structure.dart';
+import 'interiors.dart';
+import 'sitework.dart';
+import 'utilities.dart';
 
 export 'items_finishes.dart';
 export 'items_mep.dart';
@@ -84,7 +87,14 @@ const priceListSources =
     'with your supplier.';
 
 /// Every item that calculators can list, in materials-list order.
-final List<Item> allItems = [...structureItems, ...finishItems, ...mepItems];
+final List<Item> allItems = [
+  ...structureItems,
+  ...finishItems,
+  ...mepItems,
+  ...siteworkItems,
+  ...interiorsItems,
+  ...utilitiesItems,
+];
 
 final Map<String, Item> _byKey = {for (final i in allItems) i.key: i};
 

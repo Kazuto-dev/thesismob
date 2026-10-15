@@ -22,12 +22,14 @@ import '../common/price_dialog.dart';
 import '../common/tiles.dart';
 import 'boq_grid.dart';
 import 'checklist_card.dart';
+import 'checks_card.dart';
+import 'contract_tab.dart';
 import 'material_picker.dart';
 import 'project_actions.dart';
 import 'project_items.dart';
 import 'project_picker.dart';
 
-enum _Tab { items, materials, budget }
+enum _Tab { items, materials, budget, contract }
 
 /// A project: its budget, the estimates grouped by trade as a bill of
 /// quantities, the merged shopping list and the cost settings.
@@ -148,19 +150,20 @@ class _ProjectScreenState extends State<ProjectScreen> {
         ButtonSegment(
           value: _Tab.items,
           label: Text(context.tr('Items')),
-          icon: Icon(Icons.list_alt_outlined),
+          icon: wide ? const Icon(Icons.list_alt_outlined) : null,
         ),
         ButtonSegment(
           value: _Tab.materials,
           label: Text(context.tr('To buy')),
-          icon: Icon(Icons.shopping_cart_outlined),
+          icon: wide ? const Icon(Icons.shopping_cart_outlined) : null,
         ),
         if (!wide)
-          ButtonSegment(
-            value: _Tab.budget,
-            label: Text(context.tr('Budget')),
-            icon: Icon(Icons.tune),
-          ),
+          ButtonSegment(value: _Tab.budget, label: Text(context.tr('Budget'))),
+        ButtonSegment(
+          value: _Tab.contract,
+          label: Text(context.tr('Contract')),
+          icon: wide ? const Icon(Icons.handshake_outlined) : null,
+        ),
       ],
       selected: {wide && _tab == _Tab.budget ? _Tab.items : _tab},
       onSelectionChanged: (s) => setState(() => _tab = s.first),
@@ -169,8 +172,19 @@ class _ProjectScreenState extends State<ProjectScreen> {
     final body = switch (tab) {
       _Tab.items => _ItemsTab(project: project, grid: wide),
       _Tab.materials => _MaterialsTab(project: project),
-      _Tab.budget => _BudgetEditor(
-        key: ValueKey('budget-${project.id}'),
+      _Tab.budget => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _BudgetEditor(
+            key: ValueKey('budget-${project.id}'),
+            project: project,
+          ),
+          const SizedBox(height: Space.lg),
+          ChecksCard(project: project),
+        ],
+      ),
+      _Tab.contract => ContractTab(
+        key: ValueKey('contract-${project.id}'),
         project: project,
       ),
     };
@@ -225,6 +239,8 @@ class _ProjectScreenState extends State<ProjectScreen> {
                                 key: ValueKey('budget-${project.id}'),
                                 project: project,
                               ),
+                              const SizedBox(height: Space.lg),
+                              ChecksCard(project: project),
                             ],
                           ),
                         ),
@@ -297,6 +313,7 @@ class _ProjectMenu extends StatelessWidget {
       name: details.name,
       client: details.client,
       location: details.location,
+      floorArea: details.floorArea ?? 0,
     );
   }
 
@@ -1135,7 +1152,13 @@ class _BudgetEditor extends StatelessWidget {
                 value: c.vatPct,
                 onChanged: (v) => update(c.copyWith(vatPct: v)),
               ),
-              right: const SizedBox.shrink(),
+              right: _NumberSetting(
+                label: context.tr('Price escalation'),
+                suffix: '%',
+                value: c.escalationPct,
+                max: 100,
+                onChanged: (v) => update(c.copyWith(escalationPct: v)),
+              ),
             ),
             const SizedBox(height: Space.md),
             const Divider(),

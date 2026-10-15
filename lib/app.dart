@@ -16,6 +16,7 @@ import 'export/project_documents.dart';
 import 'state/appearance_controller.dart';
 import 'state/estimates_controller.dart';
 import 'state/price_book_controller.dart';
+import 'state/profile_controller.dart';
 import 'state/projects_controller.dart';
 import 'state/tips_controller.dart';
 import 'state/google_account_controller.dart';
@@ -107,6 +108,7 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
           create: (_) => AppearanceController(widget.prefs),
         ),
         ChangeNotifierProvider(create: (_) => TipsController(widget.prefs)),
+        ChangeNotifierProvider(create: (_) => ProfileController(widget.prefs)),
         ChangeNotifierProvider.value(value: _google),
       ],
       child: Builder(

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../data/contract.dart';
 import '../data/estimate.dart';
 import '../data/project.dart';
 import '../data/project_repository.dart';
@@ -66,6 +67,7 @@ class ProjectsController extends ChangeNotifier {
     String name, {
     String client = '',
     String location = '',
+    double? floorArea,
     CostSettings costs = CostSettings.owner,
     List<String> checklist = const [],
   }) {
@@ -75,6 +77,7 @@ class ProjectsController extends ChangeNotifier {
         ).copyWith(
           client: client.trim(),
           location: location.trim(),
+          floorArea: floorArea,
           costs: costs,
           checklist: checklist,
         );
@@ -90,12 +93,14 @@ class ProjectsController extends ChangeNotifier {
     String? name,
     String? client,
     String? location,
+    double? floorArea,
   }) => _update(
     id,
     (p) => p.copyWith(
       name: name == null || name.trim().isEmpty ? null : name.trim(),
       client: client?.trim(),
       location: location?.trim(),
+      floorArea: floorArea,
     ),
   );
 
@@ -109,6 +114,7 @@ class ProjectsController extends ChangeNotifier {
     final copy = Project.create('${source.name} (copy)', now: now).copyWith(
       client: source.client,
       location: source.location,
+      floorArea: source.floorArea,
       costs: source.costs,
       items: [for (final e in source.items) e.withId(Estimate.newId(now))],
       checklist: source.checklist,
@@ -291,6 +297,13 @@ class ProjectsController extends ChangeNotifier {
               : {...p.notNeeded, materialId},
         ),
       );
+
+  /// Changes a project's quotation terms, schedule, billings, variation
+  /// orders or expenses.
+  void updateContract(
+    String projectId,
+    ContractData Function(ContractData) change,
+  ) => _update(projectId, (p) => p.copyWith(contract: change(p.contract)));
 
   /// Remembers the Google spreadsheet a project was saved to.
   void setSheetId(String projectId, String sheetId) =>

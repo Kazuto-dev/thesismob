@@ -501,10 +501,13 @@ class ProportionBar extends StatelessWidget {
                       child: const SizedBox.square(dimension: 10),
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      '${p.label} ',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                    // Long labels wrap rather than overflow a narrow panel.
+                    Flexible(
+                      child: Text(
+                        '${p.label} ',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                     Text(

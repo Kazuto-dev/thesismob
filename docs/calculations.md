@@ -1,6 +1,6 @@
 # How BuildQuantify calculates
 
-BuildQuantify has 29 calculators in four groups. Each one follows common
+BuildQuantify has 40 calculators in four groups. Each one follows common
 Philippine estimating practice and the sizes sold in Philippine hardware
 stores. Quantities are planning estimates: confirm them with your supplier
 and engineer before buying.
@@ -238,6 +238,171 @@ describe the item only.
 Sources: [Lazada PE foam listing](https://www.lazada.com.ph/products/pe-foam-insulation-10mm-double-sided-1meter-x-50meter-i276479065.html),
 [roofonline pitch factors](https://roofonline.com/roof-pitch-factor/).
 
+### Earthworks
+
+| Step | Formula |
+| --- | --- |
+| Pit | (length + 2 × working space) × (width + 2 × working space) × depth; working space none, 0.30 or 0.50 m each side [0.30] |
+| Excavation (in place) | count × pit |
+| Gravel bed (optional) | count × length × width × thickness [none; 0.05 or 0.10 m], under the footing only |
+| Backfill | excavation − structure below ground − gravel bed; none when "haul all of it away" is chosen |
+| Excess in place | excavation − backfill |
+| Loose soil to haul (main item) | excess × swell [common soil 1.25; hard soil or soft rock 1.40], rounded up to 0.5 m³ |
+| Truckloads (shown only) | ⌈loose soil ÷ 6 m³⌉ for a 6-wheeler |
+
+Length and width are the footing's or wall footing's own size; the working
+space is added around it. Depth runs from the ground to the bottom of the pit,
+gravel bed included. A leading choice sets what happens to the soil:
+**backfill around the structure** (default; then the volume of the structure
+below ground, in m³ for all pits, is required: footings, wall footings, tie
+beams and column stubs below the ground line) or **haul all of it away** (a
+cistern or septic pit). The structure plus the gravel bed must fit in the
+excavation. The price field is the price per m³ of loose soil hauled away
+(`soil_disposal`). Backfill is counted at the volume it fills; the slight
+shrinkage of compacted backfill is not counted, so a little less soil may be
+left over than shown.
+
+Works: excavation in m³ (common soil `excavation`, DPWH 103, 3 m³ per
+helper-day; hard soil the new `excavation_hard`, 1.5 m³ per day with the same
+crew of 0.1 foreman and 1 helper), backfill in m³ when there is any, and
+gravel bedding in m³ when chosen.
+
+Sources: DPWH Standard Specifications, Item 103 (Structure Excavation) and
+Item 104 (Embankment); swell of about 25% for common earth and 40% for hard
+clay from R. L. Peurifoy et al., *Construction Planning, Equipment, and
+Methods* (soil load-factor tables). 1.40 is applied to hardpan and soft rock
+dug by hand; blasted rock swells more (about 50–65%). The 6 m³ load of a
+6-wheeler is a common rule of thumb, not a published figure.
+
+### Concrete stairs
+
+| Step | Formula |
+| --- | --- |
+| Risers | ⌈height ÷ riser⌉ [riser at most 0.175 m; 0.175, 0.18 or 0.20], all equal: height ÷ risers |
+| Treads | risers − 1; risers − 2 with one landing [none], which takes a tread's place |
+| Slope length | √((treads × tread)² + height²) [tread 0.25 m; 0.25, 0.275 or 0.30] |
+| Volume | slope × width × waist + ½ × riser × tread × width × treads + landing × width × waist [waist 0.15 m; 0.125, 0.15 or 0.20] |
+| Cement (main item), sand, gravel | volume × (1 + waste) [5%; 0, 5 or 10%] × mix factors, Class A by default |
+| Main bars, 10 or 12 mm [12] | ⌊(width − 2 × 0.02) ÷ spacing⌋ + 1 bars [0.15 m; 0.10, 0.125, 0.15 or 0.20], each slope + landing + 2 × 40d; spliced with a 40d lap over 6 m |
+| Distribution bars, 10 mm at 0.25 m | ⌊(slope + landing) ÷ 0.25⌋ + 1 bars, each width − 0.04 m |
+| Tie wire | main bars × distribution bars × 0.30 m ÷ 53 |
+| Form area | (slope + landing) × width + height × width + 2 × volume ÷ width |
+| Forms | marine plywood 6 or 12 mm [12] ⌈area ÷ 2.88⌉, used once; coco lumber 28.8 bd ft per sheet; nails 0.20 kg/m² |
+
+The risers' faces add up to height × width, and each side of the flight has
+the profile area volume ÷ width. Main bars run along the slope into the
+supports by 40 bar diameters at each end, a development-length rule of thumb
+for Grade 33–40 bars. Cover is 20 mm, as for a suspended slab. The soffit
+is shored like a suspended slab, so the slab's 28.8 bd ft of lumber per sheet
+is used. Extra top bars at the supports, nosing bars and the beam or footing
+at the foot of the stair are not counted. The price field is the price per bag
+of cement.
+
+Works: the new `stairs_concrete` in m³ (net, before waste; crew 0.5 foreman,
+1 skilled, 4 helpers, a mixer and a vibrator; 2 m³ per day; DPWH 900), rebar in
+kg (bar metres with laps × d² ÷ 162.2), formwork in m².
+
+Sources: National Building Code (PD 1096), Rule XII Sec. 1207 (risers at most
+0.20 m, treads at least 0.25 m); Fajardo Table 1-2 and forms tables; NSCP 2015
+Table 420.6.1.3.1 (cover). The 2 m³ daily output is an estimate, below the
+2.5 m³ of columns because of the stepped forms.
+
+### Steel railing
+
+| Step | Formula |
+| --- | --- |
+| Posts, 1½" × 1½" tube | bays = ⌈length ÷ spacing⌉ [1.2 m; 1.0, 1.2 or 1.5]; posts = bays + 1, each the railing height [1.00 m; 0.90, 1.00 or 1.10] |
+| Top and bottom rails | 2 × length; the bottom rail sits 0.10 m above the floor |
+| Infill height | height − 0.15 m |
+| Balusters [default] | per bay ⌈(bay − 0.038 − gap) ÷ (gap + tube side)⌉ [gap 0.10 m; 0.10 or 0.12], each the infill height |
+| Horizontal rails | ⌈(infill height − gap) ÷ (gap + tube side)⌉ middle rails, each the full length |
+| Rail tube (main item), 1" or 1½" × 1.2 mm [1"] | ⌈metres × 1.05 ÷ 6⌉ lengths; posts are included when the tube is 1½" |
+| Post tube | ⌈post metres × 1.05 ÷ 6⌉ lengths of 1½" tube, when the rail tube is 1" |
+| Base plates, anchors | 1 plate 100 × 100 × 6 mm and 4 expansion anchors ⅜" × 3" per post |
+| Welding rod | joints × 0.02 kg; joints = posts × (3 + middle rails) + 2 × balusters |
+| Paint | area = rail and infill metres × 4 × tube side + post metres × 4 × 0.0381; red oxide primer 1 coat and enamel 2 coats at 25 m² per 4 L per coat, + 10%; thinner (primer + enamel) ÷ 8 + 0.5 L |
+
+Infill can also be **none** (top and bottom rails only). The clear gap keeps
+openings to about 10 cm so a child cannot slip through; this follows the
+common 4-inch-sphere rule of building codes and good practice rather than a
+specific NBCP clause. Each post counts one joint to its base plate and one to
+every rail; each baluster two. 0.02 kg is about one 2.5 mm E6013 rod, enough
+to weld round a 1" tube. The price field is the price per 6 m length of the
+rail tube.
+
+Works: the new `steel_railing` in m of railing (1 skilled welder, 1 helper and
+a welding machine; 6 m per day; no DPWH item given) and painting in m² with
+effort 3 (primer and two coats), which the paint companions go to.
+
+Sources: tube dimensions as in ASTM A500 / PNS; mass worked out from the
+section (1" × 1.2 mm ≈ 0.91 kg/m, 1½" × 1.2 mm ≈ 1.39 kg/m); paint coverage as
+in the Paint calculator (Boysen data sheets).
+
+### Steel roof trusses
+
+| Step | Formula |
+| --- | --- |
+| Trusses | ⌊building length ÷ spacing⌋ + 1 [1.2 m; 1.0, 1.2 or 1.5] |
+| Top chords | 2 × (span ÷ 2 + overhang) × √(1 + pitch²) [pitch 4:12; 3, 4, 5 or 6:12; overhang 0.60 m, measured level; none, 0.60, 0.80 or 1.00] |
+| Bottom chord | span |
+| Panels (Howe) | 2 × ⌈span ÷ 2 ÷ 1.2⌉; panel = span ÷ panels |
+| Verticals | at panel point i (1 to panels ÷ 2): pitch × i × panel, twice except the king post |
+| Diagonals | in panels 2 to panels ÷ 2 on each side: √(panel² + (pitch × i × panel)²) |
+| Angle bar (main item), 1½" or 2" × 3/16" [1½"] | ⌈trusses × (top chords + bottom chord + webs) × 1.05 ÷ 6⌉ lengths |
+| Gusset plates, 150 × 150 × 6 mm | 2 × panels per truss (one per joint) |
+| Steel | angle metres × kg/m (2.68 or 3.63) + gussets × 1.06 kg |
+| Welding rod | steel × 0.02 |
+| Anchor bolts, 16 mm × 300 mm | 4 per truss (2 at each bearing) |
+| Paint | area = angle metres × 4 × leg + gussets × 0.045 m²; red oxide primer 1 coat and enamel 1 coat at 25 m² per 4 L, + 10%; thinner as for the railing |
+
+**Web basis.** Webs are worked out for a Howe truss with panels no wider than
+1.2 m, a vertical at every panel point and a diagonal in every panel except
+the two end panels, rather than as a fixed fraction of the chords. For an 8 m
+span at 4:12 this gives 13.9 m of webs per truss, about 0.85 × the chords
+between supports (16.4 m); at 3:12 the share is lower and at 6:12 higher. A
+four-web Fink (W) truss of the same span uses about 40% as much web. All members are
+counted in the chosen angle size; smaller web angles in the plans use a little
+less steel. Angle weights are AISC nominal: L1½ × 1½ × 3/16 = 1.80 lb/ft
+(2.68 kg/m; the 2.71 sometimes quoted is slightly high) and L2 × 2 × 3/16 =
+2.44 lb/ft (3.63 kg/m). Welding rod at 2% of the steel weight is a rule of
+thumb for light welded trusses with gussets, about 0.08 kg per joint at the
+default. Purlins (in the Roofing calculator) and cross bracing are not counted.
+**This is not a structural design:** member sizes, the web pattern,
+connections and bracing must follow the engineer's plans. The price field is
+the price per 6 m length of angle bar.
+
+Works: the new `steel_truss` in kg of steel including gussets (0.2 foreman,
+1 skilled welder, 2 helpers and a welding machine; 150 kg per day to fabricate
+and erect; DPWH 1047) and painting in m² with effort 2.
+
+Sources: AISC *Steel Construction Manual*, angle dimensions and weights; NSCP
+2015 Chapter 5; DPWH Standard Specifications Item 1047 (structural steel; the
+item number is recalled from program-of-works line items, not checked against
+the specification text); paint coverage as in the Paint calculator.
+
+#### New price book items: earthworks, stairs and steel
+
+All prices are Metro Manila retail, VAT included, for late 2026. None could be
+confirmed from a published source, so all are flagged as estimates.
+
+| Item | Unit | Group | Price (₱) | Source |
+| --- | --- | --- | ---: | --- |
+| Hauling of excess soil, 6-wheeler truck (`soil_disposal`) | m³ | Other | 650 | Estimate: about ₱3,500–5,000 per 6 m³ trip in Metro Manila |
+| Square steel tube 1" × 1" × 1.2 mm, 6 m (`square_tube_1`) | length | Steel | 400 | Estimate: 5.5 kg at about ₱70/kg for light tube |
+| Square steel tube 1½" × 1½" × 1.2 mm, 6 m (`square_tube_1_5`) | length | Steel | 600 | Estimate: 8.3 kg at about ₱70/kg |
+| Angle bar 1½" × 1½" × 3/16", 6 m (`angle_bar_1_5`) | length | Steel | 950 | Estimate: 16.1 kg at about ₱60/kg |
+| Angle bar 2" × 2" × 3/16", 6 m (`angle_bar_2`) | length | Steel | 1,300 | Estimate: 21.8 kg at about ₱60/kg |
+| Gusset plate 150 × 150 × 6 mm, cut (`gusset_plate`) | pc | Steel | 90 | Estimate: 1.06 kg of plate plus cutting |
+| Base plate 100 × 100 × 6 mm, drilled (`base_plate`) | pc | Steel | 60 | Estimate: 0.47 kg of plate plus cutting and drilling |
+| Expansion anchor ⅜" × 3" (`anchor_bolt_10`) | pc | Steel | 30 | Estimate (hardware listings ₱20–40) |
+| Anchor bolt 16 mm × 300 mm, nut and washer (`anchor_bolt_16`) | pc | Steel | 90 | Estimate |
+| Welding rod E6013, 2.5–3.2 mm (`welding_rod`) | kg | Steel | 200 | Estimate (5 kg boxes about ₱150–180/kg; loose by the kg more) |
+| Red oxide metal primer, 4 L (`red_oxide_primer`) | gallon | Paint | 780 | Estimate (Boysen-class alkyd red oxide, ₱700–850) |
+
+Reused items: cement, sand, gravel, gravel bedding, 10 and 12 mm bars, tie
+wire, marine plywood, coco lumber, nails, quick-drying enamel and paint
+thinner.
+
 ## Architectural
 
 ### Paint
@@ -401,6 +566,198 @@ need no paste.
 
 Source: [Screwfix wallpaper guide](https://www.screwfix.com/guides/painting-decorating/wallpaper/how-much-wallpaper-do-i-need).
 
+### Waterproofing
+
+| Step | Formula |
+| --- | --- |
+| Perimeter | 2 × (length + width) |
+| Area to waterproof | length × width + perimeter × upturn [0.30 m; none, 0.15, 0.30 or 0.60 m] |
+| Corners and joints | perimeter + joints and cracks (optional) |
+| Cementitious coating, 2-component [default] | kg = area × 2 × coats [2; 2 or 3] × (1 + waste); ⌈kg ÷ 25⌉ sets (main item) |
+| Elastomeric liquid membrane | litres = area × 0.5 × coats × (1 + waste); ⌈litres ÷ 4⌉ gallons [default] or ⌈litres ÷ 16⌉ pails (main item) |
+| Acrylic primer (liquid only) | ⌈area × 0.2 × (1 + waste) ÷ 4⌉ gallons |
+| Fiberglass mesh (coatings) | ⌈(perimeter + joints) × 0.20 × (1 + waste)⌉ m of 1 m wide mesh |
+| Torch-on membrane | membrane = (area + (perimeter + joints) × 0.25) × (1 + waste); ⌈membrane ÷ 8.91⌉ rolls (main item) |
+| Bituminous primer (torch-on) | ⌈area × 0.3 × (1 + waste) ÷ 4⌉ gallons |
+| LPG (torch-on) | ⌈rolls × 2 ÷ 11⌉ tanks of 11 kg |
+
+Waste is none, 5, 10 or 15% [10%]. The system picks the price field: price
+per 25 kg set, per 4 L gallon, per 16 L pail or per roll. There is no pail
+unit, so a pail is counted as a piece.
+
+Torch-on rolls are 1 × 10 m. With 10 cm laps at the sides and ends, each
+covers 0.9 × 9.9 = 8.91 m². A 0.25 m strip goes over the corners and joints
+before the main sheets. Coatings get 0.20 m strips of fiberglass mesh in the
+first coat over the same lengths. The mesh is bought by the metre of 1 m
+wide roll and cut into 5 strips. Cementitious coatings go on damp concrete
+and need no primer.
+
+**Works.** Coatings: `waterproofing`, m² of the area to waterproof (upturns
+included, waste and strips left out). The crew is 1 skilled worker and 1
+helper, with an output of 25 m² a day for the full 2-coat system with the
+mesh. Effort is coats ÷ 2, so 3 coats count 1.5. Torch-on: a separate
+`waterproofing_torch` item in m², with the same crew at 30 m² a day,
+primer and laps included. Two items were used instead of an effort factor
+because torch-on is laid at a different pace and needs a trained
+applicator. No DPWH item number was confirmed, so none is given.
+
+The rates are planning defaults from typical data-sheet ranges. They are
+recalled, not checked against current sheets:
+
+- About 2 kg/m² per coat for cementitious coatings (SikaTop Seal-107 is
+  about 2 kg/m² per mm).
+- 0.5 L/m² per coat for elastomeric membranes (Sikalastic-560 lists about
+  1.4–2.1 kg/m² in 2–3 coats).
+- 0.2 L/m² for acrylic primer and 0.3 L/m² for bituminous primer.
+- About 2 kg of LPG per roll. This is a conservative rule of thumb.
+- 0.15 m minimum upstand, from BS 6229. The 0.30 m default is common
+  practice for toilets, baths and parapets.
+
+Sources: SikaTop Seal-107 and Sikalastic-560 product data sheets; BS
+6229:2018; installation guides from APP membrane makers.
+
+### Floor finishes
+
+| Step | Formula |
+| --- | --- |
+| Floor area | length × width |
+| SPC or vinyl planks [default] | ⌈area × (1 + waste) ÷ coverage⌉ boxes; coverage 2.2 m² unless entered (main item) |
+| Laminated wood planks | the same with 2.0 m² per box (main item) |
+| Foam underlay [rolls; or pad attached] | ⌈area × 1.05 ÷ 20⌉ rolls of 1 × 20 m |
+| Skirting (optional length) | ⌈skirting × (1 + waste) ÷ 2.4⌉ pieces |
+| Transition trims (optional doorways) | ⌈doorways × 0.90 ÷ 2.4⌉ pieces |
+| Cement topping or screed: mortar | area × thickness [25 mm; or 50 mm] × (1 + waste) |
+| Cement (main item) | ⌈mortar × 18 (1:2, Class A) [default] or 12 (1:3, Class B) + area × 0.025⌉ bags of 40 kg |
+| Sand | mortar × 1.0 m³, by the half m³ |
+| Dry-shake hardener [none] | ⌈area × 3 ÷ 25⌉ bags of 25 kg |
+
+Waste is 5, 7, 10 or 15% [10%]. It covers plank offcuts, or spillage and
+low spots under a topping. The price field follows the finish: price per box
+of SPC, per box of laminate, or per bag of cement. The 0.025 bags per m² is
+a neat cement slurry bond coat, the same allowance used under a tile bed.
+Leave a 10 mm expansion gap at the walls; the skirting hides it.
+
+**Works.** `floor_topping` in m²: 1 skilled worker and 1 helper at 25 m² a
+day for 25 mm, with effort = thickness ÷ 25 mm, so a 50 mm screed counts
+twice. `plank_flooring` in m²: 1 skilled worker and 0.5 helper at 20 m² a
+day. Underlay, skirting and trims go into that work and its output.
+
+Mortar per m³ comes from Fajardo: Class A 1:2 is 18 bags and 1.0 m³ of
+sand, Class B 1:3 is 12 bags. The 3 kg/m² for hardener is the light-traffic
+end of dry-shake hardener data sheets such as Sikafloor Chapdur, recalled.
+Box coverage, the underlay roll size, 2.4 m trim lengths and 0.90 m per
+doorway are typical retail figures, not checked against a source.
+
+Sources: Fajardo, *Simplified Construction Estimate* (mortar table);
+Sikafloor Chapdur data sheet; SPC and laminate installation guides.
+
+### Cabinets and countertops
+
+| Step | Formula |
+| --- | --- |
+| Countertop [granite; quartz, solid surface, laminated plywood, none] | base × (depth [0.60 m kitchen; 0.50 m vanity] + backsplash [0.10 m; none, 0.60 m]) m² |
+| **Made to order** [default] | base cabinet metres (main item); wall cabinets per metre; countertop per m² |
+| **Built on site**: 18 mm marine plywood (main item) | ⌈(base × 3.5 + wall × 2.2 + laminated top) × 1.15 ÷ 2.977⌉ sheets |
+| 6 mm marine plywood backs | ⌈(base + wall) × 0.75 × 1.15 ÷ 2.977⌉ sheets |
+| High-pressure laminate 4×8 | ⌈((base + wall) × 1.0 + laminated top) × 1.15 ÷ 2.977⌉ sheets |
+| Contact cement | ⌈laminate m² × 0.4⌉ L |
+| PVC edge band | ⌈((base + wall) × 9 + laminated top length) × 1.10 ÷ 50⌉ rolls |
+| Doors | ⌈base ÷ 0.50⌉ + ⌈wall ÷ 0.50⌉ |
+| Concealed hinges | doors × 2 |
+| Drawer slides | ⌈base ÷ 1.0⌉ pairs (one drawer per metre of base) |
+| Handles | doors + drawers |
+| Nails | ⌈(base + wall) × 0.2⌉ kg |
+
+Price fields: price per metre of base cabinet (made to order) or price per
+sheet of 18 mm marine plywood (built on site). Fabricated countertops are
+bought per m² in both cases. When a carpenter builds the cabinets with a
+laminated plywood top, the top's area is added to the 18 mm plywood and the
+laminate instead.
+
+Per-metre assumptions for built on site, with 15% cutting waste:
+
+- **Base cabinet**, 0.60 m deep and 0.75 m high on a 0.10 m toe kick: 3.5 m²
+  of 18 mm panels per metre. That covers the bottom 0.56, sides and
+  partitions 0.84, shelf 0.53, doors 0.75, rails 0.20, toe kick 0.10 and one
+  drawer box 0.50.
+- **Wall cabinet**, 0.35 m deep and 0.70 m high: 2.2 m² per metre. That
+  covers the top and bottom 0.66, sides 0.46, shelf 0.32 and doors 0.70.
+- **Backs and faces**: 0.75 m² of 6 mm back per metre, and about 1 m² of
+  laminate on the exposed faces.
+- **Other**: 9 m of edge band per metre, 0.4 L of contact cement per m² of
+  laminate (both faces coated), doors about 0.50 m wide and 0.2 kg of nails
+  per metre.
+
+These are our own take-offs, not published factors. An L-shaped counter
+measured along both legs counts the corner square twice in the countertop.
+Sink and cooktop cut-outs, wood glue and screws are not counted.
+
+**Works.** Made to order: `cabinets` in metres of base plus wall cabinet,
+installation only. The crew is 1 skilled worker and 1 helper at 3 m a day.
+Built on site: `cabinets_built` in the same metres, for carpentry,
+laminating and hardware, with the same crew at 0.6 m a day.
+`countertop` in metres of base cabinet: 1 skilled worker and 1 helper at
+4 m a day, measured only when there is a countertop. Fabricated countertops
+go to that work. Upper cabinets, plywood, laminate and hardware go to the
+cabinet work. If the fabricator's price includes installation, the cabinet
+labour is counted twice; the result's note says to check.
+
+Sources: *Architectural Graphic Standards* for counter and cabinet sizes;
+NKBA Kitchen Planning Guidelines; Blum hinge planning (2 hinges for doors up
+to about 0.90 m).
+
+#### New price book items: waterproofing, floors and cabinets (Metro Manila, late 2026)
+
+All prices are our own estimates (`estimate: true`), from recalled 2024–25
+retail levels at Wilcon, AllHome and fabricator quotes, raised for late
+2026. None was checked against a published 2026 listing.
+
+| Key | Item | Unit | Price (₱) | Group | Source |
+| --- | --- | --- | ---: | --- | --- |
+| wp_cementitious_set | Cementitious waterproofing, 2-component, 25 kg set | set | 3,200 | paint | estimate |
+| wp_liquid_gallon | Elastomeric liquid waterproofing, 4 L | gallon | 1,400 | paint | estimate |
+| wp_liquid_pail | Elastomeric liquid waterproofing, 16 L | pail | 5,200 | paint | estimate |
+| wp_torch_roll | Torch-on APP membrane 4 mm, 1 × 10 m | roll | 3,600 | paint | estimate |
+| wp_primer | Waterproofing primer, acrylic, 4 L | gallon | 950 | paint | estimate |
+| wp_bitumen_primer | Bituminous primer, 4 L | gallon | 850 | paint | estimate |
+| wp_mesh | Fiberglass reinforcing mesh, 1 m wide | m | 45 | paint | estimate |
+| wp_lpg_11kg | LPG, 11 kg tank refill | tank | 1,050 | other | estimate; check DOE weekly LPG prices |
+| floor_spc_box | SPC plank flooring, box of 2.2 m² | box | 1,700 | tiles | estimate (about ₱770/m²) |
+| floor_laminate_box | Laminated wood flooring 8 mm, box of 2 m² | box | 1,300 | tiles | estimate (about ₱650/m²) |
+| floor_underlay_roll | Foam underlay 2 mm, 1 × 20 m | roll | 900 | tiles | estimate |
+| floor_skirting | Floor skirting, PVC 80 mm × 2.4 m | pc | 280 | tiles | estimate |
+| floor_trim | Floor transition trim, 2.4 m | pc | 450 | tiles | estimate |
+| floor_hardener | Floor hardener, dry-shake, 25 kg | bag | 1,400 | tiles | estimate |
+| cabinet_base_lm | Base cabinet, made to order | m | 14,000 | other | estimate (fabricator range ₱12,000–18,000/m) |
+| cabinet_upper_lm | Wall cabinet, made to order | m | 10,000 | other | estimate |
+| counter_granite_m2 | Granite countertop, fabricated | m² | 6,500 | other | estimate |
+| counter_quartz_m2 | Quartz countertop, fabricated | m² | 12,000 | other | estimate |
+| counter_solid_m2 | Solid surface countertop, fabricated | m² | 9,000 | other | estimate |
+| counter_laminate_m2 | Laminated plywood countertop, fabricated | m² | 3,500 | other | estimate |
+| hpl_laminate | High-pressure laminate 0.8 mm 4×8 | sheet | 1,800 | lumber | estimate |
+| edge_band | PVC edge band 22 mm × 50 m | roll | 450 | lumber | estimate |
+| contact_cement | Contact cement, 1 L | L | 300 | lumber | estimate |
+| cabinet_hinge | Concealed cabinet hinge 35 mm, soft-close | pc | 150 | other | estimate |
+| drawer_slide | Drawer slide 18", full extension | pair | 350 | other | estimate |
+| cabinet_handle | Cabinet handle | pc | 80 | other | estimate |
+
+Reused items: `cement_40kg`, `sand`, `marine_plywood_18`, `marine_plywood_6`
+and `nails`.
+
+#### New work items: waterproofing, floors and cabinets
+
+| Key | Description | Unit | Crew | Output per day |
+| --- | --- | --- | --- | ---: |
+| waterproofing | Waterproofing coating, 2 coats with reinforcing mesh | m² | 1 skilled, 1 helper | 25 (effort = coats ÷ 2) |
+| waterproofing_torch | Torch-on bituminous membrane, primed and lapped | m² | 1 skilled, 1 helper | 30 |
+| floor_topping | Cement floor topping, troweled finish | m² | 1 skilled, 1 helper | 25 at 25 mm (effort = thickness ÷ 25 mm) |
+| plank_flooring | SPC or laminate plank flooring with underlay and skirting | m² | 1 skilled, 0.5 helper | 20 |
+| cabinets | Cabinets made to order, installed | m | 1 skilled, 1 helper | 3 |
+| cabinets_built | Cabinets built on site, laminated, with hardware | m | 1 skilled, 1 helper | 0.6 |
+| countertop | Countertop with backsplash, installed | m | 1 skilled, 1 helper | 4 |
+
+No DPWH item numbers are given, since none could be confirmed.
+
 ## Electrical
 
 ### Light bulbs
@@ -516,6 +873,83 @@ Sources: [PEC 2017 Art. 2.10](https://filipinoengineer.com/wiki/Philippine_Elect
 [Phelps Dodge FAQ](https://phelpsdodge.com.ph/frequently-asked-questions/),
 [AEDO rewiring costs](https://aedoconstruction.com/blog/house-rewiring-cost-philippines/).
 
+### Data, TV and CCTV
+
+| Step | Formula |
+| --- | --- |
+| CAT6 (main item) | (data outlets + IP cameras) × run × 1.10; by the metre ⌈m⌉ [default], or ⌈m ÷ 305⌉ boxes |
+| Data outlets | 1 CAT6 keystone, 1 faceplate, 1 utility box and 1 RJ45 plug each |
+| Network switch, 8-port | ⌈data ÷ 7⌉ when data > 4 (the router's LAN ports) |
+| RG6 coax | TV × run × 1.10 |
+| TV outlets | 1 F keystone, 1 faceplate, 1 utility box each; F connectors 2 × TV + splitters |
+| 4-way splitters | ⌈TV ÷ 4⌉ when TV > 1 |
+| Doorbell | 1 chime with push button, a utility box, 2.0 mm² wire run × 2 × 1.10 |
+| Conduit ½" | ⌈(data + TV + doorbell) × run × 1.10 ÷ 3⌉, and ⌈cameras × run × 1.10 ÷ 3⌉ |
+| Recorder | smallest of 4, 8 or 16 channels ≥ cameras, or ⌈cameras ÷ 16⌉ 16-channel |
+| Hard disk | 1 TB (4 ch), 2 TB (8 ch), 4 TB (16 ch) per recorder |
+| HD analog | DVR; RG59 + power cable cameras × run × 1.10; BNC and DC plugs per camera; ⌈cameras ÷ 4⌉ 12 V 5 A supplies |
+| IP | NVR; PoE switch with the recorder's port count; 2 RJ45 plugs per camera |
+| Every camera | 1 junction box |
+
+Cable bought as companions (RG6, RG59) is whole 305 m boxes, plus the rest
+by the metre unless 200 m or more is left, when another box is bought.
+Inputs: data outlets (required, at least 1: count one for the CCTV
+recorder's link to the router), TV outlets, cameras and the average run per
+point [15 m]. CCTV system: HD analog with DVR [default] or IP with NVR and
+PoE switch. Doorbell: no [default] or yes.
+
+**Main item.** CAT6 cable is the main item, priced per metre or per 305 m
+box. It is the one material every job here needs (data outlets are
+required) and the one people price by length; cameras and recorders are
+companions priced from the price book. IP camera runs are part of the main
+CAT6.
+
+Work: data, TV and doorbell points as the new **aux_point** work (1 skilled
++ 0.5 helper, 8 points a day) and cameras as the new **cctv_camera** work
+(1 skilled + 1 helper, 4 cameras a day). Cameras, recorders, disks, PoE
+switches, RG59, camera plugs, power supplies, camera junction boxes and
+camera conduit go to the CCTV work; the rest to the points. No DPWH items.
+
+The 10% cable allowance (slack and termination) and the 200 m box threshold
+are planning values. Disk sizes give about two weeks of continuous recording
+at 2 MP, 15 fps, H.265 (about 1.7 Mbps or 18 GB per camera a day, from the
+storage calculators below); 4 MP IP cameras fill them in about a week.
+CAT6 runs must stay under 90 m (TIA-568 permanent link), which the 80 m top
+of the typical run range respects. The internet provider's modem-router is
+not priced.
+
+Sources: [CCTV storage calculator](https://cctvdesigntool.com/calculators/storage),
+[CCTV Camera Pros storage calculator](https://videos.cctvcamerapros.com/video-storage-calculator.md),
+[Villman Hikvision kits](https://villman.com/Product-Detail/hikvidion_tvi-8ch4d4b-2mp).
+
+### Lighting fixtures
+
+| Step | Formula |
+| --- | --- |
+| Light needed | lux × room length × width |
+| Fixtures (main item) | ⌈light needed ÷ (fixture lumens × 0.6 × 0.8)⌉ |
+| Flexible conduit ½" | ⌈fixtures × 1.5⌉ m |
+| Fixture wire, 2.0 mm² | ⌈fixtures × 1.5 × 2⌉ m, cut |
+
+Room: bedroom 100 lx, living room 150 [default], bathroom 200, kitchen 300,
+study or office 500 (as for light bulbs). Fixtures: 4" downlight 9 W 750 lm
+[default], 6" downlight 12 W 1,000 lm, pin light 5 W 400 lm, surface ceiling
+lamp 24 W 2,000 lm, T8 batten 18 W 1,800 lm. You can also enter a number of
+fixtures. The breakdown shows the lighting load (fixtures × watts). Work:
+Work.lightFixture, one per fixture.
+
+The lumen method with a utilisation factor of 0.6 and a maintenance factor
+of 0.8 (0.48 together, against 0.5 for bulbs) is the textbook method; 0.6
+suits a small room with light walls and 0.8 is the usual maintenance value.
+Lumens are typical catalogue values for each wattage, about 80–100 lm/W.
+The 1.5 m whip of flexible conduit with two wires per fixture is a planning
+allowance; junction boxes and circuits come with the Electrical Rough-in
+calculator, and ceiling cut-outs need no material.
+
+Sources: [Engineering ToolBox light levels](https://www.engineeringtoolbox.com/light-level-rooms-d_708.html),
+[VIOX lumen method calculator](https://tools.viox.com/lighting-calculator/),
+[LRC LED lighting guide](https://www.lrc.rpi.edu/programs/solidstate/assist/pdf/led-lighting-apps-guide-2002.pdf).
+
 ## Plumbing
 
 ### PVC pipe
@@ -626,6 +1060,181 @@ Sources: [AEDO septic sizing](https://aedoconstruction.com/blog/septic-tank-sizi
 [Ventura County septic criteria](https://www2.vcrma.org/wp-content/uploads/2024/02/septic-tank-criteria-single-family-dwellings.pdf),
 [per-person sizing](https://www.scribd.com/document/542099418/std),
 [plumbing slides](https://www.slideshare.net/slideshow/plumbing-1ppt/262234425).
+
+### Drainage and catch basins
+
+| Step | Formula |
+| --- | --- |
+| Pipes (main item) | ⌈run × 1.05 ÷ 3⌉ lengths of 3 m |
+| Fittings | 0.30 × pipes × price per pipe, as one lot |
+| Solvent cement | ⌈run × 1 joint per m ÷ joints per can⌉ cans of 100 cc |
+| Cleanouts, floor drains | as entered (optional) |
+| Block basin walls, 4" CHB | basins × 4 × (0.45 + 0.10) × 0.60 = 1.32 m² each, on the centre line |
+| Blocks | ⌈walls × 12.5⌉ + ⌈5%⌉ |
+| Plaster, inside | basins × 4 × 0.45 × 0.60 = 1.08 m² each |
+| Floor slab, Class A | basins × 0.65 × 0.65 × 0.10 = 0.04225 m³ each |
+| Cement | slab × 9 + walls × 0.522 + plaster × 0.192 bags |
+| Sand, gravel | slab × 0.5 + walls × 0.0435 + plaster × 0.016 m³; slab × 1.0 m³ |
+| Gratings | basins (cast iron [default] or steel), block basins only |
+| Precast or PVC boxes | basins, instead of all the block basin materials |
+
+Diameters: 2", 3", 4" [default] and 6". Pipe: orange sanitary pipe
+[default] or Series 1000 (thicker wall, for driveways and deep fill), both in
+3 m lengths. Catch basins are optional, so a sanitary line under the house
+can be priced with none. A 100 cc can makes 6 joints at 2", 4 at 3", 3 at
+4" and 1 at 6" (Oatey's joints per quart scaled to 100 cc; the 6" figure,
+about 10 per quart, gives 1.06 per can). Cleanout plugs are priced at the
+4" plug's price whatever the diameter.
+
+Work: the run in m of Work.piping (main) and the basins as sets of the new
+**catch_basin** work (1 skilled + 1 helper, 1 set a day, DPWH Item 502,
+Manholes, Inlets and Catch Basins). Basin blocks, cement, sand, gravel,
+gratings and boxes go to the catch basin work; fittings, cement cans,
+cleanouts and floor drains to the piping.
+
+The 5% pipe allowance (less than the 10% of the PVC pipe calculator, which
+covers water lines with many short pieces) and the 30% fittings allowance
+are planning values for long, mostly straight drain runs. Neither comes from
+a published table. The 0.45 × 0.45 × 0.60 m basin is a common size on house
+plans, not a code minimum. Mortar, plaster and concrete factors are
+Fajardo's (see Shared factors). Basins have no bars. Trench digging,
+backfill and bedding are not included. Falls of at least 2% for 3" and
+smaller and 1% for 4" and larger follow the National Plumbing Code (UPC
+basis), as quoted by AEDO.
+
+Sources: [AEDO NPC drain sizing](https://aedoconstruction.com/blog/npc-drain-pipe-sizing-calculator-philippines/),
+[Neltex](https://www.neltex.com/products.do?item_id=51663),
+[Moldex](https://mpi.moldex.com.ph/mb-pipes-and-fittings),
+[PVC glue guide](https://www.commercial-industrial-supply.com/resource-center/how-much-pvc-glue-to-use/),
+[DPWH D.O. 028 s. 2025, Item 502](https://dpwh.gov.ph/DPWH/sites/default/files/issuances/do_028_s2025.pdf),
+Fajardo, *Simplified Construction Estimate*, Tables 1-2 and 2-2.
+
+### Water pump
+
+| Step | Formula |
+| --- | --- |
+| Size step | up to 2 bathrooms: 0; 3 or 4: 1; 5 or 6: 2; +1 for 3 storeys; at most 2 |
+| Pump (main item) | 1 set: ½ HP, 1 HP or 1½ HP |
+| Pressure tank (jet pump only) | 24 L, 60 L or 100 L, by the same step |
+| Jet pump extras | 1 five-way tank connector, 1 pressure switch, 1 gauge |
+| Valves and fittings | 1 check valve, 2 gate valves, 2 unions, 2 braided hoses, all 1"; 1 pump base |
+| Teflon tape | ⌈joints ÷ 40⌉; 16 threaded joints, 21 with a tank |
+| Pump circuit wire, 3.5 mm² | distance × 3 wires × 1.10, cut by the metre |
+| Conduit ½" | ⌈distance × 1.10 ÷ 3⌉ |
+| Breaker | 15 A for ½ HP, 20 A for 1 to 1½ HP |
+
+Pump: jet pump with pressure tank [default] or booster pump with a built-in
+controller (no tank, switch, gauge or connector). Bathrooms: up to 2
+[default], 3 or 4, 5 or 6. Storeys: 1, 2 [default] or 3. Distance from the
+panel board [10 m]. Bathrooms are a choice rather than a number so that the
+suggested price can follow the pump size: a price reference can only read
+choices.
+
+Work: 1 set of the new **pump_install** work (1 skilled plumber + 1 helper,
+1 set a day, no DPWH item) as the main work, and the wire metres of
+Work.wiring. The wire, conduit and breaker go to the wiring.
+
+The size rule is a planning rule, not a code table. ½ HP with 24 L is the
+set Philippine retailers sell most (1 HP jet pumps with 24 L tanks are listed
+at ₱4,990–9,030 at Buildmate and KHM Tools). Each storey adds about 3 m of
+head, so a 3-storey house moves up one size. US practice sizes a diaphragm
+tank at 3 × the drawdown, with about a minute of pump flow as drawdown
+(Alberta worksheet), which gives larger tanks than these; a larger tank
+starts the pump less often. Breakers: single-phase 230 V motors draw about
+4.9 A (½ HP), 8 A (1 HP) and 10 A (1½ HP) at full load (NEC Table 430.248,
+which the PEC follows); 250% of that is 12.3, 20 and 25 A, so ½ HP takes a
+15 A breaker and the others 20 A, all on 3.5 mm² wire. Recalled from the
+NEC, not checked against the PEC text. The 1" fittings suit ½–1 HP; some
+1½ HP pumps take 1¼". The suction and delivery pipes are not included.
+
+Sources: [Alberta water system sizing worksheet](https://www1.agric.gov.ab.ca/$Department/deptdocs.nsf/all/agdex15866/$FILE/716_B01_ws2.pdf),
+[KHM Tools pressure tanks](https://khmtools.com.ph/collections/pressure-tank),
+[KHM Tools booster pumps](https://khmtools.com.ph/collections/booster-pump),
+[Buildmate jet pump set](https://www.shopbuildmate.com/products/powerhouse-water-jet-pump-1hp-with-24l-pressure-tank-set-for-water-transfer-supply-phco-jet24l-tnk),
+[PEC Article 2.10](https://filipinoengineer.com/wiki/Philippine_Electrical_Code_2017_Part_1/Chapter_2._Wiring_and_Protection/Article_2.10_-_Branch_Circuits).
+
+#### New work items: drainage, pumps, auxiliary and lighting
+
+| Key | Description | Unit | Crew | Output a day | DPWH |
+| --- | --- | --- | --- | ---: | --- |
+| catch_basin | Catch basin with grating, built or set in place | set | 1 skilled, 1 helper | 1 | 502 |
+| pump_install | Water pump set with valves, installed and tested | set | 1 skilled, 1 helper | 1 | — |
+| aux_point | Data, TV or doorbell point, cabled and terminated | pt | 1 skilled, 0.5 helper | 8 | — |
+| cctv_camera | CCTV camera, mounted, cabled and set up | set | 1 skilled, 1 helper | 4 | — |
+
+#### New price book items: drainage, pumps, auxiliary and lighting
+
+Metro Manila retail, VAT included, late 2026. **Every price is our
+estimate** (`estimate: true`). Most retailer pages could not be opened, so
+they rest on search-result excerpts read in October 2026, noted where they
+helped, and on our own judgement elsewhere. Check them with your supplier.
+
+| Key | Item | Unit | Price (₱) | Basis |
+| --- | --- | --- | ---: | --- |
+| pvc_6 | PVC sanitary pipe (orange) 6", 3 m | pc | 1,000 | Estimate, scaled from the 4" price |
+| pvc_s1000_2 | PVC sanitary pipe Series 1000 2", 3 m | pc | 330 | Estimate |
+| pvc_s1000_3 | PVC sanitary pipe Series 1000 3", 3 m | pc | 520 | Estimate |
+| pvc_s1000_4 | PVC sanitary pipe Series 1000 4", 3 m | pc | 720 | Estimate |
+| pvc_s1000_6 | PVC sanitary pipe Series 1000 6", 3 m | pc | 1,600 | Estimate |
+| grating_cast_iron | Catch basin grating, cast iron, with frame, 0.50 × 0.50 m | pc | 3,500 | Estimate |
+| grating_steel | Catch basin grating, steel bars on angle frame, 0.50 × 0.50 m | pc | 2,000 | Estimate |
+| catch_basin_box | Catch basin box with grating, precast or PVC | pc | 2,500 | Estimate |
+| jet_pump_0_5hp | Jet pump, shallow well, ½ HP | set | 4,500 | Estimate |
+| jet_pump_1hp | Jet pump, shallow well, 1 HP | set | 7,500 | Estimate; bare 1 HP jet pumps ₱2,950 (Megatools) to ₱14,500 (Grundfos JPC) in KHM Tools excerpts, Oct 2026 |
+| jet_pump_1_5hp | Jet pump, shallow well, 1½ HP | set | 11,500 | Estimate |
+| booster_pump_0_5hp | Booster pump with built-in pressure controller, ½ HP | set | 12,000 | Estimate |
+| booster_pump_1hp | Booster pump with built-in pressure controller, 1 HP | set | 20,000 | Estimate (branded all-in-one boosters such as Grundfos MQ cost more) |
+| booster_pump_1_5hp | Booster pump with built-in pressure controller, 1½ HP | set | 28,000 | Estimate |
+| pressure_tank_24 | Pressure tank, diaphragm, 24 L | pc | 2,200 | Estimate |
+| pressure_tank_60 | Pressure tank, diaphragm, 60 L | pc | 4,800 | Estimate; KHM Tools excerpts show 60 L tanks at ₱3,300–5,150, Oct 2026 |
+| pressure_tank_100 | Pressure tank, diaphragm, 100 L | pc | 8,000 | Estimate |
+| pressure_switch | Pressure switch, 1.4–2.8 bar | pc | 750 | Estimate (automatic pump controllers with gauge are ₱1,700–1,980) |
+| pressure_gauge | Pressure gauge, 0–10 bar | pc | 350 | Estimate |
+| tank_connector | Five-way tank connector, 1", brass | pc | 450 | Estimate |
+| check_valve_1 | Check valve 1", brass | pc | 600 | Estimate |
+| gate_valve_1 | Gate valve 1", brass | pc | 700 | Estimate |
+| union_1 | Union 1", PVC, threaded | pc | 95 | Estimate |
+| pump_hose_1 | Flexible hose 1", braided, for pumps | pc | 450 | Estimate |
+| pump_base | Pump base: concrete pad with anchor bolts | set | 600 | Estimate (about ½ bag of cement, sand, gravel and 4 bolts) |
+| cat6_box | CAT6 UTP cable, copper, box of 305 m | box | 7,500 | Estimate; no peso listing found (foreign listings about US$90–150) |
+| cat6_m | CAT6 UTP cable, cut | m | 30 | Estimate |
+| rg6_box | RG6 coaxial cable, box of 305 m | box | 4,500 | Estimate |
+| rg6_m | RG6 coaxial cable, cut | m | 20 | Estimate |
+| rg59_box | CCTV cable, RG59 with power wires, box of 305 m | box | 3,800 | Estimate |
+| rg59_m | CCTV cable, RG59 with power wires, cut | m | 18 | Estimate |
+| keystone_cat6 | Keystone jack, CAT6 | pc | 120 | Estimate |
+| keystone_f | Keystone jack, F-type (TV) | pc | 80 | Estimate |
+| faceplate_keystone | Faceplate for 1 keystone jack | pc | 80 | Estimate |
+| rj45_plug | RJ45 plug, CAT6 | pc | 15 | Estimate |
+| f_connector | F connector, RG6 | pc | 20 | Estimate |
+| tv_splitter_4 | TV splitter, 4-way | pc | 280 | Estimate |
+| network_switch_8 | Network switch, 8-port gigabit | pc | 1,600 | Estimate |
+| cctv_camera_hd | CCTV camera, HD analog, 2 MP | pc | 1,500 | Estimate; Villman 8-channel 1080p kits (DVR + 8 cameras) ₱20,480 |
+| cctv_camera_ip | IP camera, 4 MP, PoE | pc | 3,200 | Estimate |
+| dvr_4 / dvr_8 / dvr_16 | DVR, 4 / 8 / 16-channel | pc | 3,200 / 5,200 / 9,500 | Estimate |
+| nvr_4 / nvr_8 / nvr_16 | NVR, 4 / 8 / 16-channel | pc | 3,800 / 5,800 / 10,500 | Estimate |
+| hdd_1tb / hdd_2tb / hdd_4tb | Surveillance hard disk, 1 / 2 / 4 TB | pc | 3,300 / 4,800 / 7,800 | Estimate |
+| poe_switch_4 / poe_switch_8 / poe_switch_16 | PoE switch, 4 / 8 / 16 ports | pc | 2,500 / 4,500 / 10,000 | Estimate |
+| cctv_psu | CCTV power supply 12 V, 5 A, for 4 cameras | pc | 700 | Estimate |
+| cctv_connectors | BNC and DC plugs for one camera | set | 80 | Estimate |
+| doorbell | Doorbell chime with push button | set | 650 | Estimate |
+| led_downlight_4 | LED downlight 4", 9 W | pc | 280 | Estimate |
+| led_downlight_6 | LED downlight 6", 12 W | pc | 420 | Estimate |
+| led_pin_light | LED pin light, 5 W | pc | 180 | Estimate |
+| led_ceiling_lamp | LED ceiling lamp, surface, 24 W | pc | 950 | Estimate |
+| led_batten | LED T8 batten, 4 ft, 18 W | pc | 480 | Estimate |
+| flex_conduit_m | Flexible conduit ½", cut | m | 22 | Estimate |
+
+Reused items: pvc_2, pvc_3, pvc_4, pvc_fittings, solvent_cement,
+cleanout, floor_drain, teflon_tape, chb_4, cement_40kg, sand, gravel,
+thhn_2_0_m, thhn_3_5_m, conduit_half, utility_box, junction_box,
+breaker_15a and breaker_20a.
+
+Price sources read in October 2026:
+[KHM Tools pressure tanks](https://khmtools.com.ph/collections/pressure-tank),
+[KHM Tools booster pumps](https://khmtools.com.ph/collections/booster-pump),
+[Buildmate jet pump set](https://www.shopbuildmate.com/products/powerhouse-water-jet-pump-1hp-with-24l-pressure-tank-set-for-water-transfer-supply-phco-jet24l-tnk),
+[Villman Hikvision kits](https://villman.com/Product-Detail/hikvidion_tvi-8ch4d4b-2mp).
 
 ## Accuracy and validation
 

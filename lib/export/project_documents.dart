@@ -3,37 +3,10 @@ import 'dart:convert';
 import '../core/format.dart';
 import '../data/estimate.dart';
 import '../data/project.dart';
-import '../data/unit_prices.dart';
-import '../materials/catalog.dart';
+import '../data/boq.dart';
+
+export '../data/boq.dart';
 import '../materials/items.dart';
-import '../materials/material_spec.dart';
-
-/// Trades in bill-of-quantities order, with their section letters.
-const tradeSections = [
-  (MaterialCategory.structural, 'A'),
-  (MaterialCategory.architectural, 'B'),
-  (MaterialCategory.electrical, 'C'),
-  (MaterialCategory.plumbing, 'D'),
-  (null, 'E'),
-];
-
-String tradeLabel(MaterialCategory? c) =>
-    c == null ? 'Other works' : '${c.label} works';
-
-/// A project's items grouped by trade, in bill-of-quantities order.
-List<({MaterialCategory? trade, String letter, List<Estimate> items})>
-groupByTrade(List<Estimate> items) => [
-  for (final (trade, letter) in tradeSections)
-    if (items.any((e) => materialById(e.materialId)?.category == trade))
-      (
-        trade: trade,
-        letter: letter,
-        items: [
-          for (final e in items)
-            if (materialById(e.materialId)?.category == trade) e,
-        ],
-      ),
-];
 
 /// One printed or exported row of the bill of quantities.
 typedef BoqRow = ({
@@ -109,37 +82,6 @@ List<BoqRow> boqRows(Project project) {
     );
   }
   return rows;
-}
-
-/// A project's work in bill of quantities order: by trade, each
-/// estimate's work items numbered A.1, A.2…
-List<
-  ({
-    String letter,
-    MaterialCategory? trade,
-    List<({String number, WorkAnalysis analysis})> entries,
-  })
->
-workSections(Project project) => [
-  for (final g in groupByTrade(project.items))
-    (
-      letter: g.letter,
-      trade: g.trade,
-      entries: [
-        for (final (i, a) in [
-          for (final e in g.items) ...analyseEstimate(e, project.costs),
-        ].indexed)
-          (number: '${g.letter}.${i + 1}', analysis: a),
-      ],
-    ),
-];
-
-/// The description of an analysed work item in a bill of quantities,
-/// naming the estimate it came from.
-String workDescription(WorkAnalysis a) {
-  final title = a.estimate.title;
-  final base = a.item == null ? title : '${a.description} ($title)';
-  return a.estimate.note == null ? base : '$base. ${a.estimate.note}';
 }
 
 /// The bill of quantities by work item: each trade's work with its
@@ -369,6 +311,12 @@ List<(String, double, {bool strong})> costLines(Project project) {
     if (b.hauling > 0) ('Hauling and delivery', b.hauling, strong: false),
     if (b.general > 0) ('General requirements', b.general, strong: false),
     ('Direct cost', b.direct, strong: true),
+    if (b.escalation > 0)
+      (
+        'Price escalation, ${formatNumber(s.escalationPct)}%',
+        b.escalation,
+        strong: false,
+      ),
     if (b.contingency > 0)
       (
         'Contingency, ${formatNumber(s.contingencyPct)}%',

@@ -87,6 +87,18 @@ void main() {
     expect(find.text('Get started'), findsNothing);
   });
 
+  testWidgets('a quick budget gives a range from the floor area', (
+    tester,
+  ) async {
+    await pumpApp(tester, location: '/quick-budget');
+    await tester.enterText(find.byType(TextField).first, '100');
+    await tester.pump();
+    expect(find.text('₱3,600,000.00 – ₱5,000,000.00'), findsOneWidget);
+    await tester.tap(find.text('Economy'));
+    await tester.pump();
+    expect(find.text('₱2,800,000.00 – ₱3,600,000.00'), findsOneWidget);
+  });
+
   testWidgets('a category card opens its materials', (tester) async {
     await pumpApp(tester);
     await tester.ensureVisible(find.text('Electrical'));
@@ -189,6 +201,49 @@ void main() {
       await tester.tap(find.text('Update Google Sheet'));
       await tester.pumpAndSettle();
       expect(api.spreadsheets, hasLength(1));
+    });
+
+    testWidgets('the contract tab bills progress and records changes', (
+      tester,
+    ) async {
+      await pumpApp(tester, location: '/project', prefs: projectPrefs(items));
+      await tester.tap(find.text('Contract'));
+      await tester.pumpAndSettle();
+      expect(find.text('Quotation'), findsOneWidget);
+      expect(find.text('Download quotation'), findsOneWidget);
+
+      // A variation order changes the contract price.
+      final before = projectsOf(tester).active.breakdown.total;
+      await tester.ensureVisible(find.text('Add a variation order'));
+      await tester.tap(find.text('Add a variation order'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextField, 'What changed'),
+        'Extra window',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Amount, with markups and VAT'),
+        '18000',
+      );
+      await tester.tap(find.text('Add').last);
+      await tester.pumpAndSettle();
+      final contract = projectsOf(tester).active.contract;
+      expect(contract.variations.single.amount, 18000);
+      expect(find.text('Revised contract price'), findsOneWidget);
+      expect(find.text(formatMoney(before + 18000)), findsWidgets);
+
+      // A progress billing at half of every line.
+      await tester.ensureVisible(find.text('New progress billing'));
+      await tester.tap(find.text('New progress billing'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('All 50%'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      final billing = projectsOf(tester).active.contract.billings.single;
+      expect(billing.progress.values, everyElement(50));
+      expect(find.textContaining('Billing 1 ·'), findsOneWidget);
+      expect(find.textContaining('50% complete · net due'), findsOneWidget);
     });
 
     testWidgets('desktops show the budget beside the items', (tester) async {

@@ -74,6 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const _Recent(),
                     const SizedBox(height: Space.xxl),
+                    const _QuickBudgetCard(),
+                    const SizedBox(height: Space.md),
                     const _HelpCard(),
                   ],
                 ],
@@ -516,6 +518,50 @@ class _GetStarted extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _QuickBudgetCard extends StatelessWidget {
+  const _QuickBudgetCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return TapCard(
+      color: theme.colorScheme.surfaceContainer,
+      onTap: () => context.go(Routes.quickBudget),
+      child: Row(
+        children: [
+          IconTile(icon: Icons.speed_outlined, size: 44, category: null),
+          const SizedBox(width: Space.lg),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.tr('Quick budget by floor area'),
+                  style: theme.textTheme.titleSmall,
+                ),
+                Text(
+                  context.tr(
+                    'A first idea of what a house costs, before measuring '
+                    'anything.',
+                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: 16,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ],
       ),
     );
   }

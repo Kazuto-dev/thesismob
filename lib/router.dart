@@ -13,6 +13,7 @@ import 'features/projects/project_screen.dart';
 import 'features/projects/projects_screen.dart';
 import 'features/settings/price_book_screen.dart';
 import 'features/home/home_screen.dart';
+import 'features/home/quick_budget_screen.dart';
 import 'materials/catalog.dart';
 import 'materials/material_spec.dart';
 import 'state/google_account_controller.dart';
@@ -85,6 +86,7 @@ abstract final class Routes {
   static const help = '/settings/help';
   static const prices = '/settings/prices';
   static const login = '/login';
+  static const quickBudget = '/quick-budget';
 
   static String projectById(String id) => '/project/$id';
 
@@ -172,6 +174,10 @@ GoRouter createRouter({
               path: Routes.home,
               builder: (context, state) => const HomeScreen(),
               routes: [
+                GoRoute(
+                  path: 'quick-budget',
+                  builder: (context, state) => const QuickBudgetScreen(),
+                ),
                 GoRoute(
                   path: 'category/:category',
                   builder: (context, state) {

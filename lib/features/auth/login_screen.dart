@@ -11,7 +11,7 @@ import '../common/google_button.dart';
 const _features = [
   (
     Icons.calculate_outlined,
-    '29 calculators, from concrete and rebar to wiring and plumbing',
+    '40 calculators, from earthworks and rebar to wiring and plumbing',
   ),
   (
     Icons.sell_outlined,

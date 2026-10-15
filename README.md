@@ -30,6 +30,7 @@ light or dark mode.
 - [Design system](docs/design-system.md) and [design QA](docs/design-qa.md)
 - [Translations](docs/translations.md)
 - [Usability test kit](docs/usability-test.md)
+- [Validating the estimates](docs/validation.md)
 
 - **Structural:** concrete hollow blocks (adjustable rebar spacing),
   concrete slabs, footings, columns and beams (concrete, bars, ties, forms),
@@ -123,7 +124,7 @@ lib/
   data/                    Estimate and Project models, cost build-up,
                            storage, legacy import, Sheets client
   state/                   history, projects, price book, sheet settings
-  materials/               the 29 calculators as data (MaterialSpec), the
+  materials/               the 40 calculators as data (MaterialSpec), the
                            price-book items and shared estimating factors
   export/                  bill of quantities as PDF, CSV, text; backups
   features/                screens: home, category, calculator, history,
