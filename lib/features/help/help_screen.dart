@@ -22,17 +22,24 @@ const _estimateSteps = [
     'search, in English or Filipino, for example "yero" or "gripo".',
   ),
   _Step(
-    'Enter the measurements in metres and the store price. Options such as '
-    'block size or waste allowance start with the usual choice.',
+    'Enter the measurements in metres. The price is filled in from your '
+    'price book; type your supplier\'s price to use it instead. Options such '
+    'as block size or bar spacing start with the usual choice.',
   ),
   _Step(
-    'The estimate appears as you type: the quantity to buy, the total cost, '
-    'how it was worked out and what else the job needs. "Definitions" and '
-    '"How it\'s calculated" explain every input and formula.',
+    'The estimate appears as you type: the quantity to buy, every other '
+    'material the job needs (cement, sand, bars, fittings…) with its price, '
+    'and how it was worked out. "Definitions" and "How it\'s calculated" '
+    'explain every input and formula.',
   ),
   _Step(
-    'Choose "Add to summary" to build a bill of materials. The Summary tab '
-    'totals everything, by category.',
+    'Choose "Add to" your project. The Project tab groups the estimates by '
+    'trade as a bill of quantities, merges them into one shopping list, and '
+    'adds labour, contingency and, for a bid, overhead, profit and VAT.',
+  ),
+  _Step(
+    'Download the project as a PDF or an Excel (CSV) file to send to a '
+    'client, a supplier or your team.',
   ),
 ];
 
@@ -110,17 +117,20 @@ class HelpScreen extends StatelessWidget {
                 const SectionHeader('Make an estimate'),
                 for (final (i, s) in _estimateSteps.indexed)
                   _StepTile(number: i + 1, step: s),
-                const SectionHeader('History and Summary'),
+                const SectionHeader('Projects, history and prices'),
                 paragraph(
-                  'History keeps the latest result from each visit to a '
-                  'calculator, up to 100. Open one to change its inputs. The '
-                  'Summary only holds what you chose to add, and removing an '
-                  'item can be undone.',
+                  'Keep each house, renovation or bid as its own project and '
+                  'switch between them from the Project tab. History keeps '
+                  'the latest result from each visit to a calculator, up to '
+                  '100. Settings → Price book holds the suggested prices; '
+                  'set your own and choose your region there.',
                 ),
                 const SectionHeader('Your data'),
                 paragraph(
-                  'Estimates and settings are saved in this browser only. '
-                  'Clearing your browsing data removes them.',
+                  'Projects, prices and history are saved in this browser '
+                  'only, and clearing your browsing data removes them. Use '
+                  'Settings → Backup and restore to keep a copy or move it to '
+                  'another device.',
                 ),
                 const SectionHeader('Send estimates to Google Sheets'),
                 paragraph(

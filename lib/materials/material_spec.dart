@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show IconData;
 
 /// The four groups shown on the home screen.
 enum MaterialCategory {
@@ -31,7 +32,13 @@ enum QuantityUnit {
   boxes('box', 'boxes'),
   squareMetres('m²', 'm²'),
   pipes('pipe', 'pipes'),
-  bulbs('bulb', 'bulbs');
+  bulbs('bulb', 'bulbs'),
+  bags('bag', 'bags'),
+  cubicMetres('m³', 'm³'),
+  kilograms('kg', 'kg'),
+  sets('set', 'sets'),
+  lengths('length', 'lengths'),
+  litres('L', 'L');
 
   const QuantityUnit(this.singular, this.plural);
 
@@ -218,6 +225,34 @@ class ResultDetail {
   final String value;
 }
 
+/// Another material the job needs, such as cement for laying blocks. It is
+/// bought from the price book entry [itemKey]; [quantity] is in that
+/// item's unit and already rounded to what can be bought.
+@immutable
+class Companion {
+  const Companion(this.itemKey, this.quantity, {this.label, this.unitPrice});
+
+  final String itemKey;
+  final double quantity;
+
+  /// Replaces the item's name, e.g. "Cement, laying and plaster".
+  final String? label;
+
+  /// A fixed price that overrides the price book, for allowances worked
+  /// out from the main cost.
+  final double? unitPrice;
+}
+
+/// Points a calculator's price field at a price book entry. The suggested
+/// price is the entry's price × [factor], e.g. a per-foot price × 8 ft.
+@immutable
+class PriceRef {
+  const PriceRef(this.itemKey, [this.factor = 1]);
+
+  final String itemKey;
+  final double factor;
+}
+
 /// The outcome of a calculation. [total] is rounded to the centavo.
 @immutable
 class CalcResult {
@@ -230,6 +265,7 @@ class CalcResult {
     this.details = const [],
     this.companions = const [],
     this.note,
+    this.itemKey,
   }) : total = (quantity * unitPrice * 100).roundToDouble() / 100;
 
   /// Short description used in the summary, e.g. `CHB 4"`.
@@ -244,8 +280,12 @@ class CalcResult {
   /// How the quantity was worked out, step by step.
   final List<ResultDetail> details;
 
-  /// Other materials the job needs, with quantities but no price.
-  final List<ResultDetail> companions;
+  /// Other materials the job needs, priced from the price book.
+  final List<Companion> companions;
+
+  /// Price book entry of the main material, so the same material from
+  /// several estimates can be bought as one line.
+  final String? itemKey;
 
   /// A short remark shown under the breakdown.
   final String? note;
@@ -260,7 +300,8 @@ class MaterialSpec {
     required this.id,
     required this.name,
     required this.category,
-    required this.image,
+    this.image,
+    this.icon,
     required this.blurb,
     required this.numbers,
     required this.compute,
@@ -269,14 +310,18 @@ class MaterialSpec {
     this.solution = const [],
     this.references = const [],
     this.keywords = const [],
-  });
+    this.priceRef,
+  }) : assert(image != null || icon != null);
 
   final String id;
   final String name;
   final MaterialCategory category;
 
-  /// Asset path of the material icon.
-  final String image;
+  /// Asset path of the material's drawn icon.
+  final String? image;
+
+  /// A Material icon, for calculators without a drawn one.
+  final IconData? icon;
 
   /// One line shown under the name in lists.
   final String blurb;
@@ -289,6 +334,10 @@ class MaterialSpec {
 
   /// Other words people search for, including Filipino terms.
   final List<String> keywords;
+
+  /// The price book entry that suggests a price for the main material,
+  /// for the selected options.
+  final PriceRef? Function(Map<String, String> selected)? priceRef;
 
   /// Choices a fresh form starts with.
   Map<String, String> get initialChoices => {

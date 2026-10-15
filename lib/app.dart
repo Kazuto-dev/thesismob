@@ -8,8 +8,11 @@ import 'data/estimate_repository.dart';
 import 'data/sheet_settings.dart';
 import 'data/sheets_export_service.dart';
 import 'router.dart';
+import 'data/project_repository.dart';
 import 'state/appearance_controller.dart';
 import 'state/estimates_controller.dart';
+import 'state/price_book_controller.dart';
+import 'state/projects_controller.dart';
 import 'state/sheet_settings_controller.dart';
 
 class BuildQuantifyApp extends StatefulWidget {
@@ -49,6 +52,12 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
       providers: [
         ChangeNotifierProvider(
           create: (_) => EstimatesController(EstimateRepository(widget.prefs)),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ProjectsController(ProjectRepository(widget.prefs)),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => PriceBookController(widget.prefs),
         ),
         ChangeNotifierProvider(
           create: (_) => AppearanceController(widget.prefs),

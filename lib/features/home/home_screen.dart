@@ -11,6 +11,7 @@ import '../../materials/catalog.dart';
 import '../../materials/material_spec.dart';
 import '../../router.dart';
 import '../../state/estimates_controller.dart';
+import '../../state/projects_controller.dart';
 import '../common/tiles.dart';
 
 /// Calculators most people start with.
@@ -89,9 +90,11 @@ class _Hero extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
     final compact = WindowSize.of(context) == WindowSize.compact;
-    final (count, total) = context.select<EstimatesController, (int, double)>(
-      (c) => (c.summary.length, c.summaryTotal),
-    );
+    final (name, count, total) = context
+        .select<ProjectsController, (String, int, double)>(
+          (c) =>
+              (c.active.name, c.active.items.length, c.active.breakdown.total),
+        );
     return InkPanel(
       padding: EdgeInsets.all(compact ? Space.xl : Space.xxl + Space.sm),
       child: Builder(
@@ -146,7 +149,9 @@ class _Hero extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Project total · ${count == 1 ? '1 item' : '$count items'}',
+                              '$name · ${count == 1 ? '1 item' : '$count items'}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.labelMedium?.copyWith(
                                 color: palette.onInkMuted,
                               ),
@@ -165,13 +170,13 @@ class _Hero extends StatelessWidget {
                       ),
                     ),
                     TextButton.icon(
-                      onPressed: () => context.go(Routes.summary),
+                      onPressed: () => context.go(Routes.project),
                       style: TextButton.styleFrom(
                         foregroundColor: palette.onInk,
                       ),
                       iconAlignment: IconAlignment.end,
                       icon: const Icon(Icons.arrow_forward, size: 18),
-                      label: const Text('View summary'),
+                      label: const Text('Open project'),
                     ),
                   ],
                 ),

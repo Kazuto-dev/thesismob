@@ -22,7 +22,7 @@ jobs:
       - run: flutter test
       # The same pure-Dart tests compiled to JavaScript, where integers
       # behave differently than on the VM.
-      - run: flutter test --platform chrome test/data test/materials test/state
+      - run: flutter test --platform chrome test/data test/materials test/state test/export
       - run: flutter build web --release --no-web-resources-cdn
       - uses: actions/setup-node@v4
         with:

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:thesismob/core/format.dart';
 
 import '../helpers.dart';
 
@@ -22,7 +23,8 @@ void main() {
   testWidgets('says what is missing, and flags invalid input', (tester) async {
     await pumpApp(tester, location: chb);
     expect(
-      find.textContaining('Enter wall length, wall height and the price'),
+      // The price is already filled in from the price book.
+      find.textContaining('Enter wall length and wall height'),
       findsOneWidget,
     );
     expect(find.text('Total cost'), findsNothing);
@@ -49,7 +51,7 @@ void main() {
     // 375 blocks plus the default 5% waste.
     expect(find.text('₱9,850.00'), findsWidgets);
     expect(find.text('394 blocks'), findsWidgets);
-    expect(find.text('28 bags'), findsOneWidget);
+    expect(find.textContaining('28 bags'), findsOneWidget);
 
     await tester.ensureVisible(find.text('None').first);
     await tester.tap(find.text('None').first);
@@ -80,31 +82,69 @@ void main() {
     await settle(tester);
     expect(estimates.history, hasLength(1));
     expect(estimates.history.single.total, 394 * 30);
-    expect(estimates.summary, isEmpty);
+    expect(projectsOf(tester).active.items, isEmpty);
   });
 
-  testWidgets('"Add to summary" adds once; new inputs start a new entry', (
+  testWidgets('the price comes from the price book until you type one', (
+    tester,
+  ) async {
+    await pumpApp(tester, location: chb);
+    expect(find.text('24'), findsOneWidget);
+    expect(find.textContaining('From your price book'), findsOneWidget);
+
+    // A 6" block has its own price.
+    await tester.ensureVisible(find.text('6"'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('6"'));
+    await tester.pumpAndSettle();
+    expect(find.text('32'), findsOneWidget);
+
+    await tester.enterText(field('Price per block'), '30');
+    await tester.pump();
+    await tester.ensureVisible(find.text('4"'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('4"'));
+    await tester.pumpAndSettle();
+    expect(find.text('30'), findsOneWidget);
+    expect(find.textContaining('Use price book price'), findsOneWidget);
+  });
+
+  testWidgets('companion materials are priced and added to the total', (
+    tester,
+  ) async {
+    await pumpApp(tester, location: chb);
+    await fillWall(tester);
+    // Blocks ₱9,850 + 28 bags of cement, 2.5 m³ of sand, 22 bars and 1 kg
+    // of tie wire at the suggested prices.
+    const others = 28 * 240 + 2.5 * 1500 + 22 * 150 + 85;
+    expect(find.text('Materials total'), findsOneWidget);
+    expect(find.text(formatMoney(9850 + others)), findsWidgets);
+  });
+
+  testWidgets('"Add to project" adds once; new inputs start a new entry', (
     tester,
   ) async {
     await pumpApp(tester, location: chb);
     await fillWall(tester);
 
-    final add = find.widgetWithText(FilledButton, 'Add to summary');
+    final add = find.widgetWithText(FilledButton, 'Add to My project');
     await tester.ensureVisible(add);
     await tester.pumpAndSettle();
     await tester.tap(add);
     await tester.pumpAndSettle();
-    expect(find.text('Added to summary'), findsOneWidget);
+    expect(find.text('Added to My project'), findsOneWidget);
     final estimates = estimatesOf(tester);
-    expect(estimates.summary, hasLength(1));
+    final projects = projectsOf(tester);
+    expect(projects.active.items, hasLength(1));
+    expect(projects.active.items.single.companions, hasLength(4));
     expect(estimates.history, hasLength(1));
 
     await tester.enterText(field('Wall height'), '4');
     await settle(tester);
-    expect(find.text('Added to summary'), findsNothing);
-    expect(find.text('Add to summary'), findsOneWidget);
+    expect(find.text('Added to My project'), findsNothing);
+    expect(find.text('Add to My project'), findsOneWidget);
     expect(estimates.history, hasLength(2));
-    expect(estimates.summary.single.total, 9850);
+    expect(projects.active.items.single.total, 9850);
   });
 
   testWidgets('the bar on phones shows the live total and adds it', (
@@ -116,7 +156,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Add'));
     await tester.pumpAndSettle();
-    expect(estimatesOf(tester).summary, hasLength(1));
+    expect(projectsOf(tester).active.items, hasLength(1));
     expect(find.widgetWithText(FilledButton, 'Added'), findsOneWidget);
   });
 

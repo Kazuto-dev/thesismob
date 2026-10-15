@@ -89,7 +89,18 @@ const browser = await chromium.launch();
 try {
   // Every screen loads without errors or horizontal overflow at each size.
   for (const [name, viewport] of Object.entries(viewports)) {
-    for (const hash of ['', '#/category/structural/chb', '#/summary', '#/history', '#/settings', '#/settings/help']) {
+    for (const hash of [
+      '',
+      '#/category/structural/chb',
+      '#/category/structural/column',
+      '#/category/electrical/rough_in',
+      '#/project',
+      '#/project/all',
+      '#/history',
+      '#/settings',
+      '#/settings/prices',
+      '#/settings/help',
+    ]) {
       const { context, page, errors } = await open(browser, viewport, hash);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
       check(errors.length === 0 && !overflow, `${name} ${hash || '#/'} loads cleanly${errors.length ? `: ${errors[0]}` : ''}`);
@@ -116,7 +127,7 @@ try {
     await context.close();
   }
 
-  // A full estimate: it appears as you type and can be added to the summary.
+  // A full estimate: it appears as you type and can be added to a project.
   {
     const { context, page, errors } = await open(browser, viewports.phone, '#/category/structural/chb');
     const field = (label) => (n) => n.role === 'textbox' && n.label.startsWith(label);
@@ -137,6 +148,7 @@ try {
     };
 
     check(await waitForText(page, 'Enter wall length'), 'an empty form says what is missing');
+    check(await hasText(page, 'From your price book'), 'the price comes from the price book');
 
     await fill('Wall length', '10');
     await fill('Wall height', '3');
@@ -144,13 +156,23 @@ try {
     check(await waitForText(page, '₱9,850.00'), 'CHB 10 m × 3 m at ₱25 costs ₱9,850.00 with 5% waste');
     check(await hasText(page, '394 blocks'), 'and needs 394 blocks');
 
-    await tap(page, (n) => n.label === 'Add to summary', 'Add to summary');
-    check(await waitForText(page, 'Added to summary'), 'adding to the summary disables the button');
+    // Blocks ₱9,850 plus cement, sand, bars and tie wire from the price book.
+    check(await hasText(page, '₱23,705.00'), 'the materials total includes cement, sand, bars and tie wire');
 
-    await page.goto(BASE + '#/summary');
+    await tap(page, (n) => n.label === 'Add to My project', 'Add to My project');
+    check(await waitForText(page, 'Added to My project'), 'adding to the project disables the button');
+
+    await page.goto(BASE + '#/project');
     await page.waitForTimeout(1500);
-    check(await waitForText(page, 'Total, 1 item'), 'summary shows one item');
-    check(await hasText(page, '₱9,850.00'), 'summary total is ₱9,850.00');
+    check(await waitForText(page, 'Project budget · 1 item'), 'the project shows one item');
+    check(await hasText(page, '₱23,705.00'), 'the item costs ₱23,705.00 with its materials');
+    // 40% labour and a 10% contingency: 23,705 × 1.4 × 1.1.
+    check(await hasText(page, '₱36,505.70'), 'the owner budget is ₱36,505.70');
+    const [download] = await Promise.all([
+      page.waitForEvent('download', { timeout: 30000 }),
+      tap(page, (n) => n.label === 'Download PDF', 'Download PDF'),
+    ]);
+    check(download.suggestedFilename() === 'my-project-boq.pdf', 'the project downloads as a PDF bill of quantities');
     check(errors.length === 0, `no errors during the estimate${errors.length ? `: ${errors[0]}` : ''}`);
     await context.close();
   }
@@ -159,6 +181,32 @@ try {
   {
     const { context, page } = await open(browser, viewports.desktop, '#/CHBpages');
     check(await waitForText(page, 'Concrete Hollow Blocks'), 'legacy #/CHBpages opens the CHB calculator');
+    await context.close();
+  }
+  {
+    const { context, page } = await open(browser, viewports.desktop, '#/summary');
+    check(await waitForText(page, 'No estimates yet'), 'legacy #/summary opens the project');
+    await context.close();
+  }
+
+  // After one visit the app starts and calculates with no connection.
+  {
+    const context = await browser.newContext({ ...viewports.phone, locale: 'en-PH' });
+    const page = await context.newPage();
+    await page.goto(BASE + '?offline');
+    await page.waitForSelector('flutter-view', { state: 'attached', timeout: 60000 });
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    // Reload under the worker so everything the app loads is cached, and
+    // give the icon warm-up time to run.
+    await page.reload();
+    await page.waitForSelector('flutter-view', { state: 'attached', timeout: 60000 });
+    await page.waitForTimeout(6000);
+    await context.setOffline(true);
+    await page.goto(BASE + '?offline#/category/structural/slab');
+    await page.waitForSelector('flutter-view', { state: 'attached', timeout: 60000 });
+    await page.waitForTimeout(1500);
+    await page.evaluate(() => document.querySelector('flt-semantics-placeholder')?.click());
+    check(await waitForText(page, 'Concrete Slab'), 'offline: the slab calculator opens with no connection');
     await context.close();
   }
 } catch (e) {

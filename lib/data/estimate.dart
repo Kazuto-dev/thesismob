@@ -2,12 +2,86 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 
+import '../materials/items.dart';
 import '../materials/material_spec.dart';
 
 final _random = Random();
 
-/// One calculated estimate. All amounts are stored as numbers; formatting
-/// happens only when they are displayed.
+double _centavos(double value) => (value * 100).roundToDouble() / 100;
+
+/// A priced companion material in an estimate, e.g. 28 bags of cement.
+@immutable
+class EstimateLine {
+  const EstimateLine({
+    required this.itemKey,
+    required this.label,
+    required this.quantity,
+    required this.unit,
+    required this.unitPrice,
+  });
+
+  /// Prices [companion] with [priceOf], the price book lookup.
+  factory EstimateLine.fromCompanion(
+    Companion companion,
+    double Function(String itemKey) priceOf,
+  ) {
+    final item = itemByKey(companion.itemKey);
+    return EstimateLine(
+      itemKey: companion.itemKey,
+      label: companion.label ?? item?.name ?? companion.itemKey,
+      quantity: companion.quantity,
+      unit: item?.unitFor(companion.quantity) ?? '',
+      unitPrice: companion.unitPrice ?? priceOf(companion.itemKey),
+    );
+  }
+
+  factory EstimateLine.fromJson(Map<String, dynamic> json) {
+    final quantity = json['quantity'];
+    final unitPrice = json['unitPrice'];
+    if (json['itemKey'] is! String ||
+        quantity is! num ||
+        !quantity.isFinite ||
+        unitPrice is! num ||
+        !unitPrice.isFinite) {
+      throw FormatException('EstimateLine is malformed', json);
+    }
+    return EstimateLine(
+      itemKey: json['itemKey'] as String,
+      label: json['label'] is String ? json['label'] as String : '',
+      quantity: quantity.toDouble(),
+      unit: json['unit'] is String ? json['unit'] as String : '',
+      unitPrice: unitPrice.toDouble(),
+    );
+  }
+
+  final String itemKey;
+  final String label;
+  final double quantity;
+  final String unit;
+  final double unitPrice;
+
+  double get total => _centavos(quantity * unitPrice);
+
+  EstimateLine withPrice(double price) => EstimateLine(
+    itemKey: itemKey,
+    label: label,
+    quantity: quantity,
+    unit: unit,
+    unitPrice: price,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'itemKey': itemKey,
+    'label': label,
+    'quantity': quantity,
+    'unit': unit,
+    'unitPrice': unitPrice,
+  };
+}
+
+/// One calculated estimate: the main material plus the companion materials
+/// the job needs. All amounts are stored as numbers; formatting happens only
+/// when they are displayed.
 @immutable
 class Estimate {
   const Estimate({
@@ -22,16 +96,22 @@ class Estimate {
     this.area,
     this.inputs = const {},
     this.choices = const {},
+    this.itemKey,
+    this.companions = const [],
   });
 
+  /// Builds an estimate from a calculation, pricing its companions with
+  /// [priceOf].
   factory Estimate.fromResult({
     required String materialId,
     required CalcResult result,
     required Map<String, double> inputs,
     required Map<String, String> choices,
+    double Function(String itemKey)? priceOf,
     DateTime? createdAt,
   }) {
     final now = createdAt ?? DateTime.now();
+    final lookup = priceOf ?? (key) => itemByKey(key)?.price ?? 0;
     return Estimate(
       id: newId(now),
       materialId: materialId,
@@ -44,6 +124,11 @@ class Estimate {
       createdAt: now,
       inputs: Map.unmodifiable(inputs),
       choices: Map.unmodifiable(choices),
+      itemKey: result.itemKey,
+      companions: List.unmodifiable([
+        for (final c in result.companions)
+          if (c.quantity > 0) EstimateLine.fromCompanion(c, lookup),
+      ]),
     );
   }
 
@@ -63,6 +148,18 @@ class Estimate {
     }
 
     final area = json['area'];
+    final companions = <EstimateLine>[];
+    if (json['companions'] case final List<dynamic> list) {
+      for (final item in list) {
+        if (item is Map<String, dynamic>) {
+          try {
+            companions.add(EstimateLine.fromJson(item));
+          } on FormatException {
+            // Skip a damaged line rather than losing the estimate.
+          }
+        }
+      }
+    }
     return Estimate(
       id: text('id'),
       materialId: text('materialId'),
@@ -83,6 +180,8 @@ class Estimate {
         for (final e in (json['choices'] as Map? ?? const {}).entries)
           if (e.value is String) e.key as String: e.value as String,
       },
+      itemKey: json['itemKey'] is String ? json['itemKey'] as String : null,
+      companions: List.unmodifiable(companions),
     );
   }
 
@@ -99,33 +198,33 @@ class Estimate {
   final double quantity;
   final QuantityUnit unit;
   final double unitPrice;
+
+  /// Cost of the main material only.
   final double total;
   final DateTime createdAt;
 
   /// The values typed into the calculator, keyed by field id.
   final Map<String, double> inputs;
 
-  /// The selected dropdown options, keyed by field id.
+  /// The selected options, keyed by field id.
   final Map<String, String> choices;
+
+  /// Price book entry of the main material, when the calculator has one.
+  final String? itemKey;
+
+  /// Priced companion materials, such as cement and sand for blocks.
+  final List<EstimateLine> companions;
+
+  /// Cost of the companion materials.
+  double get companionsTotal =>
+      _centavos(companions.fold<double>(0, (sum, l) => sum + l.total));
+
+  /// Cost of the main material and its companions.
+  double get grandTotal => _centavos(total + companionsTotal);
 
   static String newId(DateTime at) =>
       '${at.microsecondsSinceEpoch.toRadixString(36)}-'
       '${_random.nextInt(0x3fffffff).toRadixString(36)}';
-
-  /// A copy of this estimate stored under [newId].
-  Estimate withId(String newId) => Estimate(
-    id: newId,
-    materialId: materialId,
-    label: label,
-    area: area,
-    quantity: quantity,
-    unit: unit,
-    unitPrice: unitPrice,
-    total: total,
-    createdAt: createdAt,
-    inputs: inputs,
-    choices: choices,
-  );
 
   /// True when [other] came from the same calculator with the same inputs.
   bool sameCalculationAs(Estimate other) =>
@@ -133,8 +232,39 @@ class Estimate {
       mapEquals(inputs, other.inputs) &&
       mapEquals(choices, other.choices);
 
-  /// Columns for Google Sheets: Materials, Area(sqm), Quantity, Cost(₱).
-  List<Object?> toSheetRow() => [label, area ?? '', quantity, total];
+  Estimate copyWith({
+    String? id,
+    double? unitPrice,
+    List<EstimateLine>? companions,
+  }) {
+    final price = unitPrice ?? this.unitPrice;
+    return Estimate(
+      id: id ?? this.id,
+      materialId: materialId,
+      label: label,
+      area: area,
+      quantity: quantity,
+      unit: unit,
+      unitPrice: price,
+      total: unitPrice == null ? total : _centavos(quantity * price),
+      createdAt: createdAt,
+      inputs: inputs,
+      choices: choices,
+      itemKey: itemKey,
+      companions: companions ?? this.companions,
+    );
+  }
+
+  /// A copy of this estimate stored under [newId].
+  Estimate withId(String newId) => copyWith(id: newId);
+
+  /// Rows for Google Sheets: the main material, then each companion, as
+  /// Item, Quantity, Unit, Unit cost, Amount.
+  List<List<Object?>> toSheetRows() => [
+    [label, quantity, unit.labelFor(quantity), unitPrice, total],
+    for (final l in companions)
+      ['  ${l.label}', l.quantity, l.unit, l.unitPrice, l.total],
+  ];
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -148,5 +278,8 @@ class Estimate {
     'createdAt': createdAt.toIso8601String(),
     'inputs': inputs,
     'choices': choices,
+    if (itemKey != null) 'itemKey': itemKey,
+    if (companions.isNotEmpty)
+      'companions': [for (final l in companions) l.toJson()],
   };
 }

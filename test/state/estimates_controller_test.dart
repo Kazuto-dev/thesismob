@@ -65,51 +65,6 @@ void main() {
     expect(c.history, hasLength(EstimatesController.historyLimit));
   });
 
-  test('summary only grows on purpose and never duplicates', () async {
-    final (c, repo) = await setup();
-    final e = c.record(estimate(total: 9375));
-    expect(
-      c.summary,
-      isEmpty,
-      reason: 'calculating must not add to the summary',
-    );
-    expect(c.addToSummary(e), isTrue);
-    expect(c.addToSummary(e), isFalse);
-    expect(c.summary, hasLength(1));
-    expect(c.isInSummary(e.id), isTrue);
-    expect(repo.loadSummary(), hasLength(1), reason: 'persisted');
-  });
-
-  test(
-    'total is summed from numbers, including large and decimal values',
-    () async {
-      final (c, _) = await setup();
-      c.addToSummary(estimate(total: 1000));
-      c.addToSummary(estimate(total: 15000000));
-      c.addToSummary(estimate(total: 1250.5));
-      expect(c.summaryTotal, 15002250.5);
-
-      // Removing any item, in any order, keeps the total right.
-      c.removeFromSummary(c.summary[2].id);
-      c.removeFromSummary(c.summary[1].id);
-      expect(c.summaryTotal, 1000);
-
-      c.addToSummary(estimate(total: 0.1));
-      c.addToSummary(estimate(total: 0.2));
-      expect(c.summaryTotal, 1000.3);
-    },
-  );
-
-  test('removed items can be restored in place', () async {
-    final (c, _) = await setup();
-    final items = [estimate(), estimate(), estimate()];
-    items.forEach(c.addToSummary);
-    final removed = c.removeFromSummary(items[1].id)!;
-    expect(removed.index, 1);
-    c.restoreToSummary(removed.index, removed.estimate);
-    expect(c.summary.map((e) => e.id), items.map((e) => e.id));
-  });
-
   test('clearing can be undone', () async {
     final (c, _) = await setup();
     c.record(estimate(inputs: {'a': 1}));
@@ -136,8 +91,19 @@ void main() {
     var calls = 0;
     c.addListener(() => calls++);
     final e = c.record(estimate());
-    c.addToSummary(e);
-    c.removeFromSummary(e.id);
-    expect(calls, 3);
+    c.removeFromHistory(e.id);
+    expect(calls, 2);
+  });
+
+  test('a backup adds only entries that are not already here', () async {
+    final (c, _) = await setup();
+    final kept = c.record(estimate(inputs: {'a': 1}));
+    final added = c.importHistory([
+      kept,
+      estimate(inputs: {'a': 2}, at: DateTime(2026, 12, 1)),
+    ]);
+    expect(added, 1);
+    expect(c.history, hasLength(2));
+    expect(c.history.first.createdAt, DateTime(2026, 12, 1));
   });
 }

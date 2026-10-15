@@ -99,7 +99,7 @@ void main() {
 
   for (final (label, size) in [('phone', phone), ('desktop', desktop)]) {
     testWidgets('home on $label', skip: _skip != null, (tester) async {
-      await pumpApp(tester, size: size, prefs: summaryPrefs(items));
+      await pumpApp(tester, size: size, prefs: projectPrefs(items));
       await _snapshot(tester, 'home_$label');
     });
 
@@ -115,14 +115,14 @@ void main() {
       await _snapshot(tester, 'calculator_$label');
     });
 
-    testWidgets('summary on $label', skip: _skip != null, (tester) async {
+    testWidgets('project on $label', skip: _skip != null, (tester) async {
       await pumpApp(
         tester,
         size: size,
-        location: '/summary',
-        prefs: summaryPrefs(items),
+        location: '/project',
+        prefs: projectPrefs(items),
       );
-      await _snapshot(tester, 'summary_$label');
+      await _snapshot(tester, 'project_$label');
     });
   }
 

@@ -1,16 +1,26 @@
 import 'architectural.dart';
+import 'concrete.dart';
 import 'fixtures.dart';
 import 'material_spec.dart';
+import 'openings.dart';
+import 'services.dart';
 import 'structural.dart';
 
 /// Every calculator in the app, in the order shown in each category.
 final List<MaterialSpec> allMaterials = [
   chb,
+  slab,
+  footing,
+  column,
+  beam,
   plywood,
+  ceiling,
   insulation,
   paint,
   tiles,
   roof,
+  doors,
+  windows,
   carpet,
   wallpaper,
   bulb,
@@ -19,11 +29,14 @@ final List<MaterialSpec> allMaterials = [
   outlet,
   wires,
   utilityBox,
+  roughIn,
   pvc,
   sink,
   toilet,
   faucet,
   shower,
+  waterTank,
+  septicTank,
 ];
 
 final Map<String, MaterialSpec> _byId = {for (final m in allMaterials) m.id: m};

@@ -11,10 +11,15 @@ import '../../core/theme.dart';
 import '../../core/widgets.dart';
 import '../../data/estimate.dart';
 import '../../data/sheets_export_service.dart';
+import '../../materials/items.dart';
 import '../../materials/material_spec.dart';
 import '../../router.dart';
 import '../../state/estimates_controller.dart';
+import '../../state/price_book_controller.dart';
+import '../../state/projects_controller.dart';
 import '../../state/sheet_settings_controller.dart';
+import '../common/price_dialog.dart';
+import '../projects/project_picker.dart';
 import 'info_sheet.dart';
 import 'result_panel.dart';
 
@@ -66,7 +71,13 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   };
   late Map<String, String> _selected = widget.spec.initialChoices;
   late final EstimatesController _estimates;
+  late final ProjectsController _projects;
+  late final PriceBookController _prices;
   late final AppLifecycleListener _lifecycle;
+
+  /// Whether the price field follows the price book. It stops once the
+  /// user types their own price.
+  bool _autoPrice = true;
 
   /// The history entry that matches the inputs, once recorded.
   Estimate? _recorded;
@@ -82,17 +93,52 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   void initState() {
     super.initState();
     _estimates = context.read<EstimatesController>();
+    _projects = context.read<ProjectsController>();
+    _prices = context.read<PriceBookController>()..addListener(_pricesChanged);
     _prefill();
+    _applySuggestedPrice();
     for (final c in _text.values) {
       c.addListener(_changed);
     }
     _lifecycle = AppLifecycleListener(onHide: _recordNow);
   }
 
+  NumberField? get _priceField =>
+      spec.visibleNumbers(_selected).where((f) => f.isPrice).firstOrNull;
+
+  /// The price book's price for the main material with the chosen options.
+  double? get _suggestedPrice =>
+      _prices.suggest(spec.priceRef?.call(_selected));
+
+  /// Fills the price field from the price book while the user has not
+  /// typed a price of their own.
+  void _applySuggestedPrice({bool force = false}) {
+    if (!_autoPrice && !force) return;
+    final field = _priceField;
+    final price = _suggestedPrice;
+    if (field == null || price == null) return;
+    final text = price == price.roundToDouble()
+        ? price.toInt().toString()
+        : price.toStringAsFixed(2);
+    final controller = _text[field.id]!;
+    if (controller.text != text) controller.text = text;
+    _autoPrice = true;
+  }
+
+  void _pricesChanged() {
+    if (!mounted) return;
+    setState(_applySuggestedPrice);
+  }
+
   void _prefill() {
     final id = widget.fromEstimateId;
     if (id == null) return;
-    final saved = _estimates.history.where((e) => e.id == id).firstOrNull;
+    final saved =
+        _estimates.history.where((e) => e.id == id).firstOrNull ??
+        _projects.projects
+            .expand((p) => p.items)
+            .where((e) => e.id == id)
+            .firstOrNull;
     if (saved == null || saved.materialId != spec.id) return;
     for (final MapEntry(:key, :value) in saved.inputs.entries) {
       _text[key]?.text = value == value.roundToDouble()
@@ -101,6 +147,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     }
     _selected = {..._selected, ...saved.choices};
     _recorded = saved;
+    final price = _priceField;
+    if (price != null && (saved.inputs[price.id] ?? 0) > 0) _autoPrice = false;
   }
 
   @override
@@ -115,6 +163,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       });
     }
     _lifecycle.dispose();
+    _prices.removeListener(_pricesChanged);
     for (final c in _text.values) {
       c.dispose();
     }
@@ -130,7 +179,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   }
 
   void _select(String id, String value) {
-    setState(() => _selected = {..._selected, id: value});
+    setState(() {
+      _selected = {..._selected, id: value};
+      _applySuggestedPrice();
+    });
     _scheduleRecord();
   }
 
@@ -180,6 +232,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       result: result,
       inputs: e.numbers,
       choices: e.choices,
+      priceOf: _prices.priceOf,
     );
   }
 
@@ -199,10 +252,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   }
 
   /// Saves [estimate] to the history, replacing this visit's earlier
-  /// entry unless that one went into the summary.
+  /// entry unless that one went into a project.
   Estimate _record(Estimate estimate) {
     final visit = _visitEntryId;
-    final replaced = visit != null && !_estimates.isInSummary(visit)
+    final replaced = visit != null && !_projects.isInAnyProject(visit)
         ? _estimates.replaceInHistory(visit, estimate)
         : null;
     final stored = replaced ?? _estimates.record(estimate);
@@ -223,18 +276,33 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     return _record(current);
   }
 
-  void _addToSummary() {
-    final estimate = _ensureRecorded();
-    if (estimate == null) return;
-    _estimates.addToSummary(estimate);
+  void _addToProject() {
+    final recorded = _ensureRecorded();
+    final current = _currentEstimate();
+    if (recorded == null || current == null) return;
+    // The project keeps today's prices for the companion materials.
+    final estimate = current.withId(recorded.id);
+    _projects.add(estimate);
     showMessage(
       context,
-      'Added ${estimate.label} to the summary.',
+      'Added ${estimate.label} to ${_projects.active.name}.',
       action: SnackBarAction(
         label: 'View',
-        onPressed: () => context.go(Routes.summary),
+        onPressed: () => context.go(Routes.project),
       ),
     );
+  }
+
+  Future<void> _setLinePrice(EstimateLine line) async {
+    final item = itemByKey(line.itemKey);
+    final price = await showPriceDialog(
+      context,
+      title: line.label,
+      unit: item?.unit ?? 'unit',
+      initial: line.unitPrice,
+      suggested: 'Saved to your price book for later estimates',
+    );
+    if (price != null) _prices.setPrice(line.itemKey, price);
   }
 
   Future<void> _export() async {
@@ -288,15 +356,20 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     final twoPane = size == WindowSize.expanded;
     final evaluation = _evaluate();
     final result = evaluation.result;
+    context.watch<PriceBookController>();
     final current = _currentEstimate(evaluation);
     final recorded = _recorded;
-    final inSummary = context.select<EstimatesController, bool>(
-      (c) =>
-          current != null &&
-          recorded != null &&
-          recorded.sameCalculationAs(current) &&
-          c.isInSummary(recorded.id),
-    );
+    final (projectName, inProject) = context
+        .select<ProjectsController, (String, bool)>(
+          (c) => (
+            c.active.name,
+            current != null &&
+                recorded != null &&
+                recorded.sameCalculationAs(current) &&
+                c.contains(recorded.id),
+          ),
+        );
+    final suggested = _suggestedPrice;
     final exporting = context.select<SheetSettingsController, bool>(
       (c) => c.isExporting,
     );
@@ -309,6 +382,15 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       onSelect: _select,
       onShowInfo: _showInfo,
       onDone: twoPane ? null : _showResult,
+      onPriceTyped: () => _autoPrice = false,
+      priceNote: suggested == null
+          ? null
+          : _PriceNote(
+              suggested: suggested,
+              following: _autoPrice,
+              region: _prices.region,
+              onUse: () => setState(() => _applySuggestedPrice(force: true)),
+            ),
     );
     final panel = KeyedSubtree(
       key: _resultKey,
@@ -321,10 +403,14 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           : ResultPanel(
               spec: spec,
               result: result,
-              inSummary: inSummary,
+              estimate: current!,
+              projectName: projectName,
+              inProject: inProject,
               exporting: exporting,
-              onAddToSummary: _addToSummary,
+              onAdd: _addToProject,
+              onChangeProject: () => showProjectPicker(context),
               onExport: _export,
+              onSetPrice: _setLinePrice,
             ),
     );
 
@@ -362,8 +448,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
             ? null
             : _ResultBar(
                 result: result,
-                inSummary: inSummary,
-                onAdd: _addToSummary,
+                total: current?.grandTotal,
+                inProject: inProject,
+                onAdd: _addToProject,
                 onShow: _showResult,
               ),
       ),
@@ -380,6 +467,8 @@ class _CalculatorForm extends StatelessWidget {
     required this.onSelect,
     required this.onShowInfo,
     required this.onDone,
+    required this.onPriceTyped,
+    this.priceNote,
   });
 
   final MaterialSpec spec;
@@ -389,6 +478,12 @@ class _CalculatorForm extends StatelessWidget {
   final void Function(String id, String value) onSelect;
   final void Function({required bool solution}) onShowInfo;
   final VoidCallback? onDone;
+
+  /// Called when the user types in a price field.
+  final VoidCallback onPriceTyped;
+
+  /// Where the price came from, shown under the price field.
+  final Widget? priceNote;
 
   @override
   Widget build(BuildContext context) {
@@ -420,6 +515,7 @@ class _CalculatorForm extends StatelessWidget {
       focusNode: focus[f.id]!,
       isLast: f == last,
       onDone: onDone,
+      onChanged: f.isPrice ? (_) => onPriceTyped() : null,
     );
 
     return Column(
@@ -483,6 +579,7 @@ class _CalculatorForm extends StatelessWidget {
             title: 'Price',
             children: [
               _FieldGrid(children: [for (final f in prices) numberField(f)]),
+              ?priceNote,
             ],
           ),
         ],
@@ -558,6 +655,7 @@ class _NumberInput extends StatelessWidget {
     required this.focusNode,
     required this.isLast,
     required this.onDone,
+    this.onChanged,
   });
 
   final NumberField field;
@@ -565,6 +663,7 @@ class _NumberInput extends StatelessWidget {
   final FocusNode focusNode;
   final bool isLast;
   final VoidCallback? onDone;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -587,6 +686,7 @@ class _NumberInput extends StatelessWidget {
       ],
       textInputAction: isLast ? TextInputAction.done : TextInputAction.next,
       onFieldSubmitted: isLast && onDone != null ? (_) => onDone!() : null,
+      onChanged: onChanged,
       validator: (value) => f.validate(value ?? ''),
     );
   }
@@ -695,13 +795,17 @@ class _ChoiceInput extends StatelessWidget {
 class _ResultBar extends StatelessWidget {
   const _ResultBar({
     required this.result,
-    required this.inSummary,
+    required this.total,
+    required this.inProject,
     required this.onAdd,
     required this.onShow,
   });
 
   final CalcResult? result;
-  final bool inSummary;
+
+  /// Main material and companions together.
+  final double? total;
+  final bool inProject;
   final VoidCallback onAdd;
   final VoidCallback onShow;
 
@@ -738,7 +842,7 @@ class _ResultBar extends StatelessWidget {
                             button: true,
                             liveRegion: true,
                             label:
-                                'Estimate ${formatMoney(r.total)} for '
+                                'Estimate ${formatMoney(total ?? r.total)} for '
                                 '${formatQuantity(r.quantity, r.unit)}. '
                                 'Show details',
                             excludeSemantics: true,
@@ -765,7 +869,7 @@ class _ResultBar extends StatelessWidget {
                                       fit: BoxFit.scaleDown,
                                       alignment: Alignment.centerLeft,
                                       child: Text(
-                                        formatMoney(r.total),
+                                        formatMoney(total ?? r.total),
                                         style: tabular(
                                           theme.textTheme.titleLarge?.copyWith(
                                             color: palette.inkAccent,
@@ -782,9 +886,9 @@ class _ResultBar extends StatelessWidget {
                         ),
                         const SizedBox(width: Space.md),
                         FilledButton.icon(
-                          onPressed: inSummary ? null : onAdd,
-                          icon: Icon(inSummary ? Icons.check : Icons.add),
-                          label: Text(inSummary ? 'Added' : 'Add'),
+                          onPressed: inProject ? null : onAdd,
+                          icon: Icon(inProject ? Icons.check : Icons.add),
+                          label: Text(inProject ? 'Added' : 'Add'),
                         ),
                       ],
                     );
@@ -792,6 +896,58 @@ class _ResultBar extends StatelessWidget {
                 ),
               ),
             ),
+    );
+  }
+}
+
+/// Where the suggested price came from, or a way back to it after the user
+/// typed their own.
+class _PriceNote extends StatelessWidget {
+  const _PriceNote({
+    required this.suggested,
+    required this.following,
+    required this.region,
+    required this.onUse,
+  });
+
+  final double suggested;
+  final bool following;
+  final PriceRegion region;
+  final VoidCallback onUse;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final style = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    if (following) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.sell_outlined,
+            size: 16,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: Space.sm),
+          Expanded(
+            child: Text(
+              'From your price book (${region.label}). Type your supplier\'s '
+              'price to use it instead.',
+              style: style,
+            ),
+          ),
+        ],
+      );
+    }
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: TextButton.icon(
+        onPressed: onUse,
+        icon: const Icon(Icons.sell_outlined, size: 18),
+        label: Text('Use price book price, ${formatMoney(suggested)}'),
+      ),
     );
   }
 }

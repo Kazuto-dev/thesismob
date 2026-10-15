@@ -52,7 +52,7 @@ void main() {
   });
 
   test(
-    'export sends one row per estimate in the original column order',
+    'export sends each estimate as item, quantity, unit, cost and amount',
     () async {
       late Map<String, dynamic> body;
       final c = await controller(
@@ -68,8 +68,9 @@ void main() {
       final result = await c.export([_estimate]);
       expect(result.isSuccess, isTrue);
       expect(body['rows'], [
-        ['CHB 4"', 30, 375, 9375],
+        ['CHB 4"', 375, 'blocks', 25, 9375],
       ]);
+      expect(body['header'], SheetsExportService.header);
       expect(c.isExporting, isFalse);
     },
   );

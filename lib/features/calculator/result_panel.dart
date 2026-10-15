@@ -4,39 +4,63 @@ import '../../core/format.dart';
 import '../../core/layout.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
+import '../../data/estimate.dart';
 import '../../materials/material_spec.dart';
 
-/// The estimate: quantity and cost on the brand panel, then how it was
-/// worked out, what else the job needs, and the actions.
+/// The estimate: quantity and cost on the brand panel, every material the
+/// job needs with its price, how the quantity was worked out, and the
+/// actions.
 class ResultPanel extends StatelessWidget {
   const ResultPanel({
     super.key,
     required this.spec,
     required this.result,
-    required this.inSummary,
+    required this.estimate,
+    required this.projectName,
+    required this.inProject,
     required this.exporting,
-    required this.onAddToSummary,
+    required this.onAdd,
+    required this.onChangeProject,
     required this.onExport,
+    required this.onSetPrice,
   });
 
   final MaterialSpec spec;
   final CalcResult result;
-  final bool inSummary;
+
+  /// The result priced with the price book.
+  final Estimate estimate;
+  final String projectName;
+  final bool inProject;
   final bool exporting;
-  final VoidCallback onAddToSummary;
+  final VoidCallback onAdd;
+  final VoidCallback onChangeProject;
   final VoidCallback onExport;
+
+  /// Changes the price book price of a companion material.
+  final void Function(EstimateLine line) onSetPrice;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final palette = AppPalette.of(context);
     final r = result;
+    final e = estimate;
     final compact = WindowSize.of(context) == WindowSize.compact;
+    final unpriced = e.companions.where((l) => l.unitPrice <= 0).length;
 
     final add = FilledButton.icon(
-      onPressed: inSummary ? null : onAddToSummary,
-      icon: Icon(inSummary ? Icons.check : Icons.add),
-      label: Text(inSummary ? 'Added to summary' : 'Add to summary'),
+      onPressed: inProject ? null : onAdd,
+      icon: Icon(inProject ? Icons.check : Icons.add),
+      label: Text(
+        inProject ? 'Added to $projectName' : 'Add to $projectName',
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+    final change = TextButton.icon(
+      onPressed: onChangeProject,
+      icon: const Icon(Icons.swap_horiz, size: 18),
+      label: const Text('Change project'),
     );
     final export = OutlinedButton.icon(
       onPressed: exporting ? null : onExport,
@@ -83,7 +107,7 @@ class ResultPanel extends StatelessWidget {
                     ),
                     const SizedBox(height: Space.lg),
                     Text(
-                      'Total cost',
+                      e.companions.isEmpty ? 'Total cost' : 'Materials total',
                       style: theme.textTheme.labelMedium?.copyWith(
                         color: palette.onInkMuted,
                       ),
@@ -92,7 +116,7 @@ class ResultPanel extends StatelessWidget {
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        formatMoney(r.total),
+                        formatMoney(e.grandTotal),
                         style: tabular(
                           theme.textTheme.headlineMedium?.copyWith(
                             color: palette.inkAccent,
@@ -101,11 +125,23 @@ class ResultPanel extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'at ${formatMoney(r.unitPrice)} per ${r.unit.singular}',
+                      e.companions.isEmpty
+                          ? 'at ${formatMoney(r.unitPrice)} per '
+                                '${r.unit.singular}'
+                          : '${formatMoney(e.total)} ${r.unit.plural} + '
+                                '${formatMoney(e.companionsTotal)} other '
+                                'materials',
                       style: tabular(
                         theme.textTheme.bodySmall?.copyWith(
                           color: palette.onInkMuted,
                         ),
+                      ),
+                    ),
+                    Text(
+                      'Materials only. Labour and markups are added in the '
+                      'project budget.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: palette.onInkMuted,
                       ),
                     ),
                   ],
@@ -123,6 +159,47 @@ class ResultPanel extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (e.companions.isNotEmpty) ...[
+                  _Heading(
+                    'Materials for this job',
+                    caption: unpriced > 0
+                        ? '$unpriced ${unpriced == 1 ? 'item has' : 'items have'} '
+                              'no price yet. Tap a line to set one.'
+                        : 'Priced from your price book. Tap a line to change '
+                              'its price.',
+                  ),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainer,
+                      borderRadius: BorderRadius.circular(Radii.md),
+                    ),
+                    child: Column(
+                      children: [
+                        _MaterialLine(
+                          name: r.label,
+                          amount: formatQuantity(r.quantity, r.unit),
+                          unitPrice: r.unitPrice,
+                          total: e.total,
+                        ),
+                        for (final l in e.companions) ...[
+                          const Divider(height: 1, indent: Space.lg),
+                          _MaterialLine(
+                            name: l.label,
+                            amount: '${formatNumber(l.quantity)} ${l.unit}',
+                            unitPrice: l.unitPrice,
+                            total: l.total,
+                            onTap:
+                                l.itemKey == 'pvc_fittings' ||
+                                    l.itemKey == 'conduit_fittings'
+                                ? null
+                                : () => onSetPrice(l),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: Space.lg),
+                ],
                 if (r.details.isNotEmpty) ...[
                   _Heading("How it's worked out"),
                   for (final (i, d) in r.details.indexed) ...[
@@ -133,31 +210,6 @@ class ResultPanel extends StatelessWidget {
                       emphasize: i == r.details.length - 1,
                     ),
                   ],
-                ],
-                if (r.companions.isNotEmpty) ...[
-                  const SizedBox(height: Space.lg),
-                  _Heading(
-                    'Also needed',
-                    caption: 'Planning quantities, not in the cost',
-                  ),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainer,
-                      borderRadius: BorderRadius.circular(Radii.md),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: Space.lg,
-                        vertical: Space.xs,
-                      ),
-                      child: Column(
-                        children: [
-                          for (final c in r.companions)
-                            KeyValueLine(c.label, c.value),
-                        ],
-                      ),
-                    ),
-                  ),
                 ],
                 if (r.note != null) ...[
                   const SizedBox(height: Space.lg),
@@ -184,18 +236,105 @@ class ResultPanel extends StatelessWidget {
                 const SizedBox(height: Space.xl),
                 if (compact) ...[
                   add,
-                  const SizedBox(height: Space.sm),
+                  change,
+                  const SizedBox(height: Space.xs),
                   export,
                 ] else
                   Wrap(
                     spacing: Space.sm,
                     runSpacing: Space.sm,
-                    children: [add, export],
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [add, export, change],
                   ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// One material with its quantity, unit price and amount.
+class _MaterialLine extends StatelessWidget {
+  const _MaterialLine({
+    required this.name,
+    required this.amount,
+    required this.unitPrice,
+    required this.total,
+    this.onTap,
+  });
+
+  final String name;
+  final String amount;
+  final double unitPrice;
+  final double total;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final missing = unitPrice <= 0;
+    final row = Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: Space.lg,
+        vertical: Space.md,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  missing
+                      ? '$amount · no price yet'
+                      : '$amount × '
+                            '${formatMoney(unitPrice)}',
+                  style: tabular(
+                    theme.textTheme.bodySmall?.copyWith(
+                      color: missing ? scheme.error : scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: Space.md),
+          if (missing && onTap != null)
+            Text(
+              'Set price',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: scheme.primary,
+              ),
+            )
+          else
+            Text(
+              formatMoney(total),
+              style: tabular(
+                theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+    if (onTap == null) return MergeSemantics(child: row);
+    return Semantics(
+      button: true,
+      hint: 'Change price',
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(Radii.md),
+        child: row,
       ),
     );
   }

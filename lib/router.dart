@@ -8,7 +8,9 @@ import 'features/history/history_screen.dart';
 import 'features/not_found_screen.dart';
 import 'features/shell/app_shell.dart';
 import 'features/settings/settings_screen.dart';
-import 'features/summary/summary_screen.dart';
+import 'features/projects/project_screen.dart';
+import 'features/projects/projects_screen.dart';
+import 'features/settings/price_book_screen.dart';
 import 'features/home/home_screen.dart';
 import 'materials/catalog.dart';
 import 'materials/material_spec.dart';
@@ -22,7 +24,7 @@ const _legacyRedirects = {
   '/sheetform': '/settings',
   '/sheet': '/settings',
   '/history': '/history',
-  '/summary': '/summary',
+  '/summary': '/project',
   '/strucPages': '/category/structural',
   '/struc': '/category/structural',
   '/archPages': '/category/architectural',
@@ -75,9 +77,13 @@ const _legacyRedirects = {
 abstract final class Routes {
   static const home = '/';
   static const history = '/history';
-  static const summary = '/summary';
+  static const project = '/project';
+  static const projects = '/project/all';
   static const settings = '/settings';
   static const help = '/settings/help';
+  static const prices = '/settings/prices';
+
+  static String projectById(String id) => '/project/$id';
 
   static String category(MaterialCategory c) => '/category/${c.name}';
 
@@ -156,8 +162,19 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: Routes.summary,
-              builder: (context, state) => const SummaryScreen(),
+              path: Routes.project,
+              builder: (context, state) => const ProjectScreen(),
+              routes: [
+                GoRoute(
+                  path: 'all',
+                  builder: (context, state) => const ProjectsScreen(),
+                ),
+                GoRoute(
+                  path: ':id',
+                  builder: (context, state) =>
+                      ProjectScreen(projectId: state.pathParameters['id']),
+                ),
+              ],
             ),
           ],
         ),
@@ -170,6 +187,10 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
                 GoRoute(
                   path: 'help',
                   builder: (context, state) => const HelpScreen(),
+                ),
+                GoRoute(
+                  path: 'prices',
+                  builder: (context, state) => const PriceBookScreen(),
                 ),
               ],
             ),

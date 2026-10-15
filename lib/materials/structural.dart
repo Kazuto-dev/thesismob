@@ -1,33 +1,18 @@
+import 'package:material_ui/material_ui.dart' show Icons;
+
 import '../core/format.dart';
 import 'calc_helpers.dart';
+import 'factors.dart';
+import 'items.dart';
 import 'material_spec.dart';
 
-/// Face of a hollow block with its mortar joint: 0.40 × 0.20 m, or
-/// 12.5 blocks per m², whatever its thickness.
-const chbFaceArea = 0.08;
+/// Vertical bars in a block wall, metres of bar per m² (laps included),
+/// by spacing.
+const chbVerticalBars = {'0.4': 2.93, '0.6': 2.13, '0.8': 1.60};
 
-/// Class B mortar (1:3) to lay one m² of wall, by block thickness:
-/// 40 kg cement bags and m³ of sand. Fajardo, Simplified Construction
-/// Estimate, Table 2-2.
-const chbMortar = {
-  '4': (cement: 0.522, sand: 0.0435),
-  '6': (cement: 1.018, sand: 0.0844),
-  '8': (cement: 1.500, sand: 0.1250),
-};
-
-/// Class B plaster, 16 mm thick, per m² of each plastered face.
-const plasterCement = 0.192;
-const plasterSand = 0.016;
-
-/// 10 mm bars per m² of wall: vertical every 0.60 m (2.13 m) plus
-/// horizontal every third course (2.15 m), laps included.
-const chbRebar = 4.28;
-
-/// Commercial length of reinforcing bars.
-const rebarLength = 6.0;
-
-/// A 4' × 8' plywood sheet as sold in the Philippines: 1.22 × 2.44 m.
-const plywoodSheetArea = 1.22 * 2.44;
+/// Horizontal bars in a block wall, metres per m², by how many courses
+/// apart they are laid.
+const chbHorizontalBars = {'2': 3.30, '3': 2.15, '4': 1.72};
 
 /// Foam rolls are 1 m wide; a 50 mm taped lap leaves 0.95 m of cover.
 const foamRollWidth = 1.0;
@@ -76,7 +61,38 @@ final chb = MaterialSpec(
         ChoiceOption('2', 'Both faces', 2),
       ],
     ),
+    const ChoiceField(
+      id: 'bar',
+      label: 'Bar size',
+      initial: '10',
+      options: [
+        ChoiceOption('10', '10 mm', 10),
+        ChoiceOption('12', '12 mm', 12),
+      ],
+    ),
+    const ChoiceField(
+      id: 'vertical',
+      label: 'Vertical bars',
+      initial: '0.6',
+      helper: 'Follow the plans; 60 cm is usual for houses',
+      options: [
+        ChoiceOption('0.4', 'Every 40 cm', 0.4),
+        ChoiceOption('0.6', 'Every 60 cm', 0.6),
+        ChoiceOption('0.8', 'Every 80 cm', 0.8),
+      ],
+    ),
+    const ChoiceField(
+      id: 'horizontal',
+      label: 'Horizontal bars',
+      initial: '3',
+      options: [
+        ChoiceOption('2', 'Every 2nd course', 2),
+        ChoiceOption('3', 'Every 3rd course', 3),
+        ChoiceOption('4', 'Every 4th course', 4),
+      ],
+    ),
   ],
+  priceRef: (s) => PriceRef('chb_${s['size'] ?? '4'}'),
   compute: (input) {
     final gross = input['length'] * input['height'];
     final openings = input.optional('openings');
@@ -87,17 +103,26 @@ final chb = MaterialSpec(
     final size = input.choice('size');
     final waste = input.choice('waste').value;
     final faces = input.choice('plaster').value;
-    final count = withWaste(ceilCount(net / chbFaceArea), waste);
+    final count = withWaste(ceilCount(net * chbPerSquareMetre), waste);
     final mortar = chbMortar[size.id]!;
-    final cement = ceilCount(net * (mortar.cement + faces * plasterCement));
-    final sand = roundUp(net * (mortar.sand + faces * plasterSand));
-    final rebar = roundUp(net * chbRebar, 1);
+    final cement = net * (mortar.cement + faces * plasterCement);
+    final sand = net * (mortar.sand + faces * plasterSand);
+    final vertical = input.choice('vertical');
+    final horizontal = input.choice('horizontal');
+    final barPerM2 =
+        chbVerticalBars[vertical.id]! + chbHorizontalBars[horizontal.id]!;
+    final barMm = int.parse(input.choice('bar').id);
+    final rebar = net * barPerM2;
+    final bars = ceilCount(rebar / rebarStockLength);
+    // A tie wherever a vertical bar crosses a horizontal one.
+    final ties = net / vertical.value / (horizontal.value * 0.20);
     return CalcResult(
       label: 'CHB ${size.label}',
       area: net,
       quantity: count.total.toDouble(),
       unit: QuantityUnit.blocks,
       unitPrice: input['price'],
+      itemKey: 'chb_${size.id}',
       details: [
         if (openings > 0) ...[
           ResultDetail('Wall area', formatArea(gross)),
@@ -110,17 +135,20 @@ final chb = MaterialSpec(
           formatQuantity(count.base.toDouble(), QuantityUnit.blocks),
         ),
         ...wasteDetail(count, waste, QuantityUnit.blocks),
+        ResultDetail(
+          '$barMm mm bars, ${formatNumber(barPerM2)} m per m²',
+          formatLength(roundUp(rebar, 1)),
+        ),
       ],
       companions: [
-        ResultDetail(
-          faces > 0 ? 'Cement, 40 kg (laying and plaster)' : 'Cement, 40 kg',
-          formatCount(cement, 'bag'),
+        buy(
+          'cement_40kg',
+          cement,
+          label: faces > 0 ? 'Cement for laying and plaster' : null,
         ),
-        ResultDetail('Sand', formatVolume(sand)),
-        ResultDetail(
-          'Rebar, 10 mm × 6 m',
-          formatCount(ceilCount(rebar / rebarLength), 'bar'),
-        ),
+        buy('sand', sand),
+        buy(rebarKey(barMm), bars.toDouble()),
+        buy('tie_wire', ties * tieWirePerTie(barMm) / tieWireMetresPerKg),
       ],
       note: 'Cement and sand use Class B mortar (1:3).',
     );
@@ -152,9 +180,15 @@ final chb = MaterialSpec(
     InfoSection(
       'Mortar, plaster and rebar',
       'Blocks are laid in Class B mortar (1 part cement to 3 parts sand), '
-          'reinforced with 10 mm bars and usually plastered 16 mm thick on '
-          'both faces. These quantities are listed under "Also needed" to '
-          'help you plan; they are not part of the cost.',
+          'reinforced with 10 or 12 mm bars and usually plastered 16 mm thick '
+          'on both faces. These materials are priced from your price book '
+          'and added to the total.',
+    ),
+    InfoSection(
+      'Bar spacing',
+      'Vertical bars stand in the block cores, usually every 60 cm. '
+          'Horizontal bars lie in the mortar joints, usually every third '
+          'course. Use the spacing on your plans.',
     ),
   ],
   solution: const [
@@ -185,15 +219,26 @@ final chb = MaterialSpec(
     ),
     InfoSection(
       'Reinforcing bars',
-      '10 mm bars spaced 0.60 m vertically and every third course '
-          'horizontally need 2.13 + 2.15 = 4.28 m of bar per m², including '
-          'laps. Bars are sold 6 m long.',
-      formula: 'rebar = area × 4.28 m;  bars = round up(rebar ÷ 6)',
+      'Bar per m² of wall, laps included: vertical bars every 40, 60 or '
+          '80 cm need 2.93, 2.13 or 1.60 m; horizontal bars every 2nd, 3rd '
+          'or 4th course need 3.30, 2.15 or 1.72 m. Bars are sold 6 m long.',
+      formula:
+          'rebar = area × (vertical + horizontal)\n'
+          'bars = round up(rebar ÷ 6)',
+    ),
+    InfoSection(
+      'Tie wire',
+      'Each crossing of a vertical and a horizontal bar is tied with about '
+          '30 cm of #16 wire. A kilogram is about 53 m.',
+      formula:
+          'crossings = area ÷ vertical spacing ÷ (courses × 0.20)\n'
+          'tie wire = crossings × 0.30 ÷ 53 kg',
     ),
     InfoSection(
       'Cost',
-      'Multiply the total number of blocks by the price per block.',
-      formula: 'cost = total blocks × price per block',
+      'Multiply the total number of blocks by the price per block, then add '
+          'the cement, sand, bars and tie wire at their price book prices.',
+      formula: 'cost = blocks × price per block + Σ(other materials × price)',
     ),
   ],
   references: const [
@@ -202,6 +247,10 @@ final chb = MaterialSpec(
     'https://aedoconstruction.com/blog/chb-wall-rebar-spacing-philippines/',
   ],
 );
+
+String _plywoodKey(String? thickness, String? grade) => grade == 'marine'
+    ? marinePlywoodKey(thickness ?? '12')
+    : plywoodKey(thickness ?? '12');
 
 final plywood = MaterialSpec(
   id: 'plywood',
@@ -222,23 +271,44 @@ final plywood = MaterialSpec(
     ),
   ],
   choices: [
-    descriptor('thickness', 'Thickness', [
-      ('6', '6 mm (¼")'),
-      ('9', '9 mm (⅜")'),
-      ('12', '12 mm (½")'),
-      ('18', '18 mm (¾")'),
-    ], helper: '6 mm for ceilings, 12–18 mm for floors and cabinets'),
+    const ChoiceField(
+      id: 'thickness',
+      label: 'Thickness',
+      initial: '12',
+      helper: '6 mm for ceilings, 12–18 mm for floors and cabinets',
+      options: [
+        ChoiceOption('6', '6 mm (¼")'),
+        ChoiceOption('9', '9 mm (⅜")'),
+        ChoiceOption('12', '12 mm (½")'),
+        ChoiceOption('18', '18 mm (¾")'),
+      ],
+    ),
+    const ChoiceField(
+      id: 'grade',
+      label: 'Grade',
+      initial: 'ordinary',
+      helper: 'Marine plywood resists moisture',
+      options: [
+        ChoiceOption('ordinary', 'Ordinary'),
+        ChoiceOption('marine', 'Marine'),
+      ],
+    ),
     wasteField(
       initial: '10',
       helper: '10% for normal layouts, 15% for many openings',
     ),
   ],
+  priceRef: (s) => PriceRef(_plywoodKey(s['thickness'], s['grade'])),
   compute: (input) {
     final area = input['length'] * input['width'];
     final waste = input.choice('waste').value;
-    final count = withWaste(ceilCount(area / plywoodSheetArea), waste);
+    final count = withWaste(ceilCount(area / sheetArea), waste);
+    final thickness = input.choice('thickness');
+    final marine = input.chose('grade', 'marine');
     return CalcResult(
-      label: describe("Plywood 4' × 8'", [input.choices['thickness']]),
+      label:
+          "${marine ? 'Marine plywood' : 'Plywood'} ${thickness.label} 4' × 8'",
+      itemKey: _plywoodKey(thickness.id, input.choice('grade').id),
       area: area,
       quantity: count.total.toDouble(),
       unit: QuantityUnit.sheets,
@@ -266,10 +336,11 @@ final plywood = MaterialSpec(
       'The size of the floor, wall or ceiling to cover, in metres.',
     ),
     InfoSection(
-      'Thickness',
+      'Thickness and grade',
       '6 mm (¼") for ceilings, 9–12 mm for walls and partitions, 18 mm (¾") '
-          'for floors, shelves and cabinets. Thickness does not change the '
-          'number of sheets.',
+          'for floors, shelves and cabinets. Marine plywood uses waterproof '
+          'glue for wet areas and concrete forms. Thickness and grade set the '
+          'price, not the number of sheets.',
     ),
     InfoSection(
       'Waste allowance',
@@ -332,6 +403,7 @@ final insulation = MaterialSpec(
       max: 1000000,
     ),
   ],
+  priceRef: (s) => PriceRef('foam_roll_${s['roll'] ?? '50'}'),
   choices: [
     slopeField,
     sidesField,
@@ -369,6 +441,7 @@ final insulation = MaterialSpec(
       area: eave * slope * sides,
       quantity: rolls.toDouble(),
       unit: QuantityUnit.rolls,
+      itemKey: 'foam_roll_${input.choice('roll').id}',
       unitPrice: input['price'],
       details: [
         if (factor != 1)
@@ -392,7 +465,7 @@ final insulation = MaterialSpec(
       ],
       companions: [
         if (tape > 0)
-          ResultDetail('Foil tape for the laps', formatLength(tape)),
+          buy('foil_tape', tape / 50, label: 'Foil tape for the laps'),
       ],
     );
   },
@@ -442,12 +515,184 @@ final insulation = MaterialSpec(
     ),
     InfoSection(
       'Foil tape',
-      'Every lap between strips is taped along its full length.',
-      formula: 'tape = (strips − 1) × strip length × sides',
+      'Every lap between strips is taped along its full length. Tape comes '
+          'in 50 m rolls.',
+      formula:
+          'tape = (strips − 1) × strip length × sides\n'
+          'rolls = round up(tape ÷ 50)',
     ),
   ],
   references: const [
     'https://www.lazada.com.ph/products/pe-foam-insulation-10mm-double-sided-1meter-x-50meter-i276479065.html',
     'https://roofonline.com/roof-pitch-factor/',
+  ],
+);
+
+/// Ceiling framing per m²: metal furring every 0.40 m (2.5 m), carrying
+/// channels every 1.20 m (0.833 m), hangers on a 1.20 m grid (0.69).
+const furringPerM2 = 2.5;
+const channelPerM2 = 1 / 1.2;
+const hangersPerM2 = 1 / (1.2 * 1.2);
+
+/// 2"×2" wood framing on a 0.40 × 0.60 m grid: 4.17 m of lumber per m²,
+/// 1.094 board feet per metre.
+const woodFramePerM2 = 4.56;
+
+/// Board screws per m² of ceiling, fixed about every 20 cm along each
+/// furring.
+const screwsPerM2 = 14;
+
+/// #10 GI hanger wire weighs about 0.071 kg per metre; each hanger takes
+/// about a metre of wire with its twists.
+const hangerWireKg = 0.071;
+
+final ceiling = MaterialSpec(
+  id: 'ceiling',
+  name: 'Ceiling',
+  category: MaterialCategory.structural,
+  icon: Icons.grid_on,
+  blurb: 'Boards with metal or wood framing, hangers and screws',
+  keywords: const [
+    'ceiling',
+    'kisame',
+    'hardiflex',
+    'fiber cement',
+    'gypsum',
+    'furring',
+    'carrying channel',
+  ],
+  numbers: const [
+    NumberField(id: 'length', label: 'Room length', unit: 'm', max: 1000),
+    NumberField(id: 'width', label: 'Room width', unit: 'm', max: 1000),
+    NumberField(
+      id: 'price',
+      label: 'Price per board',
+      unit: '₱',
+      isPrice: true,
+      max: 1000000,
+    ),
+  ],
+  choices: [
+    const ChoiceField(
+      id: 'board',
+      label: 'Board',
+      initial: 'fiber_cement_board',
+      options: [
+        ChoiceOption('fiber_cement_board', 'Fiber cement 4.5 mm'),
+        ChoiceOption('gypsum_board', 'Gypsum 9 mm'),
+      ],
+    ),
+    const ChoiceField(
+      id: 'frame',
+      label: 'Framing',
+      initial: 'metal',
+      options: [
+        ChoiceOption('metal', 'Metal furring and channels'),
+        ChoiceOption('wood', 'Wood 2" × 2"'),
+      ],
+    ),
+    wasteField(initial: '10', helper: 'Offcuts at the edges of the room'),
+  ],
+  priceRef: (s) => PriceRef(s['board'] ?? 'fiber_cement_board'),
+  compute: (input) {
+    final length = input['length'];
+    final width = input['width'];
+    final area = length * width;
+    final perimeter = 2 * (length + width);
+    final waste = input.choice('waste').value;
+    final board = input.choice('board');
+    final boards = withWaste(ceilCount(area / sheetArea), waste);
+    final metal = input.chose('frame', 'metal');
+    final hangers = ceilCount(area * hangersPerM2);
+    return CalcResult(
+      label: '${board.label} ceiling, ${metal ? 'metal' : 'wood'} frame',
+      area: area,
+      quantity: boards.total.toDouble(),
+      unit: QuantityUnit.sheets,
+      unitPrice: input['price'],
+      itemKey: board.id,
+      details: [
+        ResultDetail('Ceiling area', formatArea(area)),
+        const ResultDetail('Area per board (1.22 × 2.44 m)', '2.98 m²'),
+        ResultDetail(
+          'Boards for ${formatArea(area)}',
+          formatQuantity(boards.base.toDouble(), QuantityUnit.sheets),
+        ),
+        ...wasteDetail(boards, waste, QuantityUnit.sheets),
+        ResultDetail('Room perimeter', formatLength(roundUp(perimeter))),
+        ResultDetail('Hangers on a 1.2 m grid', '$hangers'),
+      ],
+      companions: [
+        if (metal) ...[
+          buy('metal_furring', area * furringPerM2 * 1.05 / 5),
+          buy('carrying_channel', area * channelPerM2 * 1.05 / 5),
+          buy('wall_angle', perimeter / 3),
+          buy('hanger_wire', hangers * hangerWireKg),
+        ] else ...[
+          buy(
+            'good_lumber',
+            (area * woodFramePerM2 + hangers * 1.094) * 1.05,
+            label: 'Lumber 2" × 2", S4S',
+          ),
+          buy('nails', area * 0.08),
+        ],
+        buy('board_screws', area * screwsPerM2 * 1.05 / 100),
+      ],
+      note: 'Check spacing against the board maker\'s fixing guide.',
+    );
+  },
+  definitions: const [
+    InfoSection(
+      'Ceiling boards',
+      'Fiber cement (HardieFlex) and gypsum boards are 4\' × 8\' '
+          '(1.22 × 2.44 m). Fiber cement suits eaves and humid rooms; gypsum '
+          'gives a smoother finish indoors.',
+    ),
+    InfoSection(
+      'Metal framing',
+      'Carrying channels hang from the roof or slab every 1.2 m on wire '
+          'hangers. Metal furring is clipped under them every 40 cm and the '
+          'boards are screwed to the furring. Wall angles finish the edges. '
+          'Furring and channels are 5 m long, wall angles 3 m.',
+    ),
+    InfoSection(
+      'Wood framing',
+      'A grid of 2" × 2" lumber at 40 × 60 cm, hung from the roof framing '
+          'with 2" × 2" hangers about every 1.2 m.',
+    ),
+  ],
+  solution: const [
+    InfoSection(
+      'Boards',
+      'Divide the area by one board, round up and add the waste allowance.',
+      formula: 'boards = round up(area ÷ 2.977) + waste',
+    ),
+    InfoSection(
+      'Metal framing',
+      'Furring every 0.40 m needs 2.5 m per m²; carrying channels every '
+          '1.2 m need 0.83 m per m², both with 5% for laps, in 5 m pieces. '
+          'Wall angle runs round the room in 3 m pieces. Each hanger takes '
+          'about 1 m of #10 wire (0.071 kg).',
+      formula:
+          'furring = round up(area × 2.5 × 1.05 ÷ 5)\n'
+          'channels = round up(area × 0.83 × 1.05 ÷ 5)\n'
+          'wall angle = round up(perimeter ÷ 3)',
+    ),
+    InfoSection(
+      'Wood framing',
+      'A 40 × 60 cm grid of 2" × 2" needs 4.17 m of lumber per m², or 4.56 '
+          'board feet, plus about 1.1 board feet per hanger and 5% waste.',
+      formula: 'lumber = (area × 4.56 + hangers × 1.094) × 1.05 bd ft',
+    ),
+    InfoSection(
+      'Screws',
+      'About 14 screws per m², fixed every 20 cm along each furring, sold '
+          'in boxes of 100.',
+      formula: 'boxes = round up(area × 14 × 1.05 ÷ 100)',
+    ),
+  ],
+  references: const [
+    'James Hardie Philippines, HardieFlex ceiling installation guide',
+    'https://aedoconstruction.com/blog/ceiling-installation-repair-cost-philippines/',
   ],
 );

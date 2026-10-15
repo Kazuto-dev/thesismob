@@ -59,6 +59,17 @@
       setTimeout(function () { loader.remove(); }, 250);
     });
   </script>
+  <script>
+    // Offline support. Skipped on local development servers unless the URL
+    // has ?offline, so debug builds are never served from the cache.
+    if ('serviceWorker' in navigator &&
+        (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) ||
+         location.search.indexOf('offline') >= 0)) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      });
+    }
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

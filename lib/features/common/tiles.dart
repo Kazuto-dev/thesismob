@@ -121,7 +121,8 @@ class EstimateTile extends StatelessWidget {
                   Text(
                     subtitle ??
                         '${formatQuantity(e.quantity, e.unit)} × '
-                            '${formatMoney(e.unitPrice)}',
+                            '${formatMoney(e.unitPrice)}'
+                            '${e.companions.isEmpty ? '' : ' + ${e.companions.length} more'}',
                     style: tabular(
                       theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
@@ -133,7 +134,7 @@ class EstimateTile extends StatelessWidget {
             ),
             const SizedBox(width: Space.md),
             Text(
-              formatMoney(e.total),
+              formatMoney(e.grandTotal),
               style: tabular(theme.textTheme.titleSmall),
             ),
             ?trailing,

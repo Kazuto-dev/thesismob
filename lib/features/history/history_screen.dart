@@ -10,6 +10,7 @@ import '../../data/estimate.dart';
 import '../../materials/catalog.dart';
 import '../../router.dart';
 import '../../state/estimates_controller.dart';
+import '../../state/projects_controller.dart';
 import '../common/tiles.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -244,8 +245,11 @@ class HistoryDetails extends StatelessWidget {
     final theme = Theme.of(context);
     final e = estimate;
     final spec = materialById(e.materialId);
-    final controller = context.watch<EstimatesController>();
-    final inSummary = controller.isInSummary(e.id);
+    final controller = context.read<EstimatesController>();
+    final (projectName, inProject) = context
+        .select<ProjectsController, (String, bool)>(
+          (c) => (c.active.name, c.contains(e.id)),
+        );
 
     final inputs = <(String, String)>[
       if (spec != null) ...[
@@ -300,7 +304,24 @@ class HistoryDetails extends StatelessWidget {
         ],
         KeyValueLine('Price per ${e.unit.singular}', formatMoney(e.unitPrice)),
         const Divider(),
-        KeyValueLine('Total cost', formatMoney(e.total), emphasize: true),
+        if (e.companions.isEmpty)
+          KeyValueLine('Total cost', formatMoney(e.total), emphasize: true)
+        else ...[
+          KeyValueLine('${e.label} cost', formatMoney(e.total)),
+          for (final l in e.companions) ...[
+            const Divider(),
+            KeyValueLine(
+              '${l.label}, ${formatNumber(l.quantity)} ${l.unit}',
+              formatMoney(l.total),
+            ),
+          ],
+          const Divider(),
+          KeyValueLine(
+            'Materials total',
+            formatMoney(e.grandTotal),
+            emphasize: true,
+          ),
+        ],
         if (e.createdAt.year >= 2000) ...[
           const Divider(),
           KeyValueLine('Worked out', formatDateTime(e.createdAt)),
@@ -331,15 +352,25 @@ class HistoryDetails extends StatelessWidget {
                 label: const Text('Open in calculator'),
               ),
             OutlinedButton.icon(
-              onPressed: inSummary
+              onPressed: inProject
                   ? null
                   : () {
-                      controller.addToSummary(e);
+                      context.read<ProjectsController>().add(e);
                       onDone?.call();
-                      showMessage(context, 'Added ${e.label} to the summary.');
+                      showMessage(
+                        context,
+                        'Added ${e.label} to $projectName.',
+                        action: SnackBarAction(
+                          label: 'View',
+                          onPressed: () => context.go(Routes.project),
+                        ),
+                      );
                     },
-              icon: Icon(inSummary ? Icons.check : Icons.add),
-              label: Text(inSummary ? 'In summary' : 'Add to summary'),
+              icon: Icon(inProject ? Icons.check : Icons.add),
+              label: Text(
+                inProject ? 'In $projectName' : 'Add to $projectName',
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             TextButton.icon(
               style: TextButton.styleFrom(

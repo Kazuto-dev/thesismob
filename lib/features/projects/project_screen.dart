@@ -1,0 +1,1121 @@
+import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
+
+import '../../core/format.dart';
+import '../../core/layout.dart';
+import '../../core/theme.dart';
+import '../../core/widgets.dart';
+import '../../data/estimate.dart';
+import '../../data/project.dart';
+import '../../export/project_documents.dart';
+import '../../materials/catalog.dart';
+import '../../materials/items.dart';
+import '../../materials/material_spec.dart';
+import '../../router.dart';
+import '../../state/price_book_controller.dart';
+import '../../state/projects_controller.dart';
+import '../../state/sheet_settings_controller.dart';
+import '../common/price_dialog.dart';
+import '../common/tiles.dart';
+import 'project_actions.dart';
+import 'project_picker.dart';
+
+enum _Tab { items, materials, budget }
+
+/// A project: its budget, the estimates grouped by trade as a bill of
+/// quantities, the merged shopping list and the cost settings.
+class ProjectScreen extends StatefulWidget {
+  const ProjectScreen({super.key, this.projectId});
+
+  /// The project to show; the active one when null.
+  final String? projectId;
+
+  @override
+  State<ProjectScreen> createState() => _ProjectScreenState();
+}
+
+class _ProjectScreenState extends State<ProjectScreen> {
+  _Tab _tab = _Tab.items;
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.watch<ProjectsController>();
+    final project =
+        (widget.projectId == null
+            ? null
+            : controller.byId(widget.projectId!)) ??
+        controller.active;
+    final wide = WindowSize.of(context) == WindowSize.expanded;
+    final isActive = project.id == controller.active.id;
+    final details = [
+      if (project.client.isNotEmpty) project.client,
+      if (project.location.isNotEmpty) project.location,
+    ].join(' · ');
+
+    final header = PageHeader(
+      title: project.name,
+      subtitle: details.isEmpty
+          ? (isActive ? 'New estimates are added here' : null)
+          : details,
+      actions: [
+        IconButton(
+          tooltip: 'All projects',
+          icon: const Icon(Icons.folder_copy_outlined),
+          onPressed: () => context.go(Routes.projects),
+        ),
+        _ProjectMenu(project: project),
+      ],
+    );
+
+    if (project.items.isEmpty) {
+      return PageTitle(
+        title: project.name,
+        child: Scaffold(
+          body: SafeArea(
+            child: Column(
+              children: [
+                ContentWidth(child: header),
+                Expanded(
+                  child: EmptyState(
+                    icon: Icons.request_quote_outlined,
+                    title: 'No estimates yet',
+                    message:
+                        'Work out a material, then choose "Add to '
+                        '${project.name}". The project builds a bill of '
+                        'quantities, a shopping list and a budget with labour '
+                        'and markups.',
+                    action: Wrap(
+                      spacing: Space.sm,
+                      runSpacing: Space.sm,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        FilledButton(
+                          onPressed: () {
+                            controller.setActive(project.id);
+                            context.go(Routes.home);
+                          },
+                          child: const Text('Start an estimate'),
+                        ),
+                        OutlinedButton(
+                          onPressed: () => context.go(Routes.projects),
+                          child: const Text('All projects'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final hero = _BudgetHero(project: project);
+    final tabs = SegmentedButton<_Tab>(
+      showSelectedIcon: false,
+      segments: [
+        const ButtonSegment(
+          value: _Tab.items,
+          label: Text('Items'),
+          icon: Icon(Icons.list_alt_outlined),
+        ),
+        const ButtonSegment(
+          value: _Tab.materials,
+          label: Text('To buy'),
+          icon: Icon(Icons.shopping_cart_outlined),
+        ),
+        if (!wide)
+          const ButtonSegment(
+            value: _Tab.budget,
+            label: Text('Budget'),
+            icon: Icon(Icons.tune),
+          ),
+      ],
+      selected: {wide && _tab == _Tab.budget ? _Tab.items : _tab},
+      onSelectionChanged: (s) => setState(() => _tab = s.first),
+    );
+    final tab = wide && _tab == _Tab.budget ? _Tab.items : _tab;
+    final body = switch (tab) {
+      _Tab.items => _ItemsTab(project: project),
+      _Tab.materials => _MaterialsTab(project: project),
+      _Tab.budget => _BudgetEditor(
+        key: ValueKey('budget-${project.id}'),
+        project: project,
+      ),
+    };
+
+    return PageTitle(
+      title: project.name,
+      child: Scaffold(
+        body: SafeArea(
+          bottom: false,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(bottom: bottomClearance(context)),
+            child: ContentWidth(
+              maxWidth: wide ? 1240 : 760,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  header,
+                  if (!isActive) ...[
+                    _NotActiveBanner(project: project),
+                    const SizedBox(height: Space.lg),
+                  ],
+                  if (wide)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: tabs,
+                              ),
+                              const SizedBox(height: Space.lg),
+                              body,
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: Space.xl),
+                        SizedBox(
+                          width: 400,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              hero,
+                              const SizedBox(height: Space.lg),
+                              _BudgetEditor(
+                                key: ValueKey('budget-${project.id}'),
+                                project: project,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    )
+                  else ...[
+                    hero,
+                    const SizedBox(height: Space.xl),
+                    SizedBox(width: double.infinity, child: tabs),
+                    const SizedBox(height: Space.lg),
+                    body,
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NotActiveBanner extends StatelessWidget {
+  const _NotActiveBanner({required this.project});
+
+  final Project project;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      color: scheme.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          Space.lg,
+          Space.sm,
+          Space.sm,
+          Space.sm,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                'New estimates go to another project.',
+                style: TextStyle(color: scheme.onSecondaryContainer),
+              ),
+            ),
+            TextButton(
+              onPressed: () =>
+                  context.read<ProjectsController>().setActive(project.id),
+              child: const Text('Add estimates here'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProjectMenu extends StatelessWidget {
+  const _ProjectMenu({required this.project});
+
+  final Project project;
+
+  Future<void> _edit(BuildContext context) async {
+    final details = await showProjectDetailsDialog(context, project: project);
+    if (details == null || !context.mounted) return;
+    context.read<ProjectsController>().updateDetails(
+      project.id,
+      name: details.name,
+      client: details.client,
+      location: details.location,
+    );
+  }
+
+  void _clear(BuildContext context) {
+    final controller = context.read<ProjectsController>();
+    final removed = controller.clearItems(projectId: project.id);
+    showMessage(
+      context,
+      'Removed all estimates from ${project.name}.',
+      action: SnackBarAction(
+        label: 'Undo',
+        onPressed: () =>
+            controller.restoreItems(removed, projectId: project.id),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasItems = project.items.isNotEmpty;
+    final exporting = context.select<SheetSettingsController, bool>(
+      (c) => c.isExporting,
+    );
+    return MenuAnchor(
+      builder: (context, controller, _) => IconButton(
+        tooltip: 'Project actions',
+        icon: const Icon(Icons.more_vert),
+        onPressed: () =>
+            controller.isOpen ? controller.close() : controller.open(),
+      ),
+      menuChildren: [
+        MenuItemButton(
+          leadingIcon: const Icon(Icons.edit_outlined),
+          onPressed: () => _edit(context),
+          child: const Text('Edit details'),
+        ),
+        MenuItemButton(
+          leadingIcon: const Icon(Icons.add),
+          onPressed: () async {
+            final created = await createProject(context);
+            if (created != null && context.mounted) {
+              context.go(Routes.project);
+            }
+          },
+          child: const Text('New project'),
+        ),
+        MenuItemButton(
+          leadingIcon: const Icon(Icons.copy_all_outlined),
+          onPressed: () => duplicateProject(context, project),
+          child: const Text('Duplicate'),
+        ),
+        const Divider(),
+        MenuItemButton(
+          leadingIcon: const Icon(Icons.picture_as_pdf_outlined),
+          onPressed: hasItems
+              ? () => downloadProjectPdf(context, project)
+              : null,
+          child: const Text('Download PDF'),
+        ),
+        MenuItemButton(
+          leadingIcon: const Icon(Icons.grid_on_outlined),
+          onPressed: hasItems
+              ? () => downloadProjectCsv(context, project)
+              : null,
+          child: const Text('Download for Excel (CSV)'),
+        ),
+        MenuItemButton(
+          leadingIcon: const Icon(Icons.content_copy_outlined),
+          onPressed: hasItems ? () => copyProjectText(context, project) : null,
+          child: const Text('Copy as text'),
+        ),
+        MenuItemButton(
+          leadingIcon: const Icon(Icons.table_chart_outlined),
+          onPressed: hasItems && !exporting
+              ? () => sendProjectToSheet(context, project)
+              : null,
+          child: const Text('Send to Google Sheet'),
+        ),
+        const Divider(),
+        MenuItemButton(
+          leadingIcon: const Icon(Icons.delete_sweep_outlined),
+          onPressed: hasItems ? () => _clear(context) : null,
+          child: const Text('Remove all estimates'),
+        ),
+        MenuItemButton(
+          leadingIcon: const Icon(Icons.delete_outline),
+          onPressed: () => confirmDeleteProject(context, project),
+          child: const Text('Delete project'),
+        ),
+      ],
+    );
+  }
+}
+
+/// The project total on the brand panel, with how it splits.
+class _BudgetHero extends StatelessWidget {
+  const _BudgetHero({required this.project});
+
+  final Project project;
+
+  @override
+  Widget build(BuildContext context) {
+    final b = project.breakdown;
+    final bid = project.costs.isContractorBid;
+    final count = project.items.length;
+    final markups = b.contingency + b.overhead + b.profit + b.vat;
+    return InkPanel(
+      child: Builder(
+        builder: (context) {
+          final theme = Theme.of(context);
+          final palette = AppPalette.of(context);
+          Widget stat(String label, double value) => MergeSemantics(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: palette.onInkMuted,
+                  ),
+                ),
+                Text(
+                  formatMoney(value),
+                  style: tabular(
+                    theme.textTheme.titleSmall?.copyWith(color: palette.onInk),
+                  ),
+                ),
+              ],
+            ),
+          );
+          final trades = [
+            for (final (trade, _) in tradeSections)
+              if ((b.materialsByTrade[trade] ?? 0) > 0)
+                (
+                  label: trade?.label ?? 'Other',
+                  value: b.materialsByTrade[trade]!,
+                  color: palette.category(trade).chart,
+                ),
+          ];
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              MergeSemantics(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${bid ? 'Total contract price' : 'Project budget'} · '
+                      '${count == 1 ? '1 item' : '$count items'}',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: palette.onInkMuted,
+                      ),
+                    ),
+                    const SizedBox(height: Space.xs),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        formatMoney(b.total),
+                        style: tabular(
+                          theme.textTheme.displaySmall?.copyWith(
+                            color: palette.inkAccent,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: Space.lg),
+              Wrap(
+                spacing: Space.xl,
+                runSpacing: Space.md,
+                children: [
+                  stat('Materials', b.materials),
+                  stat('Labour and tools', b.labour + b.tools + b.hauling),
+                  stat(bid ? 'Markups and VAT' : 'Contingency', markups),
+                ],
+              ),
+              if (trades.length > 1) ...[
+                const SizedBox(height: Space.xl),
+                Semantics(
+                  label: 'Materials by trade',
+                  child: ProportionBar(format: formatMoney, parts: trades),
+                ),
+              ],
+              const SizedBox(height: Space.xl),
+              Wrap(
+                spacing: Space.sm,
+                runSpacing: Space.sm,
+                children: [
+                  FilledButton.icon(
+                    onPressed: () => downloadProjectPdf(context, project),
+                    icon: const Icon(Icons.picture_as_pdf_outlined),
+                    label: const Text('Download PDF'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () => downloadProjectCsv(context, project),
+                    icon: const Icon(Icons.grid_on_outlined),
+                    label: const Text('Excel'),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// The estimates by trade, as in a bill of quantities.
+class _ItemsTab extends StatelessWidget {
+  const _ItemsTab({required this.project});
+
+  final Project project;
+
+  void _remove(BuildContext context, Estimate e) {
+    final controller = context.read<ProjectsController>();
+    final removed = controller.removeItem(e.id, projectId: project.id);
+    if (removed == null) return;
+    showMessage(
+      context,
+      'Removed ${e.label}.',
+      action: SnackBarAction(
+        label: 'Undo',
+        onPressed: () => controller.restoreItem(
+          removed.index,
+          removed.estimate,
+          projectId: project.id,
+        ),
+      ),
+    );
+  }
+
+  void _open(BuildContext context, Estimate e) {
+    final spec = materialById(e.materialId);
+    if (spec != null) context.go(Routes.material(spec, fromEstimate: e.id));
+  }
+
+  void _details(BuildContext context, Estimate e) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (sheet) => SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(
+          Space.xl,
+          Space.sm,
+          Space.xl,
+          Space.xl,
+        ),
+        child: _ItemDetails(
+          estimate: e,
+          onOpen: materialById(e.materialId) == null
+              ? null
+              : () {
+                  Navigator.of(sheet).pop();
+                  _open(context, e);
+                },
+          onRemove: () {
+            Navigator.of(sheet).pop();
+            _remove(context, e);
+          },
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final g in groupByTrade(project.items)) ...[
+          SectionHeader(
+            '${g.letter}. ${tradeLabel(g.trade)}',
+            trailing: Text(
+              formatMoney(
+                g.items.fold<double>(0, (sum, e) => sum + e.grandTotal),
+              ),
+              style: tabular(theme.textTheme.titleSmall),
+            ),
+            padding: const EdgeInsets.fromLTRB(0, Space.md, 0, Space.sm),
+          ),
+          for (final (i, e) in g.items.indexed) ...[
+            if (i > 0) const SizedBox(height: Space.sm),
+            EstimateTile(
+              estimate: e,
+              onTap: () => _details(context, e),
+              trailing: IconButton(
+                tooltip: 'Remove ${e.label}',
+                icon: const Icon(Icons.delete_outline),
+                onPressed: () => _remove(context, e),
+              ),
+            ),
+          ],
+          const SizedBox(height: Space.md),
+        ],
+      ],
+    );
+  }
+}
+
+class _ItemDetails extends StatelessWidget {
+  const _ItemDetails({
+    required this.estimate,
+    required this.onOpen,
+    required this.onRemove,
+  });
+
+  final Estimate estimate;
+  final VoidCallback? onOpen;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final e = estimate;
+    final spec = materialById(e.materialId);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            if (spec != null)
+              IconTile.material(spec, size: 48)
+            else
+              const IconTile(icon: Icons.inventory_2_outlined, size: 48),
+            const SizedBox(width: Space.md),
+            Expanded(
+              child: Semantics(
+                header: true,
+                child: Text(e.label, style: theme.textTheme.titleLarge),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: Space.lg),
+        KeyValueLine(
+          '${formatQuantity(e.quantity, e.unit)} × ${formatMoney(e.unitPrice)}',
+          formatMoney(e.total),
+        ),
+        for (final l in e.companions) ...[
+          const Divider(),
+          KeyValueLine(
+            '${l.label}, ${formatNumber(l.quantity)} ${l.unit} × '
+            '${formatMoney(l.unitPrice)}',
+            formatMoney(l.total),
+          ),
+        ],
+        const Divider(),
+        KeyValueLine(
+          'Materials total',
+          formatMoney(e.grandTotal),
+          emphasize: true,
+        ),
+        const SizedBox(height: Space.xl),
+        Wrap(
+          spacing: Space.sm,
+          runSpacing: Space.sm,
+          children: [
+            if (onOpen != null)
+              FilledButton.icon(
+                onPressed: onOpen,
+                icon: const Icon(Icons.edit_outlined),
+                label: const Text('Open in calculator'),
+              ),
+            TextButton.icon(
+              style: TextButton.styleFrom(
+                foregroundColor: theme.colorScheme.error,
+              ),
+              onPressed: onRemove,
+              icon: const Icon(Icons.delete_outline),
+              label: const Text('Remove from project'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Everything to buy, merged across estimates and grouped like a
+/// hardware's price list.
+class _MaterialsTab extends StatelessWidget {
+  const _MaterialsTab({required this.project});
+
+  final Project project;
+
+  Future<void> _setPrice(BuildContext context, MaterialLine line) async {
+    final item = itemByKey(line.key);
+    final price = await showPriceDialog(
+      context,
+      title: line.label,
+      unit: item?.unit ?? line.unit,
+      initial: line.unitPrice,
+      suggested: item == null
+          ? 'Updates this project'
+          : 'Updates this project and your price book',
+    );
+    if (price == null || !context.mounted) return;
+    context.read<ProjectsController>().setPrice(project.id, line.key, price);
+    if (item != null) {
+      context.read<PriceBookController>().setPrice(item.key, price);
+    }
+  }
+
+  Future<void> _copy(BuildContext context, List<MaterialLine> lines) async {
+    final text = StringBuffer('${project.name}: materials to buy\n');
+    ItemGroup? group;
+    for (final l in lines) {
+      if (l.group != group) {
+        group = l.group;
+        text.writeln('\n${group.label}');
+      }
+      text.writeln('• ${l.label}: ${formatNumber(l.quantity)} ${l.unit}');
+    }
+    await Clipboard.setData(ClipboardData(text: text.toString()));
+    if (context.mounted) showMessage(context, 'Copied the shopping list.');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final lines = project.materials;
+    final groups = <ItemGroup, List<MaterialLine>>{};
+    for (final l in lines) {
+      groups.putIfAbsent(l.group, () => []).add(l);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Every material merged across the estimates. Tap a line to '
+                'change its price.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            const SizedBox(width: Space.sm),
+            TextButton.icon(
+              onPressed: () => _copy(context, lines),
+              icon: const Icon(Icons.content_copy_outlined, size: 18),
+              label: const Text('Copy list'),
+            ),
+          ],
+        ),
+        for (final MapEntry(key: group, value: members) in groups.entries) ...[
+          SectionHeader(
+            group.label,
+            trailing: Text(
+              formatMoney(members.fold<double>(0, (s, l) => s + l.amount)),
+              style: tabular(theme.textTheme.titleSmall),
+            ),
+            padding: const EdgeInsets.fromLTRB(0, Space.lg, 0, Space.sm),
+          ),
+          Card(
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                for (final (i, l) in members.indexed) ...[
+                  if (i > 0) const Divider(height: 1, indent: Space.lg),
+                  Semantics(
+                    button: true,
+                    hint: 'Change price',
+                    child: InkWell(
+                      onTap: () => _setPrice(context, l),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: Space.lg,
+                          vertical: Space.md,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l.label,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    l.amount <= 0
+                                        ? '${formatNumber(l.quantity)} '
+                                              '${l.unit} · no price yet'
+                                        : '${formatNumber(l.quantity)} '
+                                              '${l.unit} × '
+                                              '${formatMoney(l.unitPrice)}',
+                                    style: tabular(
+                                      theme.textTheme.bodySmall?.copyWith(
+                                        color: l.amount <= 0
+                                            ? scheme.error
+                                            : scheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: Space.md),
+                            Text(
+                              l.amount <= 0
+                                  ? 'Set price'
+                                  : formatMoney(l.amount),
+                              style: l.amount <= 0
+                                  ? theme.textTheme.labelLarge?.copyWith(
+                                      color: scheme.primary,
+                                    )
+                                  : tabular(
+                                      theme.textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+        const SizedBox(height: Space.lg),
+        KeyValueLine(
+          'Materials total',
+          formatMoney(project.breakdown.materials),
+          emphasize: true,
+        ),
+      ],
+    );
+  }
+}
+
+enum _Preset { owner, contractor, dpwh, custom }
+
+/// Labour, markups and taxes on top of the materials, with presets for an
+/// owner's budget, a private contractor's bid and a DPWH estimate.
+class _BudgetEditor extends StatelessWidget {
+  const _BudgetEditor({super.key, required this.project});
+
+  final Project project;
+
+  _Preset _presetOf(CostSettings c, double direct) {
+    if (c == CostSettings.owner.keepingJobCosts(c)) return _Preset.owner;
+    if (c == CostSettings.contractor.keepingJobCosts(c)) {
+      return _Preset.contractor;
+    }
+    if (c == CostSettings.dpwh(direct, from: c)) return _Preset.dpwh;
+    return _Preset.custom;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final c = project.costs;
+    final b = project.breakdown;
+    final controller = context.read<ProjectsController>();
+    void update(CostSettings costs) =>
+        controller.updateCosts(project.id, costs);
+    final preset = _presetOf(c, b.materials + b.labour + b.hauling);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(Space.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Semantics(
+              header: true,
+              child: Text('Budget', style: theme.textTheme.titleMedium),
+            ),
+            const SizedBox(height: Space.md),
+            SegmentedButton<_Preset>(
+              showSelectedIcon: false,
+              emptySelectionAllowed: true,
+              segments: const [
+                ButtonSegment(value: _Preset.owner, label: Text('Owner')),
+                ButtonSegment(
+                  value: _Preset.contractor,
+                  label: Text('Contractor'),
+                ),
+                ButtonSegment(value: _Preset.dpwh, label: Text('DPWH')),
+              ],
+              selected: {if (preset != _Preset.custom) preset},
+              onSelectionChanged: (s) {
+                if (s.isEmpty) return;
+                switch (s.first) {
+                  case _Preset.owner:
+                    update(CostSettings.owner.keepingJobCosts(c));
+                  case _Preset.contractor:
+                    update(CostSettings.contractor.keepingJobCosts(c));
+                  case _Preset.dpwh:
+                    // Tools change the direct cost; size the bracket on
+                    // materials, labour and hauling.
+                    update(
+                      CostSettings.dpwh(
+                        b.materials + b.labour + b.hauling,
+                        from: c,
+                      ),
+                    );
+                  case _Preset.custom:
+                    break;
+                }
+              },
+            ),
+            const SizedBox(height: Space.sm),
+            Text(
+              switch (preset) {
+                _Preset.owner =>
+                  'For an owner hiring workers directly: labour and a '
+                      'contingency, no contractor markups.',
+                _Preset.contractor =>
+                  'A private contractor\'s quotation: minor tools, overhead, '
+                      'profit and 12% VAT.',
+                _Preset.dpwh =>
+                  'DPWH practice (DO 197 s.2016): OCM and profit by project '
+                      'size, 10% minor tools and 5% VAT.',
+                _Preset.custom => 'Your own percentages.',
+              },
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: Space.lg),
+            _FieldPair(
+              left: _NumberSetting(
+                label: 'Labour',
+                suffix: '% of materials',
+                value: c.labourPct,
+                onChanged: (v) => update(c.copyWith(labourPct: v)),
+              ),
+              right: _NumberSetting(
+                label: 'Minor tools',
+                suffix: '% of labour',
+                value: c.toolsPct,
+                onChanged: (v) => update(c.copyWith(toolsPct: v)),
+              ),
+            ),
+            const SizedBox(height: Space.md),
+            _FieldPair(
+              left: _NumberSetting(
+                label: 'Hauling and delivery',
+                prefix: '₱ ',
+                value: c.hauling,
+                max: 100000000,
+                onChanged: (v) => update(c.copyWith(hauling: v)),
+              ),
+              right: _NumberSetting(
+                label: 'Contingency',
+                suffix: '%',
+                value: c.contingencyPct,
+                onChanged: (v) => update(c.copyWith(contingencyPct: v)),
+              ),
+            ),
+            const SizedBox(height: Space.md),
+            _FieldPair(
+              left: _NumberSetting(
+                label: 'Overhead (OCM)',
+                suffix: '%',
+                value: c.overheadPct,
+                onChanged: (v) => update(c.copyWith(overheadPct: v)),
+              ),
+              right: _NumberSetting(
+                label: 'Profit',
+                suffix: '%',
+                value: c.profitPct,
+                onChanged: (v) => update(c.copyWith(profitPct: v)),
+              ),
+            ),
+            const SizedBox(height: Space.md),
+            _FieldPair(
+              left: _NumberSetting(
+                label: 'VAT',
+                suffix: '%',
+                value: c.vatPct,
+                onChanged: (v) => update(c.copyWith(vatPct: v)),
+              ),
+              right: const SizedBox.shrink(),
+            ),
+            Theme(
+              data: theme.copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                childrenPadding: const EdgeInsets.only(bottom: Space.md),
+                title: Text(
+                  'Labour by trade',
+                  style: theme.textTheme.titleSmall,
+                ),
+                subtitle: Text(
+                  'Leave empty to use ${formatNumber(c.labourPct)}%',
+                  style: theme.textTheme.bodySmall,
+                ),
+                children: [
+                  for (final trade in MaterialCategory.values) ...[
+                    _NumberSetting(
+                      label: '${trade.label} labour',
+                      suffix: '% of materials',
+                      value: c.labourByTrade[trade.name],
+                      onChanged: (v) {
+                        final map = {...c.labourByTrade};
+                        if (v == null) {
+                          map.remove(trade.name);
+                        } else {
+                          map[trade.name] = v;
+                        }
+                        update(c.copyWith(labourByTrade: map));
+                      },
+                      clearable: true,
+                    ),
+                    const SizedBox(height: Space.md),
+                  ],
+                ],
+              ),
+            ),
+            const Divider(),
+            for (final (label, amount, strong: strong) in costLines(project))
+              KeyValueLine(
+                label,
+                formatMoney(amount),
+                emphasize: strong,
+                padding: const EdgeInsets.symmetric(vertical: 6),
+              ),
+            const SizedBox(height: Space.sm),
+            Text(
+              'Labour as a share of materials is a planning rule of thumb, '
+              'about 30–45% for houses. Use your own quotes when you have '
+              'them.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FieldPair extends StatelessWidget {
+  const _FieldPair({required this.left, required this.right});
+
+  final Widget left;
+  final Widget right;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Expanded(child: left),
+      const SizedBox(width: Space.md),
+      Expanded(child: right),
+    ],
+  );
+}
+
+/// A number setting that saves as the user types.
+class _NumberSetting extends StatefulWidget {
+  const _NumberSetting({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.suffix,
+    this.prefix,
+    this.max = 1000,
+    this.clearable = false,
+  });
+
+  final String label;
+  final double? value;
+  final String? suffix;
+  final String? prefix;
+  final double max;
+
+  /// Whether an empty field means "not set" (null) rather than 0.
+  final bool clearable;
+  final ValueChanged<double?> onChanged;
+
+  @override
+  State<_NumberSetting> createState() => _NumberSettingState();
+}
+
+class _NumberSettingState extends State<_NumberSetting> {
+  late final _controller = TextEditingController(text: _text(widget.value));
+  String? _error;
+
+  static String _text(double? v) => v == null
+      ? ''
+      : v == v.roundToDouble()
+      ? v.toInt().toString()
+      : v.toString();
+
+  @override
+  void didUpdateWidget(_NumberSetting old) {
+    super.didUpdateWidget(old);
+    final typed = double.tryParse(_controller.text.trim());
+    final shown = _controller.text.trim().isEmpty && !widget.clearable
+        ? 0.0
+        : typed;
+    if (shown != widget.value) _controller.text = _text(widget.value);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _changed(String raw) {
+    final text = raw.trim();
+    if (text.isEmpty) {
+      setState(() => _error = null);
+      widget.onChanged(widget.clearable ? null : 0);
+      return;
+    }
+    final v = double.tryParse(text);
+    if (v == null || v < 0 || v > widget.max) {
+      setState(() => _error = 'Enter 0 to ${formatNumber(widget.max)}');
+      return;
+    }
+    setState(() => _error = null);
+    widget.onChanged(v);
+  }
+
+  @override
+  Widget build(BuildContext context) => TextField(
+    controller: _controller,
+    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+    inputFormatters: [
+      const DecimalInputFormatter(),
+      LengthLimitingTextInputFormatter(12),
+    ],
+    style: tabular(Theme.of(context).textTheme.bodyLarge),
+    decoration: InputDecoration(
+      labelText: widget.label,
+      suffixText: widget.suffix,
+      prefixText: widget.prefix,
+      errorText: _error,
+      isDense: true,
+    ),
+    onChanged: _changed,
+  );
+}

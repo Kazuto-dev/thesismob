@@ -9,6 +9,8 @@ import 'package:thesismob/data/estimate.dart';
 import 'package:thesismob/data/sheets_export_service.dart';
 import 'package:thesismob/materials/material_spec.dart';
 import 'package:thesismob/state/estimates_controller.dart';
+import 'package:thesismob/state/price_book_controller.dart';
+import 'package:thesismob/state/projects_controller.dart';
 
 const phone = Size(400, 900);
 const tablet = Size(820, 1180);
@@ -40,9 +42,36 @@ Future<void> pumpApp(
 EstimatesController estimatesOf(WidgetTester tester) =>
     tester.element(find.byType(Scaffold).last).read<EstimatesController>();
 
+ProjectsController projectsOf(WidgetTester tester) =>
+    tester.element(find.byType(Scaffold).last).read<ProjectsController>();
+
+PriceBookController pricesOf(WidgetTester tester) =>
+    tester.element(find.byType(Scaffold).last).read<PriceBookController>();
+
 Finder field(String label) => find.widgetWithText(TextFormField, label);
 
-/// Saved-summary preferences holding [estimates].
+/// Preferences holding one active project with [estimates].
+Map<String, Object> projectPrefs(
+  List<Estimate> estimates, {
+  String name = 'Santos residence',
+  Map<String, Object?> costs = const {},
+}) => {
+  'projects_v1': jsonEncode([
+    {
+      'id': 'p1',
+      'name': name,
+      'client': 'Maria Santos',
+      'location': 'Antipolo, Rizal',
+      'createdAt': '2026-10-01T09:00:00.000',
+      'updatedAt': '2026-10-09T09:00:00.000',
+      'items': [for (final e in estimates) e.toJson()],
+      if (costs.isNotEmpty) 'costs': costs,
+    },
+  ]),
+  'active_project_v1': 'p1',
+};
+
+/// Preferences from before projects, holding a summary of [estimates].
 Map<String, Object> summaryPrefs(List<Estimate> estimates) => {
   'estimates_summary_v2': jsonEncode([for (final e in estimates) e.toJson()]),
 };

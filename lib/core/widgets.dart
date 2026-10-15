@@ -220,7 +220,13 @@ class IconTile extends StatelessWidget {
   }) : assert(image != null || icon != null);
 
   IconTile.material(MaterialSpec spec, {Key? key, double size = 48})
-    : this(key: key, category: spec.category, image: spec.image, size: size);
+    : this(
+        key: key,
+        category: spec.category,
+        image: spec.image,
+        icon: spec.icon,
+        size: size,
+      );
 
   IconTile.category(
     MaterialCategory category, {

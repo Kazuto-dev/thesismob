@@ -61,11 +61,32 @@ class SheetSettingsController extends ChangeNotifier {
     _exporting = true;
     notifyListeners();
     try {
-      return await _exporter.appendRows(
+      final rows = [for (final e in estimates) ...e.toSheetRows()];
+      // The proxy takes at most 200 rows a request.
+      var result = await _exporter.appendRows(
         spreadsheetId: settings.spreadsheetId,
         sheetName: settings.sheetName,
-        rows: [for (final e in estimates) e.toSheetRow()],
+        rows: rows.take(SheetsExportService.maxRows).toList(),
       );
+      for (
+        var start = SheetsExportService.maxRows;
+        start < rows.length && result.status == SheetsExportStatus.success;
+        start += SheetsExportService.maxRows
+      ) {
+        result = await _exporter.appendRows(
+          spreadsheetId: settings.spreadsheetId,
+          sheetName: settings.sheetName,
+          rows: rows.skip(start).take(SheetsExportService.maxRows).toList(),
+        );
+      }
+      if (result.status == SheetsExportStatus.success &&
+          rows.length > SheetsExportService.maxRows) {
+        return SheetsExportResult(
+          SheetsExportStatus.success,
+          'Added ${rows.length} rows to "${settings.sheetName}".',
+        );
+      }
+      return result;
     } finally {
       _exporting = false;
       notifyListeners();

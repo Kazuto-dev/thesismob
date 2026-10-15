@@ -7,7 +7,7 @@ import '../../core/layout.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
 import '../../router.dart';
-import '../../state/estimates_controller.dart';
+import '../../state/projects_controller.dart';
 
 class _Destination {
   const _Destination(this.label, this.icon, this.selectedIcon);
@@ -20,7 +20,7 @@ class _Destination {
 const _destinations = [
   _Destination('Estimate', Icons.calculate_outlined, Icons.calculate),
   _Destination('History', Icons.history, Icons.history),
-  _Destination('Summary', Icons.receipt_long_outlined, Icons.receipt_long),
+  _Destination('Project', Icons.request_quote_outlined, Icons.request_quote),
   _Destination('Settings', Icons.settings_outlined, Icons.settings),
 ];
 
@@ -39,11 +39,11 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = WindowSize.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final count = context.select<EstimatesController, int>(
-      (c) => c.summary.length,
+    final count = context.select<ProjectsController, int>(
+      (c) => c.active.items.length,
     );
 
-    Widget icon(_Destination d, IconData data) => d.label == 'Summary'
+    Widget icon(_Destination d, IconData data) => d.label == 'Project'
         ? Badge.count(
             count: count,
             isLabelVisible: count > 0,
@@ -120,26 +120,28 @@ class AppShell extends StatelessWidget {
   }
 }
 
-/// The running summary total at the foot of the desktop rail.
+/// The active project's total at the foot of the desktop rail.
 class _ProjectTotal extends StatelessWidget {
   const _ProjectTotal();
 
   @override
   Widget build(BuildContext context) {
-    final (count, total) = context.select<EstimatesController, (int, double)>(
-      (c) => (c.summary.length, c.summaryTotal),
-    );
+    final (name, count, total) = context
+        .select<ProjectsController, (String, int, double)>(
+          (c) =>
+              (c.active.name, c.active.items.length, c.active.breakdown.total),
+        );
     if (count == 0) return const SizedBox.shrink();
     final theme = Theme.of(context);
     return Semantics(
       button: true,
-      label: 'Project total ${formatMoney(total)}, $count items. Open summary',
+      label: '$name, ${formatMoney(total)}, $count items. Open project',
       excludeSemantics: true,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(Radii.lg),
-          onTap: () => context.go(Routes.summary),
+          onTap: () => context.go(Routes.project),
           child: InkPanel(
             padding: const EdgeInsets.all(Space.lg),
             borderRadius: BorderRadius.circular(Radii.lg),
@@ -147,7 +149,9 @@ class _ProjectTotal extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Project total',
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: AppPalette.of(context).onInkMuted,
                   ),

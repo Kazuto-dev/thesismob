@@ -37,9 +37,18 @@ class SheetsExportService {
     : _client = client ?? http.Client(),
       endpoint = endpoint ?? const String.fromEnvironment('SHEETS_PROXY_URL');
 
-  /// Column headers written to an empty sheet. Unchanged from the original
-  /// app so existing sheets keep lining up.
-  static const header = ['Materials', 'Area(sqm)', 'Quantity', 'Cost(₱)'];
+  /// Column headers written to an empty sheet: each estimate's main
+  /// material, then its companion materials, indented.
+  static const header = [
+    'Item',
+    'Quantity',
+    'Unit',
+    'Unit cost (₱)',
+    'Amount (₱)',
+  ];
+
+  /// Rows the proxy accepts in one request.
+  static const maxRows = 200;
 
   /// The account users share their spreadsheet with. It is an identifier, not
   /// a secret.

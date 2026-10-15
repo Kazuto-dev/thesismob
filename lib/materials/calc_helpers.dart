@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import '../core/format.dart';
+import 'items.dart';
 import 'material_spec.dart';
 
 /// Rounds a count up while ignoring floating-point noise, so that
@@ -115,13 +116,44 @@ const sidesField = ChoiceField(
   options: [ChoiceOption('1', '1 side', 1), ChoiceOption('2', '2 sides', 2)],
 );
 
+/// How a companion reads in a result or a bill of quantities.
+extension CompanionText on Companion {
+  Item get item => itemByKey(itemKey)!;
+
+  String get name => label ?? item.name;
+
+  /// The quantity with the item's unit, e.g. "12 bags".
+  String get amount => '${formatNumber(quantity)} ${item.unitFor(quantity)}';
+}
+
+/// A companion material, rounded up to an amount that can be bought.
+Companion buy(String itemKey, double quantity, {String? label}) {
+  final item = itemByKey(itemKey);
+  if (item == null) {
+    throw ArgumentError.value(itemKey, 'itemKey', 'Unknown item');
+  }
+  return Companion(itemKey, item.purchasable(quantity), label: label);
+}
+
+/// A lump sum worked out from the main cost, such as fittings at 40% of
+/// the pipe cost. Bought as one lot at [amount] pesos.
+Companion allowance(String itemKey, double amount, {String? label}) =>
+    Companion(
+      itemKey,
+      1,
+      label: label,
+      unitPrice: (amount * 100).roundToDouble() / 100,
+    );
+
 /// Calculation for fixtures bought by the piece: quantity × price, with
-/// [companions] listing what each piece also needs.
+/// [companions] listing the price book items each piece also needs and
+/// how many of each.
 Calculation perPiece(
   String name, {
   List<String> descriptors = const [],
   QuantityUnit unit = QuantityUnit.pieces,
-  List<(String, int)> companions = const [],
+  List<(String, double)> companions = const [],
+  String? itemKey,
   String? note,
 }) => (input) {
   final quantity = input['quantity'];
@@ -130,9 +162,9 @@ Calculation perPiece(
     quantity: quantity,
     unit: unit,
     unitPrice: input['price'],
+    itemKey: itemKey,
     companions: [
-      for (final (label, each) in companions)
-        ResultDetail(label, formatCount(quantity * each, 'pc', 'pcs')),
+      for (final (key, each) in companions) buy(key, quantity * each),
     ],
     note: note,
   );
