@@ -114,11 +114,18 @@ final paint = MaterialSpec(
     NumberField(
       id: 'length',
       label: 'Surface length',
+      typical: (min: 0.3, max: 300),
       unit: 'm',
       hint: 'Add up the lengths of all walls to paint',
       max: 10000,
     ),
-    NumberField(id: 'height', label: 'Surface height', unit: 'm', max: 1000),
+    NumberField(
+      id: 'height',
+      label: 'Surface height',
+      typical: (min: 0.2, max: 12),
+      unit: 'm',
+      max: 1000,
+    ),
     openingsField,
     NumberField(
       id: 'price',
@@ -412,18 +419,21 @@ final tiles = MaterialSpec(
     const NumberField(
       id: 'length',
       label: 'Surface length',
+      typical: (min: 0.3, max: 300),
       unit: 'm',
       max: 10000,
     ),
     const NumberField(
       id: 'width',
       label: 'Surface width',
+      typical: (min: 0.2, max: 60),
       unit: 'm',
       max: 10000,
     ),
     const NumberField(
       id: 'skirting',
       label: 'Skirting length',
+      typical: (min: 0.3, max: 300),
       unit: 'm',
       hint: 'Optional. Room perimeter less doors, for 10 cm skirting',
       optional: true,
@@ -711,6 +721,7 @@ final roof = MaterialSpec(
     const NumberField(
       id: 'eave',
       label: 'Roof length',
+      typical: (min: 1, max: 100),
       unit: 'm',
       hint: 'Along the eaves, overhangs included',
       max: 10000,
@@ -718,6 +729,7 @@ final roof = MaterialSpec(
     NumberField(
       id: 'width',
       label: 'Roof width',
+      typical: (min: 1, max: 100),
       unit: 'm',
       hint: 'Across the plan, overhangs included',
       max: 10000,
@@ -726,6 +738,7 @@ final roof = MaterialSpec(
     NumberField(
       id: 'rafter',
       label: 'Rafter length',
+      typical: (min: 0.5, max: 20),
       unit: 'm',
       hint: 'From the eaves to the ridge, overhang included',
       max: 1000,
@@ -734,6 +747,7 @@ final roof = MaterialSpec(
     NumberField(
       id: 'downspout',
       label: 'Downspout height',
+      typical: (min: 1, max: 15),
       unit: 'm',
       hint: 'Optional. From the gutter to the ground, 3 m if empty',
       initial: '3',
@@ -1179,8 +1193,20 @@ final carpet = MaterialSpec(
   priceRef: (s) =>
       PriceRef(s['type'] == 'tiles' ? 'carpet_tile_box' : 'carpet_m2'),
   numbers: [
-    const NumberField(id: 'length', label: 'Room length', unit: 'm', max: 1000),
-    const NumberField(id: 'width', label: 'Room width', unit: 'm', max: 1000),
+    const NumberField(
+      id: 'length',
+      label: 'Room length',
+      typical: (min: 0.5, max: 40),
+      unit: 'm',
+      max: 1000,
+    ),
+    const NumberField(
+      id: 'width',
+      label: 'Room width',
+      typical: (min: 0.5, max: 40),
+      unit: 'm',
+      max: 1000,
+    ),
     priceField('Price per m²', visibleWhen: (s) => s['type'] != 'tiles'),
     priceField(
       'Price per box',
@@ -1342,11 +1368,18 @@ final wallpaper = MaterialSpec(
     NumberField(
       id: 'width',
       label: 'Wall width',
+      typical: (min: 0.3, max: 100),
       unit: 'm',
       hint: 'Add up the widths of all walls to cover',
       max: 10000,
     ),
-    NumberField(id: 'height', label: 'Wall height', unit: 'm', max: 100),
+    NumberField(
+      id: 'height',
+      label: 'Wall height',
+      typical: (min: 0.5, max: 8),
+      unit: 'm',
+      max: 100,
+    ),
     NumberField(
       id: 'openings',
       label: 'Doors to skip',

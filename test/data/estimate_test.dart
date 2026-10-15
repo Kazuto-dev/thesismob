@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:thesismob/data/estimate.dart';
+import 'package:thesismob/materials/material_spec.dart';
 import 'package:thesismob/materials/catalog.dart';
 
 void main() {
@@ -92,5 +93,25 @@ void main() {
     expect(e.companions, isEmpty);
     expect(e.itemKey, isNull);
     expect(e.grandTotal, 9850);
+  });
+
+  test('a mark and a note are saved and shown in the title', () {
+    final e = Estimate(
+      id: 'e1',
+      materialId: 'footing',
+      label: 'Footing 1.2 × 1.2 m',
+      quantity: 1,
+      unit: QuantityUnit.cubicMetres,
+      unitPrice: 0,
+      total: 0,
+      createdAt: DateTime(2026, 10, 9),
+    ).copyWith(mark: 'F1', note: 'Four of these');
+    expect(e.title, 'F1 – Footing 1.2 × 1.2 m');
+    final back = Estimate.fromJson(e.toJson());
+    expect(back.mark, 'F1');
+    expect(back.note, 'Four of these');
+    expect(back.toSheetRows().first.first, 'F1 – Footing 1.2 × 1.2 m');
+    expect(back.copyWith(mark: '').title, 'Footing 1.2 × 1.2 m');
+    expect(back.copyWith(unitPrice: 5).mark, 'F1', reason: 'kept');
   });
 }

@@ -181,6 +181,7 @@ final bulb = MaterialSpec(
     NumberField(
       id: 'length',
       label: 'Room length',
+      typical: (min: 0.5, max: 40),
       unit: 'm',
       max: 1000,
       visibleWhen: _byRoom,
@@ -188,6 +189,7 @@ final bulb = MaterialSpec(
     NumberField(
       id: 'width',
       label: 'Room width',
+      typical: (min: 0.5, max: 40),
       unit: 'm',
       max: 1000,
       visibleWhen: _byRoom,
@@ -427,6 +429,7 @@ final outlet = MaterialSpec(
     NumberField(
       id: 'length',
       label: 'Room length',
+      typical: (min: 0.5, max: 40),
       unit: 'm',
       max: 1000,
       visibleWhen: _byRoom,
@@ -434,6 +437,7 @@ final outlet = MaterialSpec(
     NumberField(
       id: 'width',
       label: 'Room width',
+      typical: (min: 0.5, max: 40),
       unit: 'm',
       max: 1000,
       visibleWhen: _byRoom,

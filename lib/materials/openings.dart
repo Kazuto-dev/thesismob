@@ -174,6 +174,7 @@ final windows = MaterialSpec(
     const NumberField(
       id: 'width',
       label: 'Window width',
+      typical: (min: 0.2, max: 4),
       unit: 'm',
       hint: 'Of the opening, e.g. 1.20',
       max: 100,
@@ -181,6 +182,7 @@ final windows = MaterialSpec(
     const NumberField(
       id: 'height',
       label: 'Window height',
+      typical: (min: 0.2, max: 4),
       unit: 'm',
       hint: 'Of the opening, e.g. 1.20',
       max: 100,

@@ -15,12 +15,16 @@ class MaterialTile extends StatelessWidget {
     super.key,
     required this.spec,
     this.showCategory = false,
+    this.onTap,
   });
 
   final MaterialSpec spec;
 
   /// Names the category too, for search results that mix categories.
   final bool showCategory;
+
+  /// Defaults to opening the calculator.
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +33,7 @@ class MaterialTile extends StatelessWidget {
       button: true,
       child: TapCard(
         padding: const EdgeInsets.all(Space.md),
-        onTap: () => context.go(Routes.material(spec)),
+        onTap: onTap ?? () => context.go(Routes.material(spec)),
         child: Row(
           children: [
             IconTile.material(spec, size: 52),
@@ -112,23 +116,33 @@ class EstimateTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    e.label,
+                    e.title,
                     style: theme.textTheme.titleSmall,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    subtitle ??
-                        '${formatQuantity(e.quantity, e.unit)} × '
-                            '${formatMoney(e.unitPrice)}'
-                            '${e.companions.isEmpty ? '' : ' + ${e.companions.length} more'}',
+                    subtitle ?? estimateSummary(e),
                     style: tabular(
                       theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
+                  if (e.note != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        e.note!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontStyle: FontStyle.italic,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -143,6 +157,14 @@ class EstimateTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The quantity and price of an estimate's main material, and how many
+/// other materials come with it.
+String estimateSummary(Estimate e) {
+  final others = e.companions.length;
+  return '${formatQuantity(e.quantity, e.unit)} × ${formatMoney(e.unitPrice)}'
+      '${others == 0 ? '' : ' + $others other material${others == 1 ? '' : 's'}'}';
 }
 
 /// The category an estimate belongs to, or null for imported entries.

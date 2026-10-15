@@ -90,9 +90,22 @@ abstract final class Routes {
 
   static String category(MaterialCategory c) => '/category/${c.name}';
 
-  static String material(MaterialSpec m, {String? fromEstimate}) =>
-      '/category/${m.category.name}/${m.id}'
-      '${fromEstimate == null ? '' : '?estimate=$fromEstimate'}';
+  /// A calculator. With [fromEstimate], the form starts from that saved
+  /// estimate; with [inProject] too, it edits that project's item.
+  static String material(
+    MaterialSpec m, {
+    String? fromEstimate,
+    String? inProject,
+  }) {
+    final query = {
+      'estimate': ?fromEstimate,
+      if (fromEstimate != null) 'project': ?inProject,
+    };
+    return Uri(
+      path: '/category/${m.category.name}/${m.id}',
+      queryParameters: query.isEmpty ? null : query,
+    ).toString();
+  }
 }
 
 /// Where a link really leads: old bookmarks and short material links
@@ -185,6 +198,7 @@ GoRouter createRouter({
                           key: ValueKey(state.uri.toString()),
                           spec: spec,
                           fromEstimateId: state.uri.queryParameters['estimate'],
+                          editProjectId: state.uri.queryParameters['project'],
                         );
                       },
                     ),

@@ -147,6 +147,7 @@ final roughIn = MaterialSpec(
     NumberField(
       id: 'homeRun',
       label: 'Home run per circuit',
+      typical: (min: 2, max: 60),
       unit: 'm',
       hint: 'Conduit from the panel to the first box of each circuit',
       initial: '10',

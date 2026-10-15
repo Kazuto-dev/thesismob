@@ -26,8 +26,20 @@ final chb = MaterialSpec(
   blurb: 'Blocks for a wall, with mortar, plaster and rebar',
   keywords: const ['hollow blocks', 'CHB', 'block', 'wall', 'pader', 'masonry'],
   numbers: const [
-    NumberField(id: 'length', label: 'Wall length', unit: 'm', max: 10000),
-    NumberField(id: 'height', label: 'Wall height', unit: 'm', max: 100),
+    NumberField(
+      id: 'length',
+      label: 'Wall length',
+      typical: (min: 0.3, max: 300),
+      unit: 'm',
+      max: 10000,
+    ),
+    NumberField(
+      id: 'height',
+      label: 'Wall height',
+      typical: (min: 0.2, max: 8),
+      unit: 'm',
+      max: 100,
+    ),
     openingsField,
     NumberField(
       id: 'price',
@@ -260,8 +272,20 @@ final plywood = MaterialSpec(
   blurb: "4' × 8' sheets for a floor, wall or ceiling",
   keywords: const ['playwud', 'ceiling', 'kisame', 'marine plywood', 'board'],
   numbers: const [
-    NumberField(id: 'length', label: 'Surface length', unit: 'm', max: 10000),
-    NumberField(id: 'width', label: 'Surface width', unit: 'm', max: 10000),
+    NumberField(
+      id: 'length',
+      label: 'Surface length',
+      typical: (min: 0.3, max: 100),
+      unit: 'm',
+      max: 10000,
+    ),
+    NumberField(
+      id: 'width',
+      label: 'Surface width',
+      typical: (min: 0.3, max: 100),
+      unit: 'm',
+      max: 10000,
+    ),
     NumberField(
       id: 'price',
       label: 'Price per sheet',
@@ -384,6 +408,7 @@ final insulation = MaterialSpec(
     NumberField(
       id: 'eave',
       label: 'Roof length',
+      typical: (min: 1, max: 100),
       unit: 'm',
       hint: 'Along the eaves',
       max: 10000,
@@ -391,6 +416,7 @@ final insulation = MaterialSpec(
     NumberField(
       id: 'rafter',
       label: 'Rafter length',
+      typical: (min: 0.5, max: 20),
       unit: 'm',
       hint: 'From the eaves to the ridge, overhang included',
       max: 1000,
@@ -562,8 +588,20 @@ final ceiling = MaterialSpec(
     'carrying channel',
   ],
   numbers: const [
-    NumberField(id: 'length', label: 'Room length', unit: 'm', max: 1000),
-    NumberField(id: 'width', label: 'Room width', unit: 'm', max: 1000),
+    NumberField(
+      id: 'length',
+      label: 'Room length',
+      typical: (min: 0.5, max: 40),
+      unit: 'm',
+      max: 1000,
+    ),
+    NumberField(
+      id: 'width',
+      label: 'Room width',
+      typical: (min: 0.5, max: 40),
+      unit: 'm',
+      max: 1000,
+    ),
     NumberField(
       id: 'price',
       label: 'Price per board',

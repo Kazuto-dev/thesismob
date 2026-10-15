@@ -429,7 +429,7 @@ class _AppearanceSection extends StatelessWidget {
     final appearance = context.watch<AppearanceController>();
     return _Section(
       icon: Icons.palette_outlined,
-      title: 'Appearance',
+      title: 'Appearance and units',
       children: [
         SizedBox(
           width: double.infinity,
@@ -455,6 +455,31 @@ class _AppearanceSection extends StatelessWidget {
             selected: {appearance.mode},
             onSelectionChanged: (s) => appearance.setMode(s.first),
           ),
+        ),
+        const SizedBox(height: Space.lg),
+        Text(
+          'Measure lengths in',
+          style: Theme.of(context).textTheme.labelLarge,
+        ),
+        const SizedBox(height: Space.sm),
+        SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<LengthUnit>(
+            showSelectedIcon: false,
+            segments: const [
+              ButtonSegment(value: LengthUnit.metres, label: Text('Metres')),
+              ButtonSegment(value: LengthUnit.feet, label: Text('Feet')),
+            ],
+            selected: {appearance.lengthUnit},
+            onSelectionChanged: (s) => appearance.setLengthUnit(s.first),
+          ),
+        ),
+        const SizedBox(height: Space.sm),
+        Text(
+          'Calculators take lengths in feet when you choose feet. Results, '
+          'documents and prices stay metric, as suppliers sell them.',
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
       ],
     );

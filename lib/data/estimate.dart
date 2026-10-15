@@ -98,6 +98,8 @@ class Estimate {
     this.choices = const {},
     this.itemKey,
     this.companions = const [],
+    this.mark,
+    this.note,
   });
 
   /// Builds an estimate from a calculation, pricing its companions with
@@ -182,6 +184,8 @@ class Estimate {
       },
       itemKey: json['itemKey'] is String ? json['itemKey'] as String : null,
       companions: List.unmodifiable(companions),
+      mark: _optionalText(json['mark']),
+      note: _optionalText(json['note']),
     );
   }
 
@@ -215,6 +219,25 @@ class Estimate {
   /// Priced companion materials, such as cement and sand for blocks.
   final List<EstimateLine> companions;
 
+  /// The user's name for this item in a project, such as "F1" or "Kitchen
+  /// wall".
+  final String? mark;
+
+  /// The user's note on this item, printed in the bill of quantities.
+  final String? note;
+
+  /// The mark and the label, as shown in lists and documents.
+  String get title => mark == null ? label : '$mark – $label';
+
+  /// Calculator fields that hold the main material's price.
+  static const _priceInputs = {'price', 'piecePrice', 'tankPrice'};
+
+  static String? _optionalText(Object? value) {
+    if (value is! String) return null;
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
   /// Cost of the companion materials.
   double get companionsTotal =>
       _centavos(companions.fold<double>(0, (sum, l) => sum + l.total));
@@ -232,10 +255,14 @@ class Estimate {
       mapEquals(inputs, other.inputs) &&
       mapEquals(choices, other.choices);
 
+  /// A copy with changes. Pass an empty string as [mark] or [note] to
+  /// clear it.
   Estimate copyWith({
     String? id,
     double? unitPrice,
     List<EstimateLine>? companions,
+    String? mark,
+    String? note,
   }) {
     final price = unitPrice ?? this.unitPrice;
     return Estimate(
@@ -248,10 +275,21 @@ class Estimate {
       unitPrice: price,
       total: unitPrice == null ? total : _centavos(quantity * price),
       createdAt: createdAt,
-      inputs: inputs,
+      // The price typed into the calculator follows, so the item reopens
+      // at its new price.
+      inputs: unitPrice == null
+          ? inputs
+          : Map.unmodifiable({
+              for (final MapEntry(:key, :value) in inputs.entries)
+                key: _priceInputs.contains(key) && value == this.unitPrice
+                    ? unitPrice
+                    : value,
+            }),
       choices: choices,
       itemKey: itemKey,
       companions: companions ?? this.companions,
+      mark: mark == null ? this.mark : _optionalText(mark),
+      note: note == null ? this.note : _optionalText(note),
     );
   }
 
@@ -261,7 +299,7 @@ class Estimate {
   /// Rows for Google Sheets: the main material, then each companion, as
   /// Item, Quantity, Unit, Unit cost, Amount.
   List<List<Object?>> toSheetRows() => [
-    [label, quantity, unit.labelFor(quantity), unitPrice, total],
+    [title, quantity, unit.labelFor(quantity), unitPrice, total],
     for (final l in companions)
       ['  ${l.label}', l.quantity, l.unit, l.unitPrice, l.total],
   ];
@@ -281,5 +319,7 @@ class Estimate {
     if (itemKey != null) 'itemKey': itemKey,
     if (companions.isNotEmpty)
       'companions': [for (final l in companions) l.toJson()],
+    if (mark != null) 'mark': mark,
+    if (note != null) 'note': note,
   };
 }

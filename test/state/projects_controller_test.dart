@@ -142,4 +142,38 @@ void main() {
     expect(c.import([mine, other]), 1);
     expect(c.projects, hasLength(2));
   });
+
+  test('items can be duplicated, moved within a group and named', () async {
+    final (c, _) = await setup();
+    final a = estimate(total: 1);
+    final b = estimate(total: 2);
+    final other = Estimate.fromJson({
+      ...estimate(total: 3).toJson(),
+      'materialId': 'wires',
+    });
+    c
+      ..add(a)
+      ..add(other)
+      ..add(b);
+    List<String> ids() => [for (final e in c.active.items) e.id];
+
+    final copy = c.duplicateItem(a.id)!;
+    expect(ids(), [a.id, copy.id, other.id, b.id]);
+    expect(copy.total, a.total);
+
+    // Moving skips items of another group.
+    Object? group(Estimate e) => e.materialId;
+    expect(c.moveItem(b.id, up: true, groupOf: group), isTrue);
+    expect(ids(), [a.id, b.id, other.id, copy.id]);
+    expect(c.moveItem(a.id, up: true, groupOf: group), isFalse);
+    expect(c.moveItem(other.id, up: false, groupOf: group), isFalse);
+
+    c.labelItem(a.id, mark: ' F1 ', note: 'Grid A-1');
+    expect(c.active.items.first.mark, 'F1');
+    expect(c.active.items.first.note, 'Grid A-1');
+    expect(c.active.items.first.title, 'F1 – CHB 4"');
+    c.labelItem(a.id, mark: '', note: '');
+    expect(c.active.items.first.mark, isNull);
+    expect(c.active.items.first.note, isNull);
+  });
 }

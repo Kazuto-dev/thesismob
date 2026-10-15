@@ -59,6 +59,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     required this.inkLine,
     required this.inkAccent,
     required this.success,
+    required this.warning,
     required this.structural,
     required this.architectural,
     required this.electrical,
@@ -80,6 +81,9 @@ class AppPalette extends ThemeExtension<AppPalette> {
   /// Amber for figures on [ink].
   final Color inkAccent;
   final Color success;
+
+  /// Icons for values that look wrong but are allowed.
+  final Color warning;
   final CategoryColors structural;
   final CategoryColors architectural;
   final CategoryColors electrical;
@@ -109,6 +113,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     inkLine: Color(0x14FFFFFF),
     inkAccent: Color(0xFFFBBF24),
     success: Color(0xFF15803D),
+    warning: Color(0xFFB45309),
     structural: CategoryColors(
       Color(0xFFC2410C),
       Color(0xFFFFEDD5),
@@ -151,6 +156,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     inkLine: Color(0x12FFFFFF),
     inkAccent: Color(0xFFFCD34D),
     success: Color(0xFF4ADE80),
+    warning: Color(0xFFFBBF24),
     structural: CategoryColors(
       Color(0xFFFDBA74),
       Color(0xFF3B1A0A),

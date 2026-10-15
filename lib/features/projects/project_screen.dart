@@ -7,10 +7,8 @@ import '../../core/format.dart';
 import '../../core/layout.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
-import '../../data/estimate.dart';
 import '../../data/project.dart';
 import '../../export/project_documents.dart';
-import '../../materials/catalog.dart';
 import '../../materials/items.dart';
 import '../../materials/material_spec.dart';
 import '../../router.dart';
@@ -19,7 +17,10 @@ import '../../state/projects_controller.dart';
 import '../../state/google_account_controller.dart';
 import '../common/price_dialog.dart';
 import '../common/tiles.dart';
+import 'boq_grid.dart';
+import 'material_picker.dart';
 import 'project_actions.dart';
+import 'project_items.dart';
 import 'project_picker.dart';
 
 enum _Tab { items, materials, budget }
@@ -91,12 +92,13 @@ class _ProjectScreenState extends State<ProjectScreen> {
                       runSpacing: Space.sm,
                       alignment: WrapAlignment.center,
                       children: [
-                        FilledButton(
-                          onPressed: () {
-                            controller.setActive(project.id);
-                            context.go(Routes.home);
-                          },
-                          child: const Text('Start an estimate'),
+                        FilledButton.icon(
+                          onPressed: () => showMaterialPicker(
+                            context,
+                            projectId: project.id,
+                          ),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add an estimate'),
                         ),
                         OutlinedButton(
                           onPressed: () => context.go(Routes.projects),
@@ -139,7 +141,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
     );
     final tab = wide && _tab == _Tab.budget ? _Tab.items : _tab;
     final body = switch (tab) {
-      _Tab.items => _ItemsTab(project: project),
+      _Tab.items => _ItemsTab(project: project, grid: wide),
       _Tab.materials => _MaterialsTab(project: project),
       _Tab.budget => _BudgetEditor(
         key: ValueKey('budget-${project.id}'),
@@ -506,65 +508,31 @@ class _BudgetHero extends StatelessWidget {
 
 /// The estimates by trade, as in a bill of quantities.
 class _ItemsTab extends StatelessWidget {
-  const _ItemsTab({required this.project});
+  const _ItemsTab({required this.project, this.grid = false});
 
   final Project project;
 
-  void _remove(BuildContext context, Estimate e) {
-    final controller = context.read<ProjectsController>();
-    final removed = controller.removeItem(e.id, projectId: project.id);
-    if (removed == null) return;
-    showMessage(
-      context,
-      'Removed ${e.label}.',
-      action: SnackBarAction(
-        label: 'Undo',
-        onPressed: () => controller.restoreItem(
-          removed.index,
-          removed.estimate,
-          projectId: project.id,
-        ),
-      ),
-    );
-  }
-
-  void _open(BuildContext context, Estimate e) {
-    final spec = materialById(e.materialId);
-    if (spec != null) context.go(Routes.material(spec, fromEstimate: e.id));
-  }
-
-  void _details(BuildContext context, Estimate e) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (sheet) => SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          Space.xl,
-          Space.sm,
-          Space.xl,
-          Space.xl,
-        ),
-        child: _ItemDetails(
-          estimate: e,
-          onOpen: materialById(e.materialId) == null
-              ? null
-              : () {
-                  Navigator.of(sheet).pop();
-                  _open(context, e);
-                },
-          onRemove: () {
-            Navigator.of(sheet).pop();
-            _remove(context, e);
-          },
-        ),
-      ),
-    );
-  }
+  /// Shows the dense table used on wide screens.
+  final bool grid;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final add = OutlinedButton.icon(
+      onPressed: () => showMaterialPicker(context, projectId: project.id),
+      icon: const Icon(Icons.add),
+      label: const Text('Add an estimate'),
+    );
+    if (grid) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          BoqGrid(project: project),
+          const SizedBox(height: Space.lg),
+          Align(alignment: Alignment.centerLeft, child: add),
+        ],
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -583,95 +551,19 @@ class _ItemsTab extends StatelessWidget {
             if (i > 0) const SizedBox(height: Space.sm),
             EstimateTile(
               estimate: e,
-              onTap: () => _details(context, e),
-              trailing: IconButton(
-                tooltip: 'Remove ${e.label}',
-                icon: const Icon(Icons.delete_outline),
-                onPressed: () => _remove(context, e),
+              onTap: () => showItemDetails(context, project, e),
+              trailing: ItemMenu(
+                project: project,
+                estimate: e,
+                first: i == 0,
+                last: i == g.items.length - 1,
               ),
             ),
           ],
           const SizedBox(height: Space.md),
         ],
-      ],
-    );
-  }
-}
-
-class _ItemDetails extends StatelessWidget {
-  const _ItemDetails({
-    required this.estimate,
-    required this.onOpen,
-    required this.onRemove,
-  });
-
-  final Estimate estimate;
-  final VoidCallback? onOpen;
-  final VoidCallback onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final e = estimate;
-    final spec = materialById(e.materialId);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            if (spec != null)
-              IconTile.material(spec, size: 48)
-            else
-              const IconTile(icon: Icons.inventory_2_outlined, size: 48),
-            const SizedBox(width: Space.md),
-            Expanded(
-              child: Semantics(
-                header: true,
-                child: Text(e.label, style: theme.textTheme.titleLarge),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: Space.lg),
-        KeyValueLine(
-          '${formatQuantity(e.quantity, e.unit)} × ${formatMoney(e.unitPrice)}',
-          formatMoney(e.total),
-        ),
-        for (final l in e.companions) ...[
-          const Divider(),
-          KeyValueLine(
-            '${l.label}, ${formatNumber(l.quantity)} ${l.unit} × '
-            '${formatMoney(l.unitPrice)}',
-            formatMoney(l.total),
-          ),
-        ],
-        const Divider(),
-        KeyValueLine(
-          'Materials total',
-          formatMoney(e.grandTotal),
-          emphasize: true,
-        ),
-        const SizedBox(height: Space.xl),
-        Wrap(
-          spacing: Space.sm,
-          runSpacing: Space.sm,
-          children: [
-            if (onOpen != null)
-              FilledButton.icon(
-                onPressed: onOpen,
-                icon: const Icon(Icons.edit_outlined),
-                label: const Text('Open in calculator'),
-              ),
-            TextButton.icon(
-              style: TextButton.styleFrom(
-                foregroundColor: theme.colorScheme.error,
-              ),
-              onPressed: onRemove,
-              icon: const Icon(Icons.delete_outline),
-              label: const Text('Remove from project'),
-            ),
-          ],
-        ),
+        const SizedBox(height: Space.sm),
+        add,
       ],
     );
   }
@@ -872,9 +764,20 @@ class _BudgetEditor extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Semantics(
-              header: true,
-              child: Text('Budget', style: theme.textTheme.titleMedium),
+            Row(
+              children: [
+                Expanded(
+                  child: Semantics(
+                    header: true,
+                    child: Text('Budget', style: theme.textTheme.titleMedium),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => _showGlossary(context),
+                  icon: const Icon(Icons.help_outline, size: 18),
+                  label: const Text('What these mean'),
+                ),
+              ],
             ),
             const SizedBox(height: Space.md),
             SegmentedButton<_Preset>(
@@ -1042,6 +945,77 @@ class _BudgetEditor extends StatelessWidget {
     );
   }
 }
+
+/// Budget terms in plain words.
+const _glossary = [
+  (
+    'Labour',
+    'What the workers cost: masons, carpenters, steelmen, electricians, '
+        'plumbers and helpers. Here it is a share of the materials, a '
+        'planning rule of thumb; use your crew\'s quote when you have it.',
+  ),
+  (
+    'Minor tools',
+    'Small tools and consumables used up on the job, such as trowels, '
+        'saw blades and cutting discs, as a share of labour.',
+  ),
+  (
+    'Hauling and delivery',
+    'Trucking materials to the site and carting away debris.',
+  ),
+  ('Direct cost', 'Materials, labour, tools and hauling together.'),
+  (
+    'Contingency',
+    'Money set aside for the unexpected: price increases, extra work and '
+        'mistakes. 5–10% is usual for a house.',
+  ),
+  (
+    'Overhead (OCM)',
+    'A contractor\'s overhead, contingencies and miscellaneous costs: '
+        'office, permits, insurance, bonds, supervision and the like.',
+  ),
+  ('Profit', 'What the contractor earns on the job.'),
+  (
+    'VAT',
+    'Value-added tax. VAT-registered contractors charge 12% on their '
+        'price; DPWH estimates use 5%.',
+  ),
+  (
+    'DPWH',
+    'The Department of Public Works and Highways. Its estimates follow '
+        'Department Order 197 (2016), which sets overhead and profit by '
+        'project size.',
+  ),
+];
+
+void _showGlossary(BuildContext context) => showModalBottomSheet<void>(
+  context: context,
+  isScrollControlled: true,
+  useSafeArea: true,
+  builder: (_) => SingleChildScrollView(
+    padding: const EdgeInsets.fromLTRB(Space.xl, Space.sm, Space.xl, Space.xl),
+    child: Builder(
+      builder: (context) {
+        final theme = Theme.of(context);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Semantics(
+              header: true,
+              child: Text('Budget terms', style: theme.textTheme.titleLarge),
+            ),
+            for (final (term, meaning) in _glossary) ...[
+              const SizedBox(height: Space.lg),
+              Text(term, style: theme.textTheme.titleSmall),
+              const SizedBox(height: 2),
+              Text(meaning, style: theme.textTheme.bodyMedium),
+            ],
+          ],
+        );
+      },
+    ),
+  ),
+);
 
 class _FieldPair extends StatelessWidget {
   const _FieldPair({required this.left, required this.right});

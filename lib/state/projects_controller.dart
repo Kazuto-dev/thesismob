@@ -195,6 +195,65 @@ class ProjectsController extends ChangeNotifier {
     ),
   );
 
+  /// Copies an item, placing the copy right after it. Returns the copy.
+  Estimate? duplicateItem(String estimateId, {String? projectId}) {
+    final id = projectId ?? _activeId!;
+    final items = byId(id)?.items ?? const <Estimate>[];
+    final index = items.indexWhere((e) => e.id == estimateId);
+    if (index < 0) return null;
+    final copy = items[index].withId(Estimate.newId(DateTime.now()));
+    _update(
+      id,
+      (p) => p.copyWith(items: [...p.items]..insert(index + 1, copy)),
+    );
+    return copy;
+  }
+
+  /// Moves an item past its neighbour in the same group, [up] or down.
+  /// Items are grouped by [groupOf], e.g. their trade, since the bill of
+  /// quantities lists them by group. Returns whether it moved.
+  bool moveItem(
+    String estimateId, {
+    required bool up,
+    String? projectId,
+    Object? Function(Estimate)? groupOf,
+  }) {
+    final id = projectId ?? _activeId!;
+    final items = [...?byId(id)?.items];
+    final index = items.indexWhere((e) => e.id == estimateId);
+    if (index < 0) return false;
+    final group = groupOf?.call(items[index]);
+    var other = index;
+    do {
+      other += up ? -1 : 1;
+    } while (other >= 0 &&
+        other < items.length &&
+        groupOf != null &&
+        groupOf(items[other]) != group);
+    if (other < 0 || other >= items.length) return false;
+    final moving = items[index];
+    items[index] = items[other];
+    items[other] = moving;
+    _update(id, (p) => p.copyWith(items: items));
+    return true;
+  }
+
+  /// Sets an item's name or mark and its note; empty text clears them.
+  void labelItem(
+    String estimateId, {
+    required String mark,
+    required String note,
+    String? projectId,
+  }) => _update(
+    projectId ?? _activeId!,
+    (p) => p.copyWith(
+      items: [
+        for (final e in p.items)
+          e.id == estimateId ? e.copyWith(mark: mark, note: note) : e,
+      ],
+    ),
+  );
+
   /// Remembers the Google spreadsheet a project was saved to.
   void setSheetId(String projectId, String sheetId) =>
       _update(projectId, (p) => p.copyWith(sheetId: sheetId));

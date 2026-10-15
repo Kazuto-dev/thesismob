@@ -13,6 +13,7 @@ import '../../data/estimate.dart';
 import '../../materials/items.dart';
 import '../../materials/material_spec.dart';
 import '../../router.dart';
+import '../../state/appearance_controller.dart';
 import '../../state/estimates_controller.dart';
 import '../../state/price_book_controller.dart';
 import '../../state/projects_controller.dart';
@@ -47,12 +48,20 @@ class _Evaluation {
 /// One screen for every material, built from its [MaterialSpec]. The
 /// estimate updates as the user types.
 class CalculatorScreen extends StatefulWidget {
-  const CalculatorScreen({super.key, required this.spec, this.fromEstimateId});
+  const CalculatorScreen({
+    super.key,
+    required this.spec,
+    this.fromEstimateId,
+    this.editProjectId,
+  });
 
   final MaterialSpec spec;
 
-  /// History entry whose inputs prefill the form.
+  /// History entry or project item whose inputs prefill the form.
   final String? fromEstimateId;
+
+  /// The project whose item [fromEstimateId] is being edited.
+  final String? editProjectId;
 
   @override
   State<CalculatorScreen> createState() => _CalculatorScreenState();
@@ -62,16 +71,21 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   final _resultKey = GlobalKey();
   late final Map<String, TextEditingController> _text = {
     for (final f in widget.spec.numbers)
-      f.id: TextEditingController(text: f.initial),
+      f.id: TextEditingController(text: _shown(f).initial),
   };
   late final Map<String, FocusNode> _focus = {
     for (final f in widget.spec.numbers) f.id: FocusNode(),
   };
   late Map<String, String> _selected = widget.spec.initialChoices;
+  final _mark = TextEditingController();
   late final EstimatesController _estimates;
   late final ProjectsController _projects;
   late final PriceBookController _prices;
+  late final AppearanceController _appearance;
   late final AppLifecycleListener _lifecycle;
+
+  /// The unit lengths are typed in. Inputs are saved in metres.
+  late LengthUnit _lengthUnit;
 
   /// Whether the price field follows the price book. It stops once the
   /// user types their own price.
@@ -79,6 +93,12 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
   /// The history entry that matches the inputs, once recorded.
   Estimate? _recorded;
+
+  /// The project item being edited, if any.
+  Estimate? _editing;
+
+  /// The item this visit last added to a project.
+  Estimate? _added;
 
   /// The history entry this visit created, updated in place as the user
   /// keeps editing.
@@ -93,12 +113,66 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     _estimates = context.read<EstimatesController>();
     _projects = context.read<ProjectsController>();
     _prices = context.read<PriceBookController>()..addListener(_pricesChanged);
+    _appearance = context.read<AppearanceController>()
+      ..addListener(_unitChanged);
+    _lengthUnit = _appearance.lengthUnit;
     _prefill();
     _applySuggestedPrice();
     for (final c in _text.values) {
       c.addListener(_changed);
     }
+    _mark.addListener(_changed);
     _lifecycle = AppLifecycleListener(onHide: _recordNow);
+  }
+
+  /// [f] as the user sees it, in feet when they measure in feet.
+  NumberField _shown(NumberField f) =>
+      _lengthUnit == LengthUnit.feet ? f.inFeet() : f;
+
+  /// A value typed into [shown], in the field's own unit. Feet are
+  /// rounded to the millimetre so a value shown in feet reads back as the
+  /// metres it came from.
+  static double _toSaved(NumberField shown, double value) =>
+      switch (shown.unit) {
+        'ft' => _round(value / feetPerMetre, 3),
+        'ft²' => _round(value / (feetPerMetre * feetPerMetre), 4),
+        _ => value,
+      };
+
+  /// A saved value as text for [shown].
+  static String _toText(NumberField shown, double value) {
+    final v = switch (shown.unit) {
+      'ft' => _round(value * feetPerMetre, 3),
+      'ft²' => _round(value * feetPerMetre * feetPerMetre, 3),
+      _ => value,
+    };
+    return v == v.roundToDouble() ? v.toInt().toString() : v.toString();
+  }
+
+  static double _round(double v, int places) =>
+      double.parse(v.toStringAsFixed(places));
+
+  /// Converts what is typed in the length fields when the user switches
+  /// between metres and feet.
+  void _unitChanged() {
+    final unit = _appearance.lengthUnit;
+    if (!mounted || unit == _lengthUnit) return;
+    final saved = <String, double>{};
+    for (final f in spec.numbers) {
+      final value = _shown(f).parse(_text[f.id]!.text);
+      if (value != null && _text[f.id]!.text.trim().isNotEmpty) {
+        saved[f.id] = _toSaved(_shown(f), value);
+      }
+    }
+    setState(() {
+      _lengthUnit = unit;
+      for (final MapEntry(:key, :value) in saved.entries) {
+        final f = spec.numbers.firstWhere((f) => f.id == key);
+        if (f.unit == 'm' || f.unit == 'm²') {
+          _text[key]!.text = _toText(_shown(f), value);
+        }
+      }
+    });
   }
 
   NumberField? get _priceField =>
@@ -131,17 +205,26 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   void _prefill() {
     final id = widget.fromEstimateId;
     if (id == null) return;
+    final editing = widget.editProjectId == null
+        ? null
+        : _projects
+              .byId(widget.editProjectId!)
+              ?.items
+              .where((e) => e.id == id && e.materialId == spec.id)
+              .firstOrNull;
     final saved =
+        editing ??
         _estimates.history.where((e) => e.id == id).firstOrNull ??
         _projects.projects
             .expand((p) => p.items)
             .where((e) => e.id == id)
             .firstOrNull;
     if (saved == null || saved.materialId != spec.id) return;
+    _editing = editing;
+    _mark.text = saved.mark ?? '';
     for (final MapEntry(:key, :value) in saved.inputs.entries) {
-      _text[key]?.text = value == value.roundToDouble()
-          ? value.toInt().toString()
-          : value.toString();
+      final f = spec.numbers.where((f) => f.id == key).firstOrNull;
+      if (f != null) _text[key]!.text = _toText(_shown(f), value);
     }
     _selected = {..._selected, ...saved.choices};
     _recorded = saved;
@@ -162,6 +245,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     }
     _lifecycle.dispose();
     _prices.removeListener(_pricesChanged);
+    _appearance.removeListener(_unitChanged);
+    _mark.dispose();
     for (final c in _text.values) {
       c.dispose();
     }
@@ -193,11 +278,12 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     final missing = <String>[];
     final numbers = <String, double>{};
     for (final f in spec.visibleNumbers(_selected)) {
-      final value = f.parse(_text[f.id]!.text);
+      final shown = _shown(f);
+      final value = shown.parse(_text[f.id]!.text);
       if (value == null) {
         missing.add(f.label.toLowerCase());
       } else if (!(f.optional && value == 0)) {
-        numbers[f.id] = value;
+        numbers[f.id] = _toSaved(shown, value);
       }
     }
     final choices = <String, String>{};
@@ -231,7 +317,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       inputs: e.numbers,
       choices: e.choices,
       priceOf: _prices.priceOf,
-    );
+    ).copyWith(mark: _mark.text);
   }
 
   /// The current estimate when it is not yet in the history.
@@ -274,20 +360,66 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     return _record(current);
   }
 
-  void _addToProject() {
+  /// The project item being edited, while it is still in its project.
+  Estimate? get _editingItem {
+    final editing = _editing;
+    final projectId = widget.editProjectId;
+    if (editing == null || projectId == null) return null;
+    return _projects.contains(editing.id, projectId: projectId)
+        ? editing
+        : null;
+  }
+
+  void _addToProject({String? projectId}) {
     final recorded = _ensureRecorded();
     final current = _currentEstimate();
     if (recorded == null || current == null) return;
-    // The project keeps today's prices for the companion materials.
-    final estimate = current.withId(recorded.id);
-    _projects.add(estimate);
+    // The project keeps today's prices for the companion materials. An
+    // estimate already in the project, e.g. under another mark, is added
+    // again as a new item.
+    final target = projectId ?? _projects.active.id;
+    final estimate = current.withId(
+      _projects.contains(recorded.id, projectId: target)
+          ? Estimate.newId(DateTime.now())
+          : recorded.id,
+    );
+    _projects.add(estimate, projectId: target);
+    setState(() => _added = estimate);
+    final project = _projects.byId(target)!;
+    if (projectId != null) {
+      context.go(Routes.projectById(target));
+      showMessage(context, 'Added ${estimate.title} to ${project.name}.');
+      return;
+    }
     showMessage(
       context,
-      'Added ${estimate.label} to ${_projects.active.name}.',
+      'Added ${estimate.title} to ${project.name}.',
       action: SnackBarAction(
         label: 'View',
         onPressed: () => context.go(Routes.project),
       ),
+    );
+  }
+
+  /// Saves the form over the project item being edited, keeping its note
+  /// and its place in the project, then returns to the project.
+  void _updateItem() {
+    final editing = _editingItem;
+    final current = _currentEstimate();
+    final projectId = widget.editProjectId;
+    if (editing == null || current == null || projectId == null) return;
+    _recordNow();
+    final updated = current.withId(editing.id).copyWith(note: editing.note);
+    _projects.updateItem(updated, projectId: projectId);
+    _editing = updated;
+    context.go(Routes.projectById(projectId));
+    showMessage(context, 'Updated ${updated.title}.');
+  }
+
+  void _cancelEdit() {
+    final projectId = widget.editProjectId;
+    context.go(
+      projectId == null ? Routes.project : Routes.projectById(projectId),
     );
   }
 
@@ -337,21 +469,33 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     final result = evaluation.result;
     context.watch<PriceBookController>();
     final current = _currentEstimate(evaluation);
-    final recorded = _recorded;
-    final (projectName, inProject) = context
-        .select<ProjectsController, (String, bool)>(
-          (c) => (
-            c.active.name,
-            current != null &&
-                recorded != null &&
-                recorded.sameCalculationAs(current) &&
-                c.contains(recorded.id),
-          ),
-        );
+    final candidates = [?_added, ?_recorded];
+    final editProjectId = widget.editProjectId;
+    final (projectName, inProject, editing) = context
+        .select<ProjectsController, (String, bool, bool)>((c) {
+          final editing =
+              editProjectId != null &&
+              _editing != null &&
+              c.contains(_editing!.id, projectId: editProjectId);
+          final project = editing ? c.byId(editProjectId)! : c.active;
+          // Already in the project, with the same inputs and name.
+          final added =
+              current != null &&
+              project.items.any(
+                (e) =>
+                    candidates.any((x) => x.id == e.id) &&
+                    e.sameCalculationAs(current) &&
+                    e.mark == current.mark,
+              );
+          return (project.name, added, editing);
+        });
     final suggested = _suggestedPrice;
 
     final form = _CalculatorForm(
       spec: spec,
+      shown: _shown,
+      lengthUnit: _lengthUnit,
+      onLengthUnit: _appearance.setLengthUnit,
       text: _text,
       focus: _focus,
       selected: _selected,
@@ -359,6 +503,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       onShowInfo: _showInfo,
       onDone: twoPane ? null : _showResult,
       onPriceTyped: () => _autoPrice = false,
+      mark: _mark,
+      banner: editing
+          ? _EditBanner(projectName: projectName, onCancel: _cancelEdit)
+          : null,
       priceNote: suggested == null
           ? null
           : _PriceNote(
@@ -385,13 +533,19 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               onAdd: _addToProject,
               onChangeProject: () => showProjectPicker(context),
               onSetPrice: _setLinePrice,
+              onUpdate: editing ? _updateItem : null,
+              onAddNew: editing
+                  ? () => _addToProject(projectId: editProjectId)
+                  : null,
             ),
     );
 
     return PageTitle(
       title: spec.name,
       child: Scaffold(
-        appBar: AppBar(title: Text(spec.name)),
+        appBar: AppBar(
+          title: Text(editing ? 'Edit ${spec.name.toLowerCase()}' : spec.name),
+        ),
         body: SingleChildScrollView(
           padding: EdgeInsets.only(
             top: Space.sm,
@@ -425,6 +579,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                 total: current?.grandTotal,
                 inProject: inProject,
                 onAdd: _addToProject,
+                onUpdate: editing ? _updateItem : null,
                 onShow: _showResult,
               ),
       ),
@@ -432,9 +587,12 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   }
 }
 
-class _CalculatorForm extends StatelessWidget {
+class _CalculatorForm extends StatefulWidget {
   const _CalculatorForm({
     required this.spec,
+    required this.shown,
+    required this.lengthUnit,
+    required this.onLengthUnit,
     required this.text,
     required this.focus,
     required this.selected,
@@ -442,10 +600,17 @@ class _CalculatorForm extends StatelessWidget {
     required this.onShowInfo,
     required this.onDone,
     required this.onPriceTyped,
+    required this.mark,
     this.priceNote,
+    this.banner,
   });
 
   final MaterialSpec spec;
+
+  /// A field as the user sees it, in their length unit.
+  final NumberField Function(NumberField) shown;
+  final LengthUnit lengthUnit;
+  final ValueChanged<LengthUnit> onLengthUnit;
   final Map<String, TextEditingController> text;
   final Map<String, FocusNode> focus;
   final Map<String, String> selected;
@@ -459,10 +624,34 @@ class _CalculatorForm extends StatelessWidget {
   /// Where the price came from, shown under the price field.
   final Widget? priceNote;
 
+  /// The item's name or mark in a project.
+  final TextEditingController mark;
+
+  /// Shown above the form, e.g. while editing a project item.
+  final Widget? banner;
+
+  @override
+  State<_CalculatorForm> createState() => _CalculatorFormState();
+}
+
+class _CalculatorFormState extends State<_CalculatorForm> {
+  /// Options shown before "More options".
+  static const _firstOptions = 3;
+
+  bool _moreOptions = false;
+
   @override
   Widget build(BuildContext context) {
+    final w = widget;
+    final spec = w.spec;
+    final selected = w.selected;
+    final text = w.text;
+    final focus = w.focus;
+    final onSelect = w.onSelect;
+    final onShowInfo = w.onShowInfo;
+    final onDone = w.onDone;
     final theme = Theme.of(context);
-    final numbers = spec.visibleNumbers(selected);
+    final numbers = [for (final f in spec.visibleNumbers(selected)) w.shown(f)];
     final measurements = [
       for (final f in numbers)
         if (!f.isPrice) f,
@@ -481,20 +670,37 @@ class _CalculatorForm extends StatelessWidget {
         if (!c.leading) c,
     ];
     final last = numbers.isEmpty ? null : numbers.last;
+    final hasLengths = measurements.any(
+      (f) => const {'m', 'm²', 'ft', 'ft²'}.contains(f.unit),
+    );
+    final shownOptions = _moreOptions || options.length <= _firstOptions + 1
+        ? options
+        : options.take(_firstOptions).toList();
+    final hidden = options.skip(shownOptions.length).toList();
 
     Widget numberField(NumberField f) => _NumberInput(
       key: ValueKey('number-${f.id}'),
       field: f,
       controller: text[f.id]!,
       focusNode: focus[f.id]!,
-      isLast: f == last,
+      isLast: f.id == last?.id,
       onDone: onDone,
-      onChanged: f.isPrice ? (_) => onPriceTyped() : null,
+      onChanged: f.isPrice ? (_) => w.onPriceTyped() : null,
+    );
+
+    Widget choice(ChoiceField c) => _ChoiceInput(
+      field: c,
+      selected: selected,
+      onSelect: onSelect,
+      definition: spec.definitions
+          .where((d) => d.title.toLowerCase() == c.label.toLowerCase())
+          .firstOrNull,
     );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (w.banner != null) ...[w.banner!, const SizedBox(height: Space.lg)],
         Row(
           children: [
             IconTile.material(spec, size: 56),
@@ -529,9 +735,11 @@ class _CalculatorForm extends StatelessWidget {
         const SizedBox(height: Space.xl),
         _FormSection(
           title: 'Measurements',
+          trailing: hasLengths
+              ? _LengthUnitToggle(unit: w.lengthUnit, onChanged: w.onLengthUnit)
+              : null,
           children: [
-            for (final c in leading)
-              _ChoiceInput(field: c, selected: selected, onSelect: onSelect),
+            for (final c in leading) choice(c),
             _FieldGrid(
               children: [for (final f in measurements) numberField(f)],
             ),
@@ -542,8 +750,15 @@ class _CalculatorForm extends StatelessWidget {
           _FormSection(
             title: 'Options',
             children: [
-              for (final c in options)
-                _ChoiceInput(field: c, selected: selected, onSelect: onSelect),
+              for (final c in shownOptions) choice(c),
+              if (hidden.isNotEmpty)
+                _MoreOptions(
+                  summary: [
+                    for (final c in hidden)
+                      '${c.label}: ${c.option(selected[c.id])?.label ?? 'not set'}',
+                  ].join(' · '),
+                  onOpen: () => setState(() => _moreOptions = true),
+                ),
             ],
           ),
         ],
@@ -553,21 +768,94 @@ class _CalculatorForm extends StatelessWidget {
             title: 'Price',
             children: [
               _FieldGrid(children: [for (final f in prices) numberField(f)]),
-              ?priceNote,
+              ?w.priceNote,
             ],
           ),
         ],
+        const SizedBox(height: Space.lg),
+        _FormSection(
+          title: 'Name in the project',
+          children: [
+            TextField(
+              key: const ValueKey('mark'),
+              controller: w.mark,
+              textCapitalization: TextCapitalization.sentences,
+              inputFormatters: [LengthLimitingTextInputFormatter(60)],
+              decoration: const InputDecoration(
+                labelText: 'Name or mark (optional)',
+                hintText: 'F1, Kitchen wall, 2nd floor slab',
+                helperText: 'Shown in the bill of quantities',
+              ),
+            ),
+          ],
+        ),
       ],
+    );
+  }
+}
+
+/// Says that the form edits a project item, with a way back.
+class _EditBanner extends StatelessWidget {
+  const _EditBanner({required this.projectName, required this.onCancel});
+
+  final String projectName;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Card(
+      color: scheme.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          Space.lg,
+          Space.md,
+          Space.sm,
+          Space.md,
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.edit_outlined, color: scheme.onSecondaryContainer),
+            const SizedBox(width: Space.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Editing an item in $projectName',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: scheme.onSecondaryContainer,
+                    ),
+                  ),
+                  Text(
+                    'Change what you need, then choose Update item.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSecondaryContainer,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            TextButton(onPressed: onCancel, child: const Text('Cancel')),
+          ],
+        ),
+      ),
     );
   }
 }
 
 /// A titled card grouping related inputs.
 class _FormSection extends StatelessWidget {
-  const _FormSection({required this.title, required this.children});
+  const _FormSection({
+    required this.title,
+    required this.children,
+    this.trailing,
+  });
 
   final String title;
   final List<Widget> children;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -583,9 +871,16 @@ class _FormSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Semantics(
-              header: true,
-              child: Text(title, style: theme.textTheme.titleMedium),
+            Row(
+              children: [
+                Expanded(
+                  child: Semantics(
+                    header: true,
+                    child: Text(title, style: theme.textTheme.titleMedium),
+                  ),
+                ),
+                ?trailing,
+              ],
             ),
             for (final child in children) ...[
               const SizedBox(height: Space.lg),
@@ -642,15 +937,39 @@ class _NumberInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final f = field;
-    return TextFormField(
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    // The unit is always on show, not only once the field has focus, so a
+    // length is never typed in the wrong unit unawares.
+    Widget unit(String text, {required bool start}) => Padding(
+      padding: EdgeInsetsDirectional.only(
+        start: start ? Space.md : Space.sm,
+        end: start ? Space.xs : Space.md,
+      ),
+      child: Text(
+        text,
+        style: theme.textTheme.bodyLarge?.copyWith(
+          color: scheme.onSurfaceVariant,
+        ),
+      ),
+    );
+    const fit = BoxConstraints(minWidth: 0, minHeight: 0);
+    final value = double.tryParse(controller.text.trim());
+    // Asked even past the field's limit, where the likely unit helps most.
+    final unusual = value != null && value > 0 && f.isUnusual(value);
+    final input = TextFormField(
       controller: controller,
       focusNode: focusNode,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       decoration: InputDecoration(
         labelText: f.label,
         helperText: f.hint,
-        prefixText: f.isPrice ? '₱ ' : null,
-        suffixText: f.isPrice ? null : f.unit,
+        prefixIcon: f.isPrice ? unit('₱', start: true) : null,
+        prefixIconConstraints: fit,
+        suffixIcon: f.isPrice || f.unit == null
+            ? null
+            : unit(f.unit!, start: false),
+        suffixIconConstraints: fit,
       ),
       style: tabular(Theme.of(context).textTheme.bodyLarge),
       keyboardType: TextInputType.numberWithOptions(decimal: !f.integer),
@@ -663,6 +982,167 @@ class _NumberInput extends StatelessWidget {
       onChanged: onChanged,
       validator: (value) => f.validate(value ?? ''),
     );
+    // Always a column, so the field keeps its state when the warning comes
+    // and goes.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        input,
+        if (unusual)
+          _UnitWarning(field: f, value: value, controller: controller),
+      ],
+    );
+  }
+}
+
+/// Asks about a value far above the usual, which is most often a
+/// measurement in the wrong unit, and offers the likely one.
+class _UnitWarning extends StatelessWidget {
+  const _UnitWarning({
+    required this.field,
+    required this.value,
+    required this.controller,
+  });
+
+  final NumberField field;
+  final double value;
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette = AppPalette.of(context);
+    final meant = field.likelyMeant(value);
+    final unit = field.unit ?? '';
+    final fixed = meant == null ? null : formatNumber(meant.value);
+    return Semantics(
+      liveRegion: true,
+      child: Padding(
+        padding: const EdgeInsets.only(top: Space.sm),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Icon(
+                Icons.warning_amber_rounded,
+                size: 18,
+                color: palette.warning,
+              ),
+            ),
+            const SizedBox(width: Space.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    meant == null
+                        ? '${formatNumber(value)} $unit is a lot for '
+                              '${field.label.toLowerCase()}. Check the unit.'
+                        : '${formatNumber(value)} $unit is a lot for '
+                              '${field.label.toLowerCase()}. Did you type '
+                              '${meant.unit}?',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  if (fixed != null)
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      onPressed: () =>
+                          controller.text = fixed.replaceAll(',', ''),
+                      child: Text('Use $fixed $unit'),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Metres or feet, for the length fields.
+class _LengthUnitToggle extends StatelessWidget {
+  const _LengthUnitToggle({required this.unit, required this.onChanged});
+
+  final LengthUnit unit;
+  final ValueChanged<LengthUnit> onChanged;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    label: 'Length unit',
+    child: SegmentedButton<LengthUnit>(
+      showSelectedIcon: false,
+      style: const ButtonStyle(visualDensity: VisualDensity.compact),
+      segments: const [
+        ButtonSegment(
+          value: LengthUnit.metres,
+          label: Text('m'),
+          tooltip: 'Metres',
+        ),
+        ButtonSegment(
+          value: LengthUnit.feet,
+          label: Text('ft'),
+          tooltip: 'Feet',
+        ),
+      ],
+      selected: {unit},
+      onSelectionChanged: (s) => onChanged(s.first),
+    ),
+  );
+}
+
+/// The options left out until the user asks for them, with what they are
+/// set to.
+class _MoreOptions extends StatelessWidget {
+  const _MoreOptions({required this.summary, required this.onOpen});
+
+  final String summary;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Semantics(
+      button: true,
+      label: 'More options. $summary',
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onOpen,
+        borderRadius: BorderRadius.circular(Radii.md),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: Space.sm),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'More options',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      summary,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.expand_more, color: theme.colorScheme.primary),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -673,11 +1153,15 @@ class _ChoiceInput extends StatelessWidget {
     required this.field,
     required this.selected,
     required this.onSelect,
+    this.definition,
   });
 
   final ChoiceField field;
   final Map<String, String> selected;
   final void Function(String id, String value) onSelect;
+
+  /// What the choice means, from the material's definitions.
+  final InfoSection? definition;
 
   @override
   Widget build(BuildContext context) {
@@ -747,7 +1231,35 @@ class _ChoiceInput extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(c.label, style: theme.textTheme.labelLarge),
+          Row(
+            children: [
+              Flexible(child: Text(c.label, style: theme.textTheme.labelLarge)),
+              if (definition != null)
+                IconButton(
+                  tooltip: 'What is ${c.label.toLowerCase()}?',
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size.square(32),
+                    padding: EdgeInsets.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  iconSize: 18,
+                  icon: const Icon(Icons.info_outline),
+                  onPressed: () => showDialog<void>(
+                    context: context,
+                    builder: (dialog) => AlertDialog(
+                      title: Text(definition!.title),
+                      content: Text(definition!.body),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(dialog).pop(),
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
           if (c.helper != null) ...[
             const SizedBox(height: 2),
             Text(
@@ -773,6 +1285,7 @@ class _ResultBar extends StatelessWidget {
     required this.inProject,
     required this.onAdd,
     required this.onShow,
+    this.onUpdate,
   });
 
   final CalcResult? result;
@@ -782,6 +1295,9 @@ class _ResultBar extends StatelessWidget {
   final bool inProject;
   final VoidCallback onAdd;
   final VoidCallback onShow;
+
+  /// Set while editing a project item.
+  final VoidCallback? onUpdate;
 
   @override
   Widget build(BuildContext context) {
@@ -859,11 +1375,18 @@ class _ResultBar extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: Space.md),
-                        FilledButton.icon(
-                          onPressed: inProject ? null : onAdd,
-                          icon: Icon(inProject ? Icons.check : Icons.add),
-                          label: Text(inProject ? 'Added' : 'Add'),
-                        ),
+                        if (onUpdate != null)
+                          FilledButton.icon(
+                            onPressed: onUpdate,
+                            icon: const Icon(Icons.check),
+                            label: const Text('Update'),
+                          )
+                        else
+                          FilledButton.icon(
+                            onPressed: inProject ? null : onAdd,
+                            icon: Icon(inProject ? Icons.check : Icons.add),
+                            label: Text(inProject ? 'Added' : 'Add'),
+                          ),
                       ],
                     );
                   },

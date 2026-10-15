@@ -160,6 +160,141 @@ void main() {
     expect(find.widgetWithText(FilledButton, 'Added'), findsOneWidget);
   });
 
+  testWidgets('the same inputs under another name add a second item', (
+    tester,
+  ) async {
+    await pumpApp(tester, location: chb);
+    await fillWall(tester);
+    final mark = find.byKey(const ValueKey('mark'));
+    await tester.ensureVisible(mark);
+    await tester.enterText(mark, 'W1');
+    await tester.pump();
+    final add = find.widgetWithText(FilledButton, 'Add to My project');
+    await tester.ensureVisible(add);
+    await tester.pumpAndSettle();
+    await tester.tap(add);
+    await tester.pumpAndSettle();
+    expect(find.text('Added to My project'), findsOneWidget);
+
+    await tester.ensureVisible(mark);
+    await tester.enterText(mark, 'W2');
+    await tester.pump();
+    await tester.ensureVisible(add);
+    await tester.pumpAndSettle();
+    await tester.tap(add);
+    await tester.pumpAndSettle();
+    final items = projectsOf(tester).active.items;
+    expect([for (final e in items) e.title], ['W1 – CHB 4"', 'W2 – CHB 4"']);
+    expect(items.first.id, isNot(items.last.id));
+  });
+
+  testWidgets('editing a project item updates it instead of adding one', (
+    tester,
+  ) async {
+    final item = sampleEstimate('e1', 'CHB 4"', 9850).copyWith(note: 'Kitchen');
+    await pumpApp(
+      tester,
+      location: '$chb?estimate=e1&project=p1',
+      prefs: projectPrefs([item]),
+    );
+    expect(find.text('Editing an item in Santos residence'), findsOneWidget);
+    await tester.enterText(field('Wall height'), '4');
+    final mark = find.byKey(const ValueKey('mark'));
+    await tester.ensureVisible(mark);
+    await tester.enterText(mark, 'W1');
+    await tester.pump();
+
+    final update = find.widgetWithText(FilledButton, 'Update item');
+    await tester.ensureVisible(update);
+    await tester.pumpAndSettle();
+    await tester.tap(update);
+    await tester.pumpAndSettle();
+
+    final items = projectsOf(tester).byId('p1')!.items;
+    expect(items, hasLength(1));
+    expect(items.single.id, 'e1');
+    expect(items.single.inputs['height'], 4);
+    expect(items.single.mark, 'W1');
+    expect(items.single.note, 'Kitchen', reason: 'the note is kept');
+    // Back on the project, which shows the item under its new name.
+    expect(find.text('W1 – CHB 4"'), findsOneWidget);
+    expect(find.text('Kitchen'), findsOneWidget);
+  });
+
+  testWidgets('an edited item can be added as a new one instead', (
+    tester,
+  ) async {
+    await pumpApp(
+      tester,
+      location: '$chb?estimate=e1&project=p1',
+      prefs: projectPrefs([sampleEstimate('e1', 'CHB 4"', 9850)]),
+    );
+    await tester.enterText(field('Wall height'), '4');
+    await tester.pump();
+    final addNew = find.text('Add as a new item');
+    await tester.ensureVisible(addNew);
+    await tester.pumpAndSettle();
+    await tester.tap(addNew);
+    await tester.pumpAndSettle();
+    final items = projectsOf(tester).byId('p1')!.items;
+    expect(items, hasLength(2));
+    expect(items.first.inputs['height'], 3, reason: 'the original is kept');
+    expect(items.last.inputs['height'], 4);
+  });
+
+  testWidgets('a length typed in centimetres is caught', (tester) async {
+    await pumpApp(tester, location: '/category/structural/footing');
+    // Units show before anything is typed.
+    expect(find.text('m'), findsWidgets);
+    await tester.enterText(field('Thickness'), '25');
+    await tester.pump();
+    expect(find.textContaining('Did you type cm?'), findsOneWidget);
+    await tester.tap(find.text('Use 0.25 m'));
+    await tester.pump();
+    expect(find.textContaining('Did you type cm?'), findsNothing);
+    expect(
+      tester.widget<TextFormField>(field('Thickness')).controller!.text,
+      '0.25',
+    );
+  });
+
+  testWidgets('lengths can be typed in feet', (tester) async {
+    await pumpApp(tester, location: chb);
+    await tester.tap(find.text('ft'));
+    await tester.pumpAndSettle();
+    await tester.enterText(field('Wall length'), '32.808');
+    await tester.enterText(field('Wall height'), '9.843');
+    await tester.pump();
+    // The same wall as 10 × 3 m.
+    expect(find.text('394 blocks'), findsWidgets);
+    await settle(tester);
+    expect(estimatesOf(tester).history.single.inputs['length'], 10);
+
+    await tester.tap(find.text('m').first);
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<TextFormField>(field('Wall length')).controller!.text,
+      '10',
+    );
+  });
+
+  testWidgets('rarely changed options wait under "More options"', (
+    tester,
+  ) async {
+    await pumpApp(tester, location: '/category/structural/slab');
+    expect(find.text('Lap splice'), findsNothing);
+    expect(find.textContaining('Lap splice: 40 × bar'), findsOneWidget);
+    await tester.ensureVisible(find.text('More options'));
+    await tester.tap(find.text('More options'));
+    await tester.pumpAndSettle();
+    expect(find.text('Lap splice'), findsOneWidget);
+    // Terms link to what they mean.
+    await tester.ensureVisible(find.byTooltip('What is lap splice?'));
+    await tester.tap(find.byTooltip('What is lap splice?'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('joined by overlapping'), findsOneWidget);
+  });
+
   testWidgets('roofing switches inputs for long-span sheets', (tester) async {
     await pumpApp(tester, location: '/category/architectural/roof');
     expect(find.text('Side lap'), findsOneWidget);

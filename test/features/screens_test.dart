@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:thesismob/core/format.dart';
 import 'package:thesismob/data/google_sheets_client.dart';
 import 'package:thesismob/data/project.dart';
+import 'package:thesismob/features/projects/boq_grid.dart';
 import 'package:thesismob/state/google_account_controller.dart';
 
 import '../google_fake.dart';
@@ -93,8 +94,10 @@ void main() {
       await pumpApp(tester, location: '/project', prefs: projectPrefs(items));
       expect(find.text('Santos residence'), findsWidgets);
       expect(find.text('Maria Santos · Antipolo, Rizal'), findsOneWidget);
-      await tester.ensureVisible(find.byTooltip('Remove Paint'));
-      await tester.tap(find.byTooltip('Remove Paint'));
+      await tester.ensureVisible(find.byTooltip('Actions for Paint'));
+      await tester.tap(find.byTooltip('Actions for Paint'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Remove'));
       await tester.pumpAndSettle();
       expect(find.text('₱15,001,000.00'), findsNWidgets(2));
 
@@ -165,12 +168,49 @@ void main() {
       expect(find.text('Items'), findsOneWidget);
     });
 
+    testWidgets('desktops edit unit prices in the bill of quantities grid', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        location: '/project',
+        size: desktop,
+        prefs: projectPrefs(items),
+      );
+      expect(find.text('Unit price'), findsOneWidget);
+      final cell = find.bySemanticsLabel(
+        RegExp(r'^Unit price of CHB 4", ₱25\.00'),
+      );
+      await tester.ensureVisible(cell);
+      await tester.tap(cell);
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(BoqGrid),
+          matching: find.byType(TextField),
+        ),
+        '30',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+      final chb = projectsOf(tester).active.items
+          .firstWhere((e) => e.label == 'CHB 4"');
+      expect(chb.unitPrice, 30);
+      expect(chb.total, 40 * 30);
+      expect(chb.inputs['price'], 30, reason: 'reopens at the new price');
+    });
+
     testWidgets('explains the empty state', (tester) async {
       await pumpApp(tester, location: '/project');
       expect(find.text('No estimates yet'), findsOneWidget);
-      await tester.tap(find.text('Start an estimate'));
+      await tester.tap(find.text('Add an estimate'));
       await tester.pumpAndSettle();
-      expect(find.text('Categories'), findsOneWidget);
+      // A sheet of calculators to choose from.
+      await tester.enterText(find.byType(TextField).last, 'footing');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Footings'));
+      await tester.pumpAndSettle();
+      expect(find.text('Footing length'), findsOneWidget);
     });
 
     testWidgets('new projects are created from the projects list', (
@@ -259,14 +299,14 @@ void main() {
     testWidgets('switches between light and dark themes', (tester) async {
       await pumpApp(tester, location: '/settings');
       expect(
-        Theme.of(tester.element(find.text('Appearance'))).brightness,
+        Theme.of(tester.element(find.text('Appearance and units'))).brightness,
         Brightness.light,
       );
       await tester.ensureVisible(find.text('Dark'));
       await tester.tap(find.text('Dark'));
       await tester.pumpAndSettle();
       expect(
-        Theme.of(tester.element(find.text('Appearance'))).brightness,
+        Theme.of(tester.element(find.text('Appearance and units'))).brightness,
         Brightness.dark,
       );
     });

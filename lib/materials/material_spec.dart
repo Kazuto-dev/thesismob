@@ -54,6 +54,9 @@ enum QuantityUnit {
 /// Shows a field only when this returns true for the selected options.
 typedef VisibleWhen = bool Function(Map<String, String> selected);
 
+/// Feet in a metre.
+const feetPerMetre = 1 / 0.3048;
+
 /// A numeric input such as a dimension, a count or a price.
 @immutable
 class NumberField {
@@ -68,6 +71,7 @@ class NumberField {
     this.isPrice = false,
     this.optional = false,
     this.visibleWhen,
+    this.typical,
   });
 
   final String id;
@@ -88,6 +92,76 @@ class NumberField {
   /// Optional fields may be left empty or 0, which counts as 0.
   final bool optional;
   final VisibleWhen? visibleWhen;
+
+  /// The values usually entered, in [unit]. A value well outside them is
+  /// probably in the wrong unit, such as centimetres typed into a field in
+  /// metres, and the form asks about it.
+  final ({double min, double max})? typical;
+
+  /// This field in feet instead of metres: lengths become `ft` and areas
+  /// `ft²`, with [max], [typical] and the measurements in [hint]
+  /// converted. Other fields are returned as they are.
+  NumberField inFeet() {
+    final factor = switch (unit) {
+      'm' => feetPerMetre,
+      'm²' => feetPerMetre * feetPerMetre,
+      _ => null,
+    };
+    if (factor == null) return this;
+    final t = typical;
+    return NumberField(
+      id: id,
+      label: label,
+      unit: unit == 'm' ? 'ft' : 'ft²',
+      hint: hint == null ? null : _hintInFeet(hint!),
+      initial: initial == null
+          ? null
+          : _trim((double.parse(initial!) * factor).toStringAsFixed(2)),
+      max: (max * factor).roundToDouble(),
+      integer: integer,
+      isPrice: isPrice,
+      optional: optional,
+      visibleWhen: visibleWhen,
+      typical: t == null ? null : (min: t.min * factor, max: t.max * factor),
+    );
+  }
+
+  /// Converts the measurements in metres in a hint, e.g. "Usually
+  /// 0.25–0.30 m", to feet.
+  static String _hintInFeet(String hint) => hint.replaceAllMapped(
+    RegExp(r'(\d+(?:\.\d+)?)(?:–(\d+(?:\.\d+)?))? m\b'),
+    (m) {
+      String ft(String metres) =>
+          _trim((double.parse(metres) * feetPerMetre).toStringAsFixed(1));
+      return m[2] == null ? '${ft(m[1]!)} ft' : '${ft(m[1]!)}–${ft(m[2]!)} ft';
+    },
+  );
+
+  static String _trim(String number) => number.contains('.')
+      ? number.replaceFirst(RegExp(r'\.?0+$'), '')
+      : number;
+
+  /// A likelier value when [value] is far above what is [typical], read as
+  /// a smaller unit by mistake: centimetres or millimetres in a field in
+  /// metres, inches in one in feet. Returns null when [value] looks right
+  /// or no smaller unit makes sense of it.
+  ({double value, String unit})? likelyMeant(double value) {
+    final t = typical;
+    if (t == null || value <= t.max) return null;
+    final smaller = switch (unit) {
+      'm' => const [(100.0, 'cm'), (1000.0, 'mm')],
+      'ft' => const [(12.0, 'in')],
+      _ => const <(double, String)>[],
+    };
+    for (final (divisor, name) in smaller) {
+      final meant = value / divisor;
+      if (meant >= t.min && meant <= t.max) return (value: meant, unit: name);
+    }
+    return null;
+  }
+
+  /// Whether [value] is well above what is [typical].
+  bool isUnusual(double value) => typical != null && value > typical!.max;
 
   bool isVisible(Map<String, String> selected) =>
       visibleWhen == null || visibleWhen!(selected);

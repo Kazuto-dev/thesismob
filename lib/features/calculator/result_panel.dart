@@ -21,6 +21,8 @@ class ResultPanel extends StatelessWidget {
     required this.onAdd,
     required this.onChangeProject,
     required this.onSetPrice,
+    this.onUpdate,
+    this.onAddNew,
   });
 
   final MaterialSpec spec;
@@ -36,6 +38,12 @@ class ResultPanel extends StatelessWidget {
   /// Changes the price book price of a companion material.
   final void Function(EstimateLine line) onSetPrice;
 
+  /// Saves over the project item being edited, when editing one.
+  final VoidCallback? onUpdate;
+
+  /// Adds the form to the edited item's project as a new item.
+  final VoidCallback? onAddNew;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -45,19 +53,34 @@ class ResultPanel extends StatelessWidget {
     final compact = WindowSize.of(context) == WindowSize.compact;
     final unpriced = e.companions.where((l) => l.unitPrice <= 0).length;
 
-    final add = FilledButton.icon(
-      onPressed: inProject ? null : onAdd,
-      icon: Icon(inProject ? Icons.check : Icons.add),
-      label: Text(
-        inProject ? 'Added to $projectName' : 'Add to $projectName',
-        overflow: TextOverflow.ellipsis,
-      ),
-    );
-    final change = TextButton.icon(
-      onPressed: onChangeProject,
-      icon: const Icon(Icons.swap_horiz, size: 18),
-      label: const Text('Change project'),
-    );
+    final Widget add;
+    final Widget change;
+    if (onUpdate != null) {
+      add = FilledButton.icon(
+        onPressed: onUpdate,
+        icon: const Icon(Icons.check),
+        label: const Text('Update item'),
+      );
+      change = TextButton.icon(
+        onPressed: onAddNew,
+        icon: const Icon(Icons.add, size: 18),
+        label: const Text('Add as a new item'),
+      );
+    } else {
+      add = FilledButton.icon(
+        onPressed: inProject ? null : onAdd,
+        icon: Icon(inProject ? Icons.check : Icons.add),
+        label: Text(
+          inProject ? 'Added to $projectName' : 'Add to $projectName',
+          overflow: TextOverflow.ellipsis,
+        ),
+      );
+      change = TextButton.icon(
+        onPressed: onChangeProject,
+        icon: const Icon(Icons.swap_horiz, size: 18),
+        label: const Text('Change project'),
+      );
+    }
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Column(

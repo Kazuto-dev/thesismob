@@ -65,4 +65,31 @@ void main() {
     expect(byRoom.isVisible(const {'mode': 'room'}), isTrue);
     expect(byRoom.isVisible(const {'mode': 'count'}), isFalse);
   });
+
+  test('a value far above the usual suggests the smaller unit', () {
+    const f = NumberField(
+      id: 't',
+      label: 'Thickness',
+      unit: 'm',
+      max: 5,
+      hint: 'Usually 0.25–0.30 m',
+      typical: (min: 0.15, max: 1.5),
+    );
+    expect(f.likelyMeant(0.3), isNull);
+    expect(f.likelyMeant(25), (value: 0.25, unit: 'cm'));
+    expect(f.likelyMeant(250), (value: 0.25, unit: 'mm'));
+    expect(f.isUnusual(3), isTrue);
+    expect(f.likelyMeant(3), isNull, reason: 'neither cm nor mm fits');
+
+    final feet = f.inFeet();
+    expect(feet.unit, 'ft');
+    expect(feet.hint, 'Usually 0.8–1 ft');
+    expect(feet.max, 16);
+    // Six inches typed into a field in feet.
+    expect(feet.likelyMeant(6), (value: 0.5, unit: 'in'));
+    expect(
+      const NumberField(id: 'n', label: 'Number', unit: 'pcs').inFeet().unit,
+      'pcs',
+    );
+  });
 }

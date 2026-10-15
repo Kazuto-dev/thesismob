@@ -77,7 +77,7 @@ List<BoqRow> boqRows(Project project) {
       rows.add(
         _row(
           '${g.letter}.${i + 1}',
-          e.label,
+          e.note == null ? e.title : '${e.title} (${e.note})',
           quantity: e.quantity,
           unit: e.unit.labelFor(e.quantity),
           unitPrice: e.unitPrice,
@@ -209,9 +209,10 @@ String projectText(Project project) {
     b.writeln('\n${tradeLabel(g.trade)}');
     for (final e in g.items) {
       b.writeln(
-        '• ${e.label}: ${formatQuantity(e.quantity, e.unit)} × '
+        '• ${e.title}: ${formatQuantity(e.quantity, e.unit)} × '
         '${formatMoney(e.unitPrice)} = ${formatMoney(e.total)}',
       );
+      if (e.note != null) b.writeln('   ${e.note}');
       for (final l in e.companions) {
         b.writeln(
           '   – ${l.label}: ${formatNumber(l.quantity)} ${l.unit} = '
