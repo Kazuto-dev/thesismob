@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../data/checklists.dart';
@@ -88,8 +89,8 @@ class _ProjectDetailsDialogState extends State<_ProjectDetailsDialog> {
               textCapitalization: TextCapitalization.words,
               maxLength: 80,
               decoration: InputDecoration(
-                labelText: 'Project name',
-                hintText: 'Santos residence',
+                labelText: context.tr('Project name'),
+                hintText: context.tr('Santos residence'),
                 errorText: _error,
               ),
               textInputAction: TextInputAction.next,
@@ -99,9 +100,9 @@ class _ProjectDetailsDialogState extends State<_ProjectDetailsDialog> {
               controller: _client,
               textCapitalization: TextCapitalization.words,
               maxLength: 80,
-              decoration: const InputDecoration(
-                labelText: 'Client',
-                helperText: 'Optional',
+              decoration: InputDecoration(
+                labelText: context.tr('Client'),
+                helperText: context.tr('Optional'),
               ),
               textInputAction: TextInputAction.next,
             ),
@@ -110,25 +111,31 @@ class _ProjectDetailsDialogState extends State<_ProjectDetailsDialog> {
               controller: _location,
               textCapitalization: TextCapitalization.words,
               maxLength: 120,
-              decoration: const InputDecoration(
-                labelText: 'Location',
-                hintText: 'Lot 4, Antipolo, Rizal',
-                helperText: 'Optional',
+              decoration: InputDecoration(
+                labelText: context.tr('Location'),
+                hintText: context.tr('Lot 4, Antipolo, Rizal'),
+                helperText: context.tr('Optional'),
               ),
               onSubmitted: (_) => _save(),
             ),
             if (creating) ...[
               const SizedBox(height: Space.md),
               Text(
-                'Budget style',
+                context.tr('Budget style'),
                 style: Theme.of(context).textTheme.labelLarge,
               ),
-              const SizedBox(height: Space.sm),
+              SizedBox(height: Space.sm),
               SegmentedButton<bool>(
                 showSelectedIcon: false,
-                segments: const [
-                  ButtonSegment(value: false, label: Text('Owner budget')),
-                  ButtonSegment(value: true, label: Text('Contractor bid')),
+                segments: [
+                  ButtonSegment(
+                    value: false,
+                    label: Text(context.tr('Owner budget')),
+                  ),
+                  ButtonSegment(
+                    value: true,
+                    label: Text(context.tr('Contractor bid')),
+                  ),
                 ],
                 selected: {_contractor},
                 onSelectionChanged: (s) =>
@@ -146,14 +153,17 @@ class _ProjectDetailsDialogState extends State<_ProjectDetailsDialog> {
                 ),
               ),
               const SizedBox(height: Space.lg),
-              Text('Checklist', style: Theme.of(context).textTheme.labelLarge),
+              Text(
+                context.tr('Checklist'),
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
               const SizedBox(height: Space.sm),
               Wrap(
                 spacing: Space.sm,
                 runSpacing: Space.sm,
                 children: [
                   ChoiceChip(
-                    label: const Text('None'),
+                    label: Text(context.tr('None')),
                     selected: _checklist == null,
                     showCheckmark: false,
                     onSelected: (_) => setState(() => _checklist = null),
@@ -185,7 +195,7 @@ class _ProjectDetailsDialogState extends State<_ProjectDetailsDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(context.tr('Cancel')),
         ),
         FilledButton(
           onPressed: _save,
@@ -247,7 +257,7 @@ class _ProjectPicker extends StatelessWidget {
             child: Semantics(
               header: true,
               child: Text(
-                'Add estimates to',
+                context.tr('Add estimates to'),
                 style: theme.textTheme.titleLarge,
               ),
             ),
@@ -293,7 +303,7 @@ class _ProjectPicker extends StatelessWidget {
                 if (created != null) navigator.pop();
               },
               icon: const Icon(Icons.add),
-              label: const Text('New project'),
+              label: Text(context.tr('New project')),
             ),
           ),
         ],

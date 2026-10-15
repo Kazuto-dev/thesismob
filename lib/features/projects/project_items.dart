@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
@@ -30,7 +31,7 @@ void duplicateItem(BuildContext context, Project project, Estimate e) {
     context,
     'Duplicated ${e.title}.',
     action: SnackBarAction(
-      label: 'Undo',
+      label: context.tr('Undo'),
       onPressed: () => controller.removeItem(copy.id, projectId: project.id),
     ),
   );
@@ -57,7 +58,7 @@ void removeItem(BuildContext context, Project project, Estimate e) {
     context,
     'Removed ${e.title}.',
     action: SnackBarAction(
-      label: 'Undo',
+      label: context.tr('Undo'),
       onPressed: () => controller.restoreItem(
         removed.index,
         removed.estimate,
@@ -152,37 +153,37 @@ class ItemMenu extends StatelessWidget {
         MenuItemButton(
           leadingIcon: const Icon(Icons.edit_outlined),
           onPressed: canEdit ? () => editItem(context, project, e) : null,
-          child: const Text('Edit in calculator'),
+          child: Text(context.tr('Edit in calculator')),
         ),
         MenuItemButton(
           leadingIcon: const Icon(Icons.label_outline),
           onPressed: () => labelItem(context, project, e),
-          child: const Text('Name and note'),
+          child: Text(context.tr('Name and note')),
         ),
         MenuItemButton(
           leadingIcon: const Icon(Icons.copy_outlined),
           onPressed: () => duplicateItem(context, project, e),
-          child: const Text('Duplicate'),
+          child: Text(context.tr('Duplicate')),
         ),
         MenuItemButton(
           leadingIcon: const Icon(Icons.arrow_upward),
           onPressed: first
               ? null
               : () => moveItem(context, project, e, up: true),
-          child: const Text('Move up'),
+          child: Text(context.tr('Move up')),
         ),
         MenuItemButton(
           leadingIcon: const Icon(Icons.arrow_downward),
           onPressed: last
               ? null
               : () => moveItem(context, project, e, up: false),
-          child: const Text('Move down'),
+          child: Text(context.tr('Move down')),
         ),
         const Divider(),
         MenuItemButton(
           leadingIcon: const Icon(Icons.delete_outline),
           onPressed: () => removeItem(context, project, e),
-          child: const Text('Remove'),
+          child: Text(context.tr('Remove')),
         ),
       ],
     );
@@ -266,17 +267,17 @@ class _ItemDetails extends StatelessWidget {
               FilledButton.icon(
                 onPressed: onEdit,
                 icon: const Icon(Icons.edit_outlined),
-                label: const Text('Edit'),
+                label: Text(context.tr('Edit')),
               ),
             OutlinedButton.icon(
               onPressed: onLabel,
               icon: const Icon(Icons.label_outline),
-              label: const Text('Name and note'),
+              label: Text(context.tr('Name and note')),
             ),
             OutlinedButton.icon(
               onPressed: onDuplicate,
               icon: const Icon(Icons.copy_outlined),
-              label: const Text('Duplicate'),
+              label: Text(context.tr('Duplicate')),
             ),
             TextButton.icon(
               style: TextButton.styleFrom(
@@ -284,7 +285,7 @@ class _ItemDetails extends StatelessWidget {
               ),
               onPressed: onRemove,
               icon: const Icon(Icons.delete_outline),
-              label: const Text('Remove'),
+              label: Text(context.tr('Remove')),
             ),
           ],
         ),
@@ -331,9 +332,9 @@ class _LabelDialogState extends State<_LabelDialog> {
             autofocus: true,
             textCapitalization: TextCapitalization.sentences,
             inputFormatters: [LengthLimitingTextInputFormatter(60)],
-            decoration: const InputDecoration(
-              labelText: 'Name or mark',
-              hintText: 'F1, Kitchen wall, 2nd floor slab',
+            decoration: InputDecoration(
+              labelText: context.tr('Name or mark'),
+              hintText: context.tr('F1, Kitchen wall, 2nd floor slab'),
             ),
             textInputAction: TextInputAction.next,
           ),
@@ -344,10 +345,12 @@ class _LabelDialogState extends State<_LabelDialog> {
             inputFormatters: [LengthLimitingTextInputFormatter(200)],
             minLines: 2,
             maxLines: 4,
-            decoration: const InputDecoration(
-              labelText: 'Note',
-              hintText: 'Where it is, what it includes, what to check',
-              helperText: 'Printed in the bill of quantities',
+            decoration: InputDecoration(
+              labelText: context.tr('Note'),
+              hintText: context.tr(
+                'Where it is, what it includes, what to check',
+              ),
+              helperText: context.tr('Printed in the bill of quantities'),
             ),
           ),
         ],
@@ -356,9 +359,9 @@ class _LabelDialogState extends State<_LabelDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.of(context).pop(),
-        child: const Text('Cancel'),
+        child: Text(context.tr('Cancel')),
       ),
-      FilledButton(onPressed: _save, child: const Text('Save')),
+      FilledButton(onPressed: _save, child: Text(context.tr('Save'))),
     ],
   );
 }

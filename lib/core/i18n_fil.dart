@@ -1,0 +1,340 @@
+// Filipino for the app's own text. Keys are the English text exactly as
+// written in the screens; `{name}` placeholders are filled in at run time.
+// Construction terms people say in English (slab, plywood, tiles, budget)
+// stay in English, as builders and hardware stores use them.
+const filipino = <String, String>{
+  // Navigation
+  'Estimate': 'Estimate',
+  'History': 'Kasaysayan',
+  'Project': 'Proyekto',
+  'Settings': 'Settings',
+
+  // Login
+  'Sign in': 'Mag-sign in',
+  'Estimate every material.\nPrice every job.':
+      'Bilangin ang bawat materyales.\nPresyuhan ang bawat trabaho.',
+  'Quantities and costs for Philippine construction, from a single wall to a contractor\'s bid.':
+      'Dami at gastos para sa konstruksiyon sa Pilipinas, mula sa isang '
+      'pader hanggang sa bid ng kontratista.',
+  'Planning estimates. Confirm quantities and prices with your engineer and supplier before buying.':
+      'Pang-plano lamang ang mga estimate. Kumpirmahin ang dami at presyo sa '
+      'inyong engineer at supplier bago bumili.',
+  '29 calculators, from concrete and rebar to wiring and plumbing':
+      '29 calculator, mula semento at bakal hanggang wiring at tubo',
+  'Every material priced from a 2026 Philippine price book':
+      'May presyo ang bawat materyales mula sa 2026 price book ng Pilipinas',
+  'Projects with a bill of quantities, a budget, PDF and Google Sheets':
+      'Mga proyektong may bill of quantities, budget, PDF at Google Sheets',
+  'Welcome': 'Maligayang pagdating',
+  'Sign in with Google to save your projects as spreadsheets in your own Google Drive.':
+      'Mag-sign in sa Google para i-save ang mga proyekto bilang spreadsheet '
+      'sa sarili ninyong Google Drive.',
+  'or': 'o',
+  'Continue without signing in': 'Magpatuloy nang hindi nagsa-sign in',
+  'BuildQuantify can only open the spreadsheets it creates. Your projects stay in this browser, and you can sign in later from Settings.':
+      'Ang mga spreadsheet lang na ginawa nito ang mabubuksan ng '
+      'BuildQuantify. Nananatili sa browser na ito ang inyong mga proyekto, '
+      'at puwede kayong mag-sign in mamaya sa Settings.',
+
+  // Home
+  'Categories': 'Mga kategorya',
+  'Popular calculators': 'Mga madalas gamitin',
+  'What are you building?': 'Ano ang itatayo ninyo?',
+  'Estimate how much material to buy and what it costs, using sizes sold in the Philippines.':
+      'Alamin kung gaano karaming materyales ang bibilhin at magkano, gamit '
+      'ang mga sukat na mabibili sa Pilipinas.',
+  'Open project': 'Buksan ang proyekto',
+  'Search, e.g. paint or yero': 'Maghanap, hal. pintura o yero',
+  'Clear search': 'Burahin ang hinahanap',
+  'No matches': 'Walang tugma',
+  'Nothing matches "{query}". Try a material such as blocks, paint, tiles, wire or pipe.':
+      'Walang tumugma sa "{query}". Subukan ang hollow block, pintura, tiles, '
+      'wire o tubo.',
+  '1 material': '1 materyales',
+  '{n} materials': '{n} materyales',
+  '{n} calculators': '{n} calculator',
+  '{category} materials': 'Materyales: {category}',
+  'Recent': 'Kamakailan',
+  'See all': 'Tingnan lahat',
+  'Get started': 'Magsimula',
+  'Pick a calculator and type your measurements':
+      'Pumili ng calculator at ilagay ang mga sukat',
+  'Add the result to a project': 'Idagdag ang resulta sa isang proyekto',
+  'Download a PDF or save to Google Sheets':
+      'Mag-download ng PDF o i-save sa Google Sheets',
+  'Plan a house': 'Magplano ng bahay',
+  'Not now': 'Mamaya na',
+  'New here?': 'Bago rito?',
+  'See how estimates work and how to send them to Google Sheets.':
+      'Alamin kung paano gumagana ang estimate at paano ito ipadala sa '
+      'Google Sheets.',
+
+  // Calculator
+  'Edit {material}': 'I-edit: {material}',
+  'Definitions': 'Kahulugan',
+  "How it's calculated": 'Paano kinuwenta',
+  'Measurements': 'Mga sukat',
+  'Options': 'Mga opsyon',
+  'Price': 'Presyo',
+  'Name in the project': 'Pangalan sa proyekto',
+  'Name or mark (optional)': 'Pangalan o marka (opsyonal)',
+  'F1, Kitchen wall, 2nd floor slab': 'F1, Pader ng kusina, slab ng 2nd floor',
+  'Shown in the bill of quantities': 'Lalabas sa bill of quantities',
+  'Editing an item in {project}': 'Ine-edit ang item sa {project}',
+  'Change what you need, then choose Update item.':
+      'Baguhin ang kailangan, saka piliin ang I-update ang item.',
+  'Cancel': 'Kanselahin',
+  '{value} is a lot for {field}. Check the unit.':
+      'Masyadong malaki ang {value} para sa {field}. Suriin ang unit.',
+  '{value} is a lot for {field}. Did you type {unit}?':
+      'Masyadong malaki ang {value} para sa {field}. {unit} ba ang nailagay '
+      'ninyo?',
+  'Use {value}': 'Gamitin ang {value}',
+  'Length unit': 'Unit ng haba',
+  'Metres': 'Metro',
+  'Feet': 'Talampakan',
+  'More options': 'Iba pang opsyon',
+  'not set': 'wala pa',
+  'Choose one': 'Pumili ng isa',
+  'What is {term}?': 'Ano ang {term}?',
+  'Update': 'I-update',
+  'Update item': 'I-update ang item',
+  'Add as a new item': 'Idagdag bilang bagong item',
+  'Change project': 'Palitan ang proyekto',
+  'Your estimate': 'Ang inyong estimate',
+  'Total cost': 'Kabuuang gastos',
+  'Materials total': 'Kabuuan ng materyales',
+  'at {price} per {unit}': 'sa {price} bawat {unit}',
+  '{main} {unit} + {others} other materials':
+      '{main} {unit} + {others} ibang materyales',
+  'Materials only. Labour and markups are added in the project budget.':
+      'Materyales lang ito. Idinadagdag ang labor at markup sa budget ng '
+      'proyekto.',
+  'Materials for this job': 'Materyales para sa trabahong ito',
+  "How it's worked out": 'Paano kinuwenta',
+  '{n} without a price yet. Tap a line to set one.':
+      '{n} na wala pang presyo. I-tap ang linya para lagyan.',
+  'Priced from your price book. Tap a line to change its price.':
+      'Galing sa inyong price book ang presyo. I-tap ang linya para baguhin.',
+  'no price yet': 'wala pang presyo',
+  'Set price': 'Lagyan ng presyo',
+  'Change price': 'Baguhin ang presyo',
+  'Enter {fields} to see the estimate. It updates as you type.':
+      'Ilagay ang {fields} para makita ang estimate. Nagbabago ito habang '
+      'nagta-type kayo.',
+  'your measurements': 'ang mga sukat',
+  'and': 'at',
+  'Add to {project}': 'Idagdag sa {project}',
+  'Added to {project}': 'Naidagdag sa {project}',
+  'Add': 'Idagdag',
+  'Added': 'Naidagdag',
+  'Check your measurements': 'Suriin ang mga sukat',
+  'Saved to your price book for later estimates':
+      'Mase-save sa price book para sa susunod na estimate',
+  'View': 'Tingnan',
+  'Save': 'I-save',
+
+  // History
+  'History cleared.': 'Nabura ang kasaysayan.',
+  'Undo': 'Ibalik',
+  'Your last 100 calculations, newest first':
+      'Ang huling 100 kuwenta, pinakabago muna',
+  'Clear history': 'Burahin ang kasaysayan',
+  'No calculations yet': 'Wala pang kuwenta',
+  'Every estimate you work out is kept here, so you can reopen and adjust it later.':
+      'Dito itinatago ang bawat estimate, para mabuksan at maayos ninyo ito '
+      'mamaya.',
+  'Start an estimate': 'Magsimula ng estimate',
+  'Inputs': 'Mga inilagay',
+  'Open in calculator': 'Buksan sa calculator',
+  'Delete': 'Burahin',
+  'Page not found': 'Walang ganitong pahina',
+  "That link doesn't lead anywhere in BuildQuantify.":
+      'Walang patutunguhan ang link na iyan sa BuildQuantify.',
+  'Go to home': 'Bumalik sa simula',
+
+  // Project
+  'Projects': 'Mga proyekto',
+  'Keep each house, renovation or bid separate. Estimates go to the active project.':
+      'Ihiwalay ang bawat bahay, renovation o bid. Napupunta ang estimate sa '
+      'aktibong proyekto.',
+  'Active': 'Aktibo',
+  'New project': 'Bagong proyekto',
+  'All projects': 'Lahat ng proyekto',
+  'No estimates yet': 'Wala pang estimate',
+  'Items': 'Mga item',
+  'To buy': 'Bibilhin',
+  'Budget': 'Budget',
+  'New estimates go to another project.':
+      'Sa ibang proyekto napupunta ang mga bagong estimate.',
+  'Add estimates here': 'Dito idagdag ang estimate',
+  'Add estimates to': 'Idagdag ang estimate sa',
+  'Project actions': 'Mga aksiyon sa proyekto',
+  'Edit details': 'I-edit ang detalye',
+  'Duplicate': 'Doblehin',
+  '{name} checklist': 'Checklist ng {name}',
+  'Add a checklist': 'Magdagdag ng checklist',
+  'Download PDF': 'I-download ang PDF',
+  'Download for Excel (CSV)': 'I-download para sa Excel (CSV)',
+  'Copy as text': 'Kopyahin bilang text',
+  'Save to Google Sheets': 'I-save sa Google Sheets',
+  'Update Google Sheet': 'I-update ang Google Sheet',
+  'Open in Google Sheets': 'Buksan sa Google Sheets',
+  'Remove all estimates': 'Alisin lahat ng estimate',
+  'Delete project': 'Burahin ang proyekto',
+  'Materials by trade': 'Materyales ayon sa trabaho',
+  'Copied the shopping list.': 'Nakopya ang listahan ng bibilhin.',
+  'Copied the project as text.': 'Nakopya ang proyekto bilang text.',
+  'Every material merged across the estimates. Tap a line to change its price.':
+      'Pinagsama ang bawat materyales mula sa lahat ng estimate. I-tap ang '
+      'linya para baguhin ang presyo.',
+  'Copy list': 'Kopyahin ang listahan',
+  'Total contract price': 'Kabuuang presyo ng kontrata',
+  'Project budget': 'Budget ng proyekto',
+  '1 item': '1 item',
+  '{n} items': '{n} item',
+  'Preparing the PDF…': 'Inihahanda ang PDF…',
+  'Add an estimate': 'Magdagdag ng estimate',
+  'Search, e.g. footing, tiles, wire': 'Maghanap, hal. footing, tiles, wire',
+  'Click a unit price to change it for this item only. Prices for the whole project are set under To buy.':
+      'I-click ang unit price para baguhin ito sa item na ito lang. Sa '
+      'Bibilhin binabago ang presyo para sa buong proyekto.',
+
+  // Project items
+  'Edit': 'I-edit',
+  'Edit in calculator': 'I-edit sa calculator',
+  'Name and note': 'Pangalan at tala',
+  'Move up': 'Itaas',
+  'Move down': 'Ibaba',
+  'Remove': 'Alisin',
+  'Name or mark': 'Pangalan o marka',
+  'Note': 'Tala',
+  'Where it is, what it includes, what to check':
+      'Kung saan ito, ano ang kasama, ano ang susuriin',
+  'Printed in the bill of quantities': 'Nakalimbag sa bill of quantities',
+
+  // Checklist
+  'Checklist': 'Checklist',
+  'All {n} done': 'Tapos na lahat ng {n}',
+  '{done} of {n} done · next: {item}':
+      '{done} sa {n} ang tapos · susunod: {item}',
+  'Checklist actions': 'Mga aksiyon sa checklist',
+  'Remove checklist': 'Alisin ang checklist',
+  'Show what is next': 'Ipakita ang susunod',
+  'Show all {n}': 'Ipakita lahat ng {n}',
+  '{item} not needed': 'Hindi kailangan ang {item}',
+  'Needed': 'Kailangan',
+  'Add more': 'Magdagdag pa',
+  'Estimated': 'May estimate na',
+  'Not needed': 'Hindi kailangan',
+  'House': 'Bahay',
+  'Renovation': 'Renovation',
+
+  // Project details
+  'Project name': 'Pangalan ng proyekto',
+  'Client': 'Kliyente',
+  'Optional': 'Opsyonal',
+  'Location': 'Lokasyon',
+  'Budget style': 'Uri ng budget',
+  'Owner budget': 'Budget ng may-ari',
+  'Contractor bid': 'Bid ng kontratista',
+
+  // Budget
+  'What these mean': 'Ano ang mga ito',
+  'Owner': 'May-ari',
+  'Contractor': 'Kontratista',
+  'Labour': 'Labor',
+  'Minor tools': 'Maliliit na gamit',
+  'Hauling and delivery': 'Hakot at delivery',
+  'Contingency': 'Contingency',
+  'Overhead (OCM)': 'Overhead (OCM)',
+  'Profit': 'Tubo',
+  'Labour by trade': 'Labor ayon sa trabaho',
+  'Leave empty to use {pct}%': 'Iwanang blangko para gamitin ang {pct}%',
+  '{trade} labour': 'Labor sa {trade}',
+  'Labour as a share of materials is a planning rule of thumb, about 30–45% for houses. Use your own quotes when you have them.':
+      'Pang-plano lamang ang labor bilang bahagi ng materyales, mga 30–45% '
+      'para sa bahay. Gamitin ang sariling quotation kapag mayroon na.',
+  'Budget terms': 'Mga termino sa budget',
+  'What the workers cost: masons, carpenters, steelmen, electricians, plumbers and helpers. Here it is a share of the materials, a planning rule of thumb; use your crew\'s quote when you have it.':
+      'Bayad sa mga trabahador: mason, karpintero, panday-bakal, elektrisyan, '
+      'tubero at helper. Dito, bahagi ito ng materyales bilang tantiya; '
+      'gamitin ang quotation ng inyong grupo kapag mayroon na.',
+  'Small tools and consumables used up on the job, such as trowels, saw blades and cutting discs, as a share of labour.':
+      'Maliliit na gamit at nauubos sa trabaho, gaya ng kutsara, talim ng '
+      'lagari at cutting disc, bilang bahagi ng labor.',
+  'Trucking materials to the site and carting away debris.':
+      'Paghakot ng materyales papunta sa site at pagtapon ng debris.',
+  'Direct cost': 'Direktang gastos',
+  'Materials, labour, tools and hauling together.':
+      'Materyales, labor, gamit at hakot nang magkakasama.',
+  'Money set aside for the unexpected: price increases, extra work and mistakes. 5–10% is usual for a house.':
+      'Perang nakalaan sa hindi inaasahan: pagtaas ng presyo, dagdag na '
+      'trabaho at pagkakamali. Karaniwan ang 5–10% para sa bahay.',
+  'A contractor\'s overhead, contingencies and miscellaneous costs: office, permits, insurance, bonds, supervision and the like.':
+      'Overhead, contingency at iba pang gastos ng kontratista: opisina, '
+      'permit, insurance, bond, superbisyon at iba pa.',
+  'What the contractor earns on the job.': 'Ang kinikita ng kontratista.',
+  'Value-added tax. VAT-registered contractors charge 12% on their price; DPWH estimates use 5%.':
+      'Value-added tax. 12% ang singil ng mga VAT-registered na kontratista; '
+      '5% ang gamit sa estimate ng DPWH.',
+  'The Department of Public Works and Highways. Its estimates follow Department Order 197 (2016), which sets overhead and profit by project size.':
+      'Ang Department of Public Works and Highways. Sinusunod ng estimate '
+      'nito ang Department Order 197 (2016), na nagtatakda ng overhead at '
+      'tubo ayon sa laki ng proyekto.',
+
+  // Settings
+  'Prices, backups, Google Sheets and help':
+      'Presyo, backup, Google Sheets at tulong',
+  'Price book': 'Price book',
+  'Your prices were cleared.': 'Nabura ang inyong mga presyo.',
+  'Clear my prices': 'Burahin ang aking mga presyo',
+  'Calculators fill in these prices and use them for the materials each job also needs. Set your supplier\'s price to use it everywhere.':
+      'Ginagamit ng mga calculator ang mga presyong ito para sa materyales ng '
+      'bawat trabaho. Ilagay ang presyo ng inyong supplier para magamit ito '
+      'saanman.',
+  'Where is the project?': 'Saan ang proyekto?',
+  'Suggested prices are raised for regions where materials cost more':
+      'Mas mataas ang mungkahing presyo sa mga rehiyong mas mahal ang '
+      'materyales',
+  'Search materials': 'Maghanap ng materyales',
+  'Use the suggested price': 'Gamitin ang mungkahing presyo',
+  'Open price book': 'Buksan ang price book',
+  'Google Sheets': 'Google Sheets',
+  'Sign in with Google to save projects as spreadsheets in your own Google Drive: the bill of quantities, the materials to buy and the budget, each on its own tab.':
+      'Mag-sign in sa Google para i-save ang mga proyekto bilang spreadsheet '
+      'sa sarili ninyong Google Drive: ang bill of quantities, ang bibilhin '
+      'at ang budget, bawat isa sa sariling tab.',
+  'Signed out of Google.': 'Naka-sign out na sa Google.',
+  'Sign out': 'Mag-sign out',
+  'Backup and restore': 'Backup at pagbabalik',
+  'Your projects, prices and history are saved in this browser only. Download a backup to keep them safe or to move them to another device.':
+      'Sa browser na ito lang naka-save ang inyong mga proyekto, presyo at '
+      'kasaysayan. Mag-download ng backup para maingatan ito o mailipat sa '
+      'ibang device.',
+  'Download backup': 'I-download ang backup',
+  'Restore from file': 'Ibalik mula sa file',
+  'Restore this backup?': 'Ibalik ang backup na ito?',
+  'Restore': 'Ibalik',
+  'Google Drive': 'Google Drive',
+  'Back up to Drive': 'I-back up sa Drive',
+  'Restore from Drive': 'Ibalik mula sa Drive',
+  'Back up automatically': 'Awtomatikong i-back up',
+  'Saves changes to Drive within a minute, for an hour after each sign-in or backup':
+      'Sine-save ang mga pagbabago sa Drive sa loob ng isang minuto, hanggang '
+      'isang oras matapos ang bawat sign-in o backup',
+  'Appearance and units': 'Hitsura at unit',
+  'System': 'System',
+  'Light': 'Maliwanag',
+  'Dark': 'Madilim',
+  'Language': 'Wika',
+  'Help, definitions and documents stay in English, the language of plans and specifications.':
+      'Nananatili sa English ang tulong, mga kahulugan at mga dokumento, ang '
+      'wika ng mga plano at specification.',
+  'Measure lengths in': 'Sukatin ang haba sa',
+  'Calculators take lengths in feet when you choose feet. Results, documents and prices stay metric, as suppliers sell them.':
+      'Talampakan ang tatanggapin ng mga calculator kapag pinili ito. '
+      'Nananatiling metric ang resulta, dokumento at presyo, gaya ng benta '
+      'ng mga supplier.',
+  'Help and about': 'Tulong at tungkol sa app',
+};

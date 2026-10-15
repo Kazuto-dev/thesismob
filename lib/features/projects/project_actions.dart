@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
 import '../../core/widgets.dart';
 import '../../data/project.dart';
 import '../../data/google_sheets_client.dart';
@@ -18,7 +19,7 @@ import '../../state/projects_controller.dart';
 
 /// Downloads the project's bill of quantities as a PDF.
 Future<void> downloadProjectPdf(BuildContext context, Project project) async {
-  showMessage(context, 'Preparing the PDF…');
+  showMessage(context, context.tr('Preparing the PDF…'));
   try {
     await pdf.loadLibrary();
     final bytes = await pdf.projectPdf(project);
@@ -58,7 +59,9 @@ Future<void> downloadProjectCsv(BuildContext context, Project project) async {
 /// Copies the project as plain text, ready to paste into a message.
 Future<void> copyProjectText(BuildContext context, Project project) async {
   await Clipboard.setData(ClipboardData(text: projectText(project)));
-  if (context.mounted) showMessage(context, 'Copied the project as text.');
+  if (context.mounted) {
+    showMessage(context, context.tr('Copied the project as text.'));
+  }
 }
 
 /// Saves the project to a spreadsheet in the user's Google Drive, signing
@@ -76,11 +79,14 @@ Future<void> saveProjectToSheets(BuildContext context, Project project) async {
     context,
     result.message,
     action: sheet != null
-        ? SnackBarAction(label: 'Open', onPressed: () => openUrl(sheet.url))
+        ? SnackBarAction(
+            label: context.tr('Open'),
+            onPressed: () => openUrl(sheet.url),
+          )
         : context.read<GoogleAccountController>().isConfigured
         ? null
         : SnackBarAction(
-            label: 'Settings',
+            label: context.tr('Settings'),
             onPressed: () => context.go(Routes.settings),
           ),
   );
@@ -106,7 +112,7 @@ Future<void> confirmDeleteProject(BuildContext context, Project project) async {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
+          child: Text(context.tr('Cancel')),
         ),
         FilledButton(
           style: FilledButton.styleFrom(
@@ -114,7 +120,7 @@ Future<void> confirmDeleteProject(BuildContext context, Project project) async {
             foregroundColor: Theme.of(context).colorScheme.onError,
           ),
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Delete'),
+          child: Text(context.tr('Delete')),
         ),
       ],
     ),
@@ -127,7 +133,7 @@ Future<void> confirmDeleteProject(BuildContext context, Project project) async {
     context,
     'Deleted ${project.name}.',
     action: SnackBarAction(
-      label: 'Undo',
+      label: context.tr('Undo'),
       onPressed: () => controller.restore(removed.index, removed.project),
     ),
   );

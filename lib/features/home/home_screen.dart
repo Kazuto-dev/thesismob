@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
 import '../../core/format.dart';
 import '../../core/layout.dart';
 import '../../core/theme.dart';
@@ -65,9 +66,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     _SearchResults(query: _query)
                   else ...[
                     const _GetStarted(),
-                    const SectionHeader('Categories'),
+                    SectionHeader(context.tr('Categories')),
                     const _CategoryGrid(),
-                    const SectionHeader('Popular calculators'),
+                    SectionHeader(context.tr('Popular calculators')),
                     _MaterialGrid(
                       specs: [for (final id in _popular) materialById(id)!],
                     ),
@@ -117,7 +118,7 @@ class _Hero extends StatelessWidget {
               Semantics(
                 header: true,
                 child: Text(
-                  'What are you building?',
+                  context.tr('What are you building?'),
                   style:
                       (compact
                               ? theme.textTheme.headlineMedium
@@ -129,8 +130,10 @@ class _Hero extends StatelessWidget {
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 560),
                 child: Text(
-                  'Estimate how much material to buy and what it costs, '
-                  'using sizes sold in the Philippines.',
+                  context.tr(
+                    'Estimate how much material to buy and what it costs, '
+                    'using sizes sold in the Philippines.',
+                  ),
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: palette.onInkMuted,
                   ),
@@ -180,7 +183,7 @@ class _Hero extends StatelessWidget {
                       ),
                       iconAlignment: IconAlignment.end,
                       icon: const Icon(Icons.arrow_forward, size: 18),
-                      label: const Text('Open project'),
+                      label: Text(context.tr('Open project')),
                     ),
                   ],
                 ),
@@ -214,7 +217,7 @@ class _SearchField extends StatelessWidget {
         style: theme.textTheme.bodyLarge?.copyWith(color: palette.onInk),
         cursorColor: palette.inkAccent,
         decoration: InputDecoration(
-          hintText: 'Search, e.g. paint or yero',
+          hintText: context.tr('Search, e.g. paint or yero'),
           hintStyle: theme.textTheme.bodyLarge?.copyWith(
             color: palette.onInkMuted,
           ),
@@ -224,7 +227,7 @@ class _SearchField extends StatelessWidget {
           suffixIcon: value.text.isEmpty
               ? null
               : IconButton(
-                  tooltip: 'Clear search',
+                  tooltip: context.tr('Clear search'),
                   icon: Icon(Icons.close, color: palette.onInkMuted),
                   onPressed: controller.clear,
                 ),
@@ -256,15 +259,19 @@ class _SearchResults extends StatelessWidget {
       children: [
         SectionHeader(
           results.isEmpty
-              ? 'No matches'
-              : results.length == 1
-              ? '1 material'
-              : '${results.length} materials',
+              ? context.tr('No matches')
+              : context.tr(
+                  results.length == 1 ? '1 material' : '{n} materials',
+                  {'n': results.length},
+                ),
         ),
         if (results.isEmpty)
           Text(
-            'Nothing matches "${query.trim()}". Try a material such as '
-            'blocks, paint, tiles, wire or pipe.',
+            context.tr(
+              'Nothing matches "{query}". Try a material such as blocks, '
+              'paint, tiles, wire or pipe.',
+              {'query': query.trim()},
+            ),
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -310,10 +317,13 @@ class _CategoryCard extends StatelessWidget {
           children: [
             IconTile.category(category, size: 52),
             const SizedBox(height: Space.lg),
-            Text(category.label, style: theme.textTheme.titleMedium),
+            Text(
+              context.tr(category.label),
+              style: theme.textTheme.titleMedium,
+            ),
             const SizedBox(height: 2),
             Text(
-              category.tagline,
+              context.tr(category.tagline),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -324,7 +334,7 @@ class _CategoryCard extends StatelessWidget {
               children: [
                 Flexible(
                   child: Text(
-                    '$count calculators',
+                    context.tr('{n} calculators', {'n': count}),
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: theme.colorScheme.primary,
                     ),
@@ -374,10 +384,10 @@ class _Recent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SectionHeader(
-          'Recent',
+          context.tr('Recent'),
           trailing: TextButton(
             onPressed: () => context.go(Routes.history),
-            child: const Text('See all'),
+            child: Text(context.tr('See all')),
           ),
         ),
         for (final (i, e) in recent.indexed) ...[
@@ -440,7 +450,7 @@ class _GetStarted extends StatelessWidget {
               Semantics(
                 header: true,
                 child: Text(
-                  'Get started',
+                  context.tr('Get started'),
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: scheme.onPrimaryContainer,
                   ),
@@ -468,7 +478,7 @@ class _GetStarted extends StatelessWidget {
                       const SizedBox(width: Space.sm),
                       Expanded(
                         child: Text(
-                          text,
+                          context.tr(text),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: scheme.onPrimaryContainer,
                           ),
@@ -493,13 +503,13 @@ class _GetStarted extends StatelessWidget {
                       }
                     },
                     icon: const Icon(Icons.house_outlined),
-                    label: const Text('Plan a house'),
+                    label: Text(context.tr('Plan a house')),
                   ),
                   TextButton(
                     onPressed: () => context.read<TipsController>().dismiss(
                       TipsController.getStarted,
                     ),
-                    child: const Text('Not now'),
+                    child: Text(context.tr('Not now')),
                   ),
                 ],
               ),
@@ -528,10 +538,15 @@ class _HelpCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('New here?', style: theme.textTheme.titleSmall),
                 Text(
-                  'See how estimates work and how to send them to Google '
-                  'Sheets.',
+                  context.tr('New here?'),
+                  style: theme.textTheme.titleSmall,
+                ),
+                Text(
+                  context.tr(
+                    'See how estimates work and how to send them to Google '
+                    'Sheets.',
+                  ),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

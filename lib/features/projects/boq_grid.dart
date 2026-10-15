@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
@@ -223,8 +224,10 @@ class BoqGrid extends StatelessWidget {
               Space.md,
             ),
             child: Text(
-              'Click a unit price to change it for this item only. Prices '
-              'for the whole project are set under To buy.',
+              context.tr(
+                'Click a unit price to change it for this item only. Prices '
+                'for the whole project are set under To buy.',
+              ),
               style: muted,
             ),
           ),
@@ -331,7 +334,7 @@ class _PriceCellState extends State<_PriceCell> {
               isDense: true,
               prefixText: '₱ ',
               labelText: null,
-              hintText: '0',
+              hintText: context.tr('0'),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: Space.sm,
                 vertical: Space.sm,
@@ -349,7 +352,7 @@ class _PriceCellState extends State<_PriceCell> {
       label:
           'Unit price of ${widget.label}, '
           '${missing ? 'not set' : formatMoney(widget.price)}',
-      hint: 'Edit',
+      hint: context.tr('Edit'),
       excludeSemantics: true,
       child: InkWell(
         onTap: _start,

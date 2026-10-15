@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
 import '../../core/format.dart';
 import '../../core/layout.dart';
 import '../../core/theme.dart';
@@ -49,9 +50,9 @@ class _PriceBookScreenState extends State<PriceBookScreen> {
     book.resetAll();
     showMessage(
       context,
-      'Your prices were cleared.',
+      context.tr('Your prices were cleared.'),
       action: SnackBarAction(
-        label: 'Undo',
+        label: context.tr('Undo'),
         onPressed: () => book.restore(saved),
       ),
     );
@@ -78,15 +79,15 @@ class _PriceBookScreenState extends State<PriceBookScreen> {
     }
 
     return PageTitle(
-      title: 'Price book',
+      title: context.tr('Price book'),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Price book'),
+          title: Text(context.tr('Price book')),
           actions: [
             if (book.custom.isNotEmpty)
               TextButton(
                 onPressed: _resetAll,
-                child: const Text('Clear my prices'),
+                child: Text(context.tr('Clear my prices')),
               ),
           ],
         ),
@@ -101,9 +102,11 @@ class _PriceBookScreenState extends State<PriceBookScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Calculators fill in these prices and use them for the '
-                  'materials each job also needs. Set your supplier\'s price '
-                  'to use it everywhere.',
+                  context.tr(
+                    'Calculators fill in these prices and use them for the '
+                    'materials each job also needs. Set your supplier\'s price '
+                    'to use it everywhere.',
+                  ),
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
@@ -118,11 +121,12 @@ class _PriceBookScreenState extends State<PriceBookScreen> {
                         DropdownButtonFormField<PriceRegion>(
                           initialValue: book.region,
                           isExpanded: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Where is the project?',
-                            helperText:
-                                'Suggested prices are raised for regions '
-                                'where materials cost more',
+                          decoration: InputDecoration(
+                            labelText: context.tr('Where is the project?'),
+                            helperText: context.tr(
+                              'Suggested prices are raised for regions '
+                              'where materials cost more',
+                            ),
                           ),
                           items: [
                             for (final r in PriceRegion.values)
@@ -153,9 +157,9 @@ class _PriceBookScreenState extends State<PriceBookScreen> {
                 const SizedBox(height: Space.lg),
                 TextField(
                   controller: _search,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     prefixIcon: Icon(Icons.search),
-                    hintText: 'Search materials',
+                    hintText: context.tr('Search materials'),
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
@@ -244,7 +248,7 @@ class _PriceRow extends StatelessWidget {
         : null;
     return Semantics(
       button: true,
-      hint: 'Change price',
+      hint: context.tr('Change price'),
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -297,7 +301,7 @@ class _PriceRow extends StatelessWidget {
               ),
               if (custom)
                 IconButton(
-                  tooltip: 'Use the suggested price',
+                  tooltip: context.tr('Use the suggested price'),
                   icon: const Icon(Icons.restart_alt, size: 20),
                   onPressed: onReset,
                 ),

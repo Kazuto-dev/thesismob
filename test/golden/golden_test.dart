@@ -142,4 +142,15 @@ void main() {
     await tester.pumpAndSettle();
     await _snapshot(tester, 'calculator_phone_dark');
   });
+
+  testWidgets('slab calculator in Filipino', skip: _skip != null, (
+    tester,
+  ) async {
+    await pumpApp(
+      tester,
+      location: '/category/structural/slab',
+      prefs: {AppearanceController.languageKey: 'filipino'},
+    );
+    await _snapshot(tester, 'calculator_phone_filipino');
+  });
 }

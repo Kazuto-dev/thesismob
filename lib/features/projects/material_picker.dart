@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
 import '../../materials/catalog.dart';
@@ -77,7 +78,7 @@ class _MaterialPickerState extends State<_MaterialPicker> {
               Semantics(
                 header: true,
                 child: Text(
-                  'Add an estimate',
+                  context.tr('Add an estimate'),
                   style: theme.textTheme.titleLarge,
                 ),
               ),
@@ -85,8 +86,8 @@ class _MaterialPickerState extends State<_MaterialPicker> {
               TextField(
                 autofocus: false,
                 textInputAction: TextInputAction.search,
-                decoration: const InputDecoration(
-                  hintText: 'Search, e.g. footing, tiles, wire',
+                decoration: InputDecoration(
+                  hintText: context.tr('Search, e.g. footing, tiles, wire'),
                   prefixIcon: Icon(Icons.search),
                 ),
                 onChanged: (v) => setState(() => _query = v),

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
 import '../../core/format.dart';
 import '../../core/layout.dart';
 import '../../core/theme.dart';
@@ -26,20 +27,22 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PageTitle(
-      title: 'Settings',
+      title: context.tr('Settings'),
       child: Scaffold(
         body: SafeArea(
           bottom: false,
           child: SingleChildScrollView(
             padding: EdgeInsets.only(bottom: bottomClearance(context)),
-            child: const ContentWidth(
+            child: ContentWidth(
               maxWidth: 720,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   PageHeader(
-                    title: 'Settings',
-                    subtitle: 'Prices, backups, Google Sheets and help',
+                    title: context.tr('Settings'),
+                    subtitle: context.tr(
+                      'Prices, backups, Google Sheets and help',
+                    ),
                   ),
                   _PricesSection(),
                   SizedBox(height: Space.lg),
@@ -126,7 +129,7 @@ class _GoogleSection extends StatelessWidget {
 
     return _Section(
       icon: Icons.table_chart_outlined,
-      title: 'Google Sheets',
+      title: context.tr('Google Sheets'),
       trailing: _StatusChip(
         label: !google.isConfigured
             ? 'Not set up'
@@ -139,9 +142,11 @@ class _GoogleSection extends StatelessWidget {
       ),
       children: [
         Text(
-          'Sign in with Google to save projects as spreadsheets in your own '
-          'Google Drive: the bill of quantities, the materials to buy and the '
-          'budget, each on its own tab.',
+          context.tr(
+            'Sign in with Google to save projects as spreadsheets in your own '
+            'Google Drive: the bill of quantities, the materials to buy and the '
+            'budget, each on its own tab.',
+          ),
           style: muted,
         ),
         const SizedBox(height: Space.lg),
@@ -223,10 +228,13 @@ class _GoogleSection extends StatelessWidget {
                         : () async {
                             await google.signOut();
                             if (context.mounted) {
-                              showMessage(context, 'Signed out of Google.');
+                              showMessage(
+                                context,
+                                context.tr('Signed out of Google.'),
+                              );
                             }
                           },
-                    child: const Text('Sign out'),
+                    child: Text(context.tr('Sign out')),
                   ),
                 ],
               ),
@@ -291,7 +299,7 @@ class _PricesSection extends StatelessWidget {
     final mine = book.custom.length;
     return _Section(
       icon: Icons.sell_outlined,
-      title: 'Price book',
+      title: context.tr('Price book'),
       children: [
         Text(
           'Suggested prices for ${book.region.label}. '
@@ -306,7 +314,7 @@ class _PricesSection extends StatelessWidget {
           child: FilledButton.tonalIcon(
             onPressed: () => context.go(Routes.prices),
             icon: const Icon(Icons.edit_note),
-            label: const Text('Open price book'),
+            label: Text(context.tr('Open price book')),
           ),
         ),
       ],
@@ -382,7 +390,7 @@ class _BackupSection extends StatelessWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Restore this backup?'),
+        title: Text(context.tr('Restore this backup?')),
         content: Text(
           'It has ${backup.projects.length} projects, '
           '${backup.prices.length} prices and ${backup.history.length} '
@@ -392,11 +400,11 @@ class _BackupSection extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(context.tr('Cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Restore'),
+            child: Text(context.tr('Restore')),
           ),
         ],
       ),
@@ -419,12 +427,14 @@ class _BackupSection extends StatelessWidget {
     final google = context.watch<GoogleAccountController>();
     return _Section(
       icon: Icons.backup_outlined,
-      title: 'Backup and restore',
+      title: context.tr('Backup and restore'),
       children: [
         Text(
-          'Your projects, prices and history are saved in this browser only. '
-          'Download a backup to keep them safe or to move them to another '
-          'device.',
+          context.tr(
+            'Your projects, prices and history are saved in this browser only. '
+            'Download a backup to keep them safe or to move them to another '
+            'device.',
+          ),
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -437,18 +447,18 @@ class _BackupSection extends StatelessWidget {
             FilledButton.tonalIcon(
               onPressed: () => _download(context),
               icon: const Icon(Icons.download_outlined),
-              label: const Text('Download backup'),
+              label: Text(context.tr('Download backup')),
             ),
             OutlinedButton.icon(
               onPressed: () => _restore(context),
               icon: const Icon(Icons.upload_file_outlined),
-              label: const Text('Restore from file'),
+              label: Text(context.tr('Restore from file')),
             ),
           ],
         ),
         if (google.isConfigured) ...[
           const SizedBox(height: Space.xl),
-          Text('Google Drive', style: theme.textTheme.titleSmall),
+          Text(context.tr('Google Drive'), style: theme.textTheme.titleSmall),
           const SizedBox(height: Space.xs),
           Text(
             !google.isSignedIn
@@ -473,14 +483,14 @@ class _BackupSection extends StatelessWidget {
                       ? null
                       : () => _backUpToDrive(context),
                   icon: const Icon(Icons.cloud_upload_outlined),
-                  label: const Text('Back up to Drive'),
+                  label: Text(context.tr('Back up to Drive')),
                 ),
                 OutlinedButton.icon(
                   onPressed: google.isBusy
                       ? null
                       : () => _restoreFromDrive(context),
-                  icon: const Icon(Icons.cloud_download_outlined),
-                  label: const Text('Restore from Drive'),
+                  icon: Icon(Icons.cloud_download_outlined),
+                  label: Text(context.tr('Restore from Drive')),
                 ),
               ],
             ),
@@ -488,10 +498,12 @@ class _BackupSection extends StatelessWidget {
               contentPadding: EdgeInsets.zero,
               value: google.autoBackup,
               onChanged: google.setAutoBackup,
-              title: const Text('Back up automatically'),
-              subtitle: const Text(
-                'Saves changes to Drive within a minute, for an hour after '
-                'each sign-in or backup',
+              title: Text(context.tr('Back up automatically')),
+              subtitle: Text(
+                context.tr(
+                  'Saves changes to Drive within a minute, for an hour after '
+                  'each sign-in or backup',
+                ),
               ),
             ),
           ],
@@ -509,27 +521,27 @@ class _AppearanceSection extends StatelessWidget {
     final appearance = context.watch<AppearanceController>();
     return _Section(
       icon: Icons.palette_outlined,
-      title: 'Appearance and units',
+      title: context.tr('Appearance and units'),
       children: [
         SizedBox(
           width: double.infinity,
           child: SegmentedButton<ThemeMode>(
             showSelectedIcon: false,
-            segments: const [
+            segments: [
               ButtonSegment(
                 value: ThemeMode.system,
                 icon: Icon(Icons.brightness_auto_outlined),
-                label: Text('System'),
+                label: Text(context.tr('System')),
               ),
               ButtonSegment(
                 value: ThemeMode.light,
                 icon: Icon(Icons.light_mode_outlined),
-                label: Text('Light'),
+                label: Text(context.tr('Light')),
               ),
               ButtonSegment(
                 value: ThemeMode.dark,
                 icon: Icon(Icons.dark_mode_outlined),
-                label: Text('Dark'),
+                label: Text(context.tr('Dark')),
               ),
             ],
             selected: {appearance.mode},
@@ -538,17 +550,50 @@ class _AppearanceSection extends StatelessWidget {
         ),
         const SizedBox(height: Space.lg),
         Text(
-          'Measure lengths in',
+          context.tr('Language'),
           style: Theme.of(context).textTheme.labelLarge,
         ),
         const SizedBox(height: Space.sm),
         SizedBox(
           width: double.infinity,
+          child: SegmentedButton<AppLanguage>(
+            showSelectedIcon: false,
+            segments: [
+              for (final l in AppLanguage.values)
+                ButtonSegment(value: l, label: Text(l.label)),
+            ],
+            selected: {appearance.language},
+            onSelectionChanged: (s) => appearance.setLanguage(s.first),
+          ),
+        ),
+        const SizedBox(height: Space.sm),
+        Text(
+          context.tr(
+            'Help, definitions and documents stay in English, the language '
+            'of plans and specifications.',
+          ),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: Space.lg),
+        Text(
+          context.tr('Measure lengths in'),
+          style: Theme.of(context).textTheme.labelLarge,
+        ),
+        SizedBox(height: Space.sm),
+        SizedBox(
+          width: double.infinity,
           child: SegmentedButton<LengthUnit>(
             showSelectedIcon: false,
-            segments: const [
-              ButtonSegment(value: LengthUnit.metres, label: Text('Metres')),
-              ButtonSegment(value: LengthUnit.feet, label: Text('Feet')),
+            segments: [
+              ButtonSegment(
+                value: LengthUnit.metres,
+                label: Text(context.tr('Metres')),
+              ),
+              ButtonSegment(
+                value: LengthUnit.feet,
+                label: Text(context.tr('Feet')),
+              ),
             ],
             selected: {appearance.lengthUnit},
             onSelectionChanged: (s) => appearance.setLengthUnit(s.first),
@@ -556,8 +601,10 @@ class _AppearanceSection extends StatelessWidget {
         ),
         const SizedBox(height: Space.sm),
         Text(
-          'Calculators take lengths in feet when you choose feet. Results, '
-          'documents and prices stay metric, as suppliers sell them.',
+          context.tr(
+            'Calculators take lengths in feet when you choose feet. Results, '
+            'documents and prices stay metric, as suppliers sell them.',
+          ),
           style: Theme.of(context).textTheme.bodySmall
               ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
@@ -582,7 +629,7 @@ class _AboutSection extends StatelessWidget {
     );
     return _Section(
       icon: Icons.help_outline,
-      title: 'Help and about',
+      title: context.tr('Help and about'),
       children: [
         link(
           Icons.school_outlined,
@@ -599,9 +646,11 @@ class _AboutSection extends StatelessWidget {
         ),
         const SizedBox(height: Space.md),
         Text(
-          'BuildQuantify, developed by ARCONSTRUKT. Quantities follow '
-          'common Philippine practice and are planning estimates; confirm '
-          'with your supplier and engineer before buying.',
+          context.tr(
+            'BuildQuantify, developed by ARCONSTRUKT. Quantities follow '
+            'common Philippine practice and are planning estimates; confirm '
+            'with your supplier and engineer before buying.',
+          ),
           style: theme.textTheme.bodySmall?.copyWith(color: muted),
         ),
       ],

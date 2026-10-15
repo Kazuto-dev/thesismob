@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
 import '../../core/format.dart';
 import '../../core/layout.dart';
 import '../../core/theme.dart';
@@ -281,7 +282,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       final shown = _shown(f);
       final value = shown.parse(_text[f.id]!.text);
       if (value == null) {
-        missing.add(f.label.toLowerCase());
+        missing.add(f.label);
       } else if (!(f.optional && value == 0)) {
         numbers[f.id] = _toSaved(shown, value);
       }
@@ -290,7 +291,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     for (final c in spec.visibleChoices(_selected)) {
       final option = c.option(_selected[c.id]);
       if (option == null) {
-        missing.add(c.label.toLowerCase());
+        missing.add(c.label);
       } else {
         choices[c.id] = option.id;
       }
@@ -395,7 +396,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       context,
       'Added ${estimate.title} to ${project.name}.',
       action: SnackBarAction(
-        label: 'View',
+        label: context.tr('View'),
         onPressed: () => context.go(Routes.project),
       ),
     );
@@ -430,7 +431,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       title: line.label,
       unit: item?.unit ?? 'unit',
       initial: line.unitPrice,
-      suggested: 'Saved to your price book for later estimates',
+      suggested: context.tr('Saved to your price book for later estimates'),
     );
     if (price != null) _prices.setPrice(line.itemKey, price);
   }
@@ -541,10 +542,16 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     );
 
     return PageTitle(
-      title: spec.name,
+      title: context.tr(spec.name),
       child: Scaffold(
         appBar: AppBar(
-          title: Text(editing ? 'Edit ${spec.name.toLowerCase()}' : spec.name),
+          title: Text(
+            editing
+                ? context.tr('Edit {material}', {
+                    'material': context.tr(spec.name),
+                  })
+                : context.tr(spec.name),
+          ),
         ),
         body: SingleChildScrollView(
           padding: EdgeInsets.only(
@@ -707,7 +714,7 @@ class _CalculatorFormState extends State<_CalculatorForm> {
             const SizedBox(width: Space.lg),
             Expanded(
               child: Text(
-                spec.blurb,
+                context.tr(spec.blurb),
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -723,18 +730,18 @@ class _CalculatorFormState extends State<_CalculatorForm> {
             OutlinedButton.icon(
               onPressed: () => onShowInfo(solution: false),
               icon: const Icon(Icons.menu_book_outlined, size: 18),
-              label: const Text('Definitions'),
+              label: Text(context.tr('Definitions')),
             ),
             OutlinedButton.icon(
               onPressed: () => onShowInfo(solution: true),
               icon: const Icon(Icons.functions, size: 18),
-              label: const Text("How it's calculated"),
+              label: Text(context.tr("How it's calculated")),
             ),
           ],
         ),
         const SizedBox(height: Space.xl),
         _FormSection(
-          title: 'Measurements',
+          title: context.tr('Measurements'),
           trailing: hasLengths
               ? _LengthUnitToggle(unit: w.lengthUnit, onChanged: w.onLengthUnit)
               : null,
@@ -748,14 +755,15 @@ class _CalculatorFormState extends State<_CalculatorForm> {
         if (options.isNotEmpty) ...[
           const SizedBox(height: Space.lg),
           _FormSection(
-            title: 'Options',
+            title: context.tr('Options'),
             children: [
               for (final c in shownOptions) choice(c),
               if (hidden.isNotEmpty)
                 _MoreOptions(
                   summary: [
                     for (final c in hidden)
-                      '${c.label}: ${c.option(selected[c.id])?.label ?? 'not set'}',
+                      '${context.tr(c.label)}: '
+                          '${context.tr(c.option(selected[c.id])?.label ?? 'not set')}',
                   ].join(' · '),
                   onOpen: () => setState(() => _moreOptions = true),
                 ),
@@ -765,7 +773,7 @@ class _CalculatorFormState extends State<_CalculatorForm> {
         if (prices.isNotEmpty) ...[
           const SizedBox(height: Space.lg),
           _FormSection(
-            title: 'Price',
+            title: context.tr('Price'),
             children: [
               _FieldGrid(children: [for (final f in prices) numberField(f)]),
               ?w.priceNote,
@@ -774,17 +782,17 @@ class _CalculatorFormState extends State<_CalculatorForm> {
         ],
         const SizedBox(height: Space.lg),
         _FormSection(
-          title: 'Name in the project',
+          title: context.tr('Name in the project'),
           children: [
             TextField(
               key: const ValueKey('mark'),
               controller: w.mark,
               textCapitalization: TextCapitalization.sentences,
               inputFormatters: [LengthLimitingTextInputFormatter(60)],
-              decoration: const InputDecoration(
-                labelText: 'Name or mark (optional)',
-                hintText: 'F1, Kitchen wall, 2nd floor slab',
-                helperText: 'Shown in the bill of quantities',
+              decoration: InputDecoration(
+                labelText: context.tr('Name or mark (optional)'),
+                hintText: context.tr('F1, Kitchen wall, 2nd floor slab'),
+                helperText: context.tr('Shown in the bill of quantities'),
               ),
             ),
           ],
@@ -823,13 +831,17 @@ class _EditBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Editing an item in $projectName',
+                    context.tr('Editing an item in {project}', {
+                      'project': projectName,
+                    }),
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: scheme.onSecondaryContainer,
                     ),
                   ),
                   Text(
-                    'Change what you need, then choose Update item.',
+                    context.tr(
+                      'Change what you need, then choose Update item.',
+                    ),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: scheme.onSecondaryContainer,
                     ),
@@ -837,7 +849,7 @@ class _EditBanner extends StatelessWidget {
                 ],
               ),
             ),
-            TextButton(onPressed: onCancel, child: const Text('Cancel')),
+            TextButton(onPressed: onCancel, child: Text(context.tr('Cancel'))),
           ],
         ),
       ),
@@ -962,8 +974,8 @@ class _NumberInput extends StatelessWidget {
       focusNode: focusNode,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       decoration: InputDecoration(
-        labelText: f.label,
-        helperText: f.hint,
+        labelText: context.tr(f.label),
+        helperText: f.hint == null ? null : context.tr(f.hint!),
         prefixIcon: f.isPrice ? unit('₱', start: true) : null,
         prefixIconConstraints: fit,
         suffixIcon: f.isPrice || f.unit == null
@@ -1037,11 +1049,22 @@ class _UnitWarning extends StatelessWidget {
                 children: [
                   Text(
                     meant == null
-                        ? '${formatNumber(value)} $unit is a lot for '
-                              '${field.label.toLowerCase()}. Check the unit.'
-                        : '${formatNumber(value)} $unit is a lot for '
-                              '${field.label.toLowerCase()}. Did you type '
-                              '${meant.unit}?',
+                        ? context.tr(
+                            '{value} is a lot for {field}. Check the unit.',
+                            {
+                              'value': '${formatNumber(value)} $unit',
+                              'field': context.tr(field.label).toLowerCase(),
+                            },
+                          )
+                        : context.tr(
+                            '{value} is a lot for {field}. Did you type '
+                            '{unit}?',
+                            {
+                              'value': '${formatNumber(value)} $unit',
+                              'field': context.tr(field.label).toLowerCase(),
+                              'unit': meant.unit,
+                            },
+                          ),
                     style: theme.textTheme.bodySmall,
                   ),
                   if (fixed != null)
@@ -1052,7 +1075,9 @@ class _UnitWarning extends StatelessWidget {
                       ),
                       onPressed: () =>
                           controller.text = fixed.replaceAll(',', ''),
-                      child: Text('Use $fixed $unit'),
+                      child: Text(
+                        context.tr('Use {value}', {'value': '$fixed $unit'}),
+                      ),
                     ),
                 ],
               ),
@@ -1073,20 +1098,20 @@ class _LengthUnitToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-    label: 'Length unit',
+    label: context.tr('Length unit'),
     child: SegmentedButton<LengthUnit>(
       showSelectedIcon: false,
-      style: const ButtonStyle(visualDensity: VisualDensity.compact),
-      segments: const [
+      style: ButtonStyle(visualDensity: VisualDensity.compact),
+      segments: [
         ButtonSegment(
           value: LengthUnit.metres,
-          label: Text('m'),
-          tooltip: 'Metres',
+          label: Text(context.tr('m')),
+          tooltip: context.tr('Metres'),
         ),
         ButtonSegment(
           value: LengthUnit.feet,
-          label: Text('ft'),
-          tooltip: 'Feet',
+          label: Text(context.tr('ft')),
+          tooltip: context.tr('Feet'),
         ),
       ],
       selected: {unit},
@@ -1122,7 +1147,7 @@ class _MoreOptions extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'More options',
+                      context.tr('More options'),
                       style: theme.textTheme.labelLarge?.copyWith(
                         color: theme.colorScheme.primary,
                       ),
@@ -1168,7 +1193,8 @@ class _ChoiceInput extends StatelessWidget {
     final theme = Theme.of(context);
     final c = field;
     final value = c.option(selected[c.id])?.id;
-    final labelLength = c.options.fold<int>(0, (n, o) => n + o.label.length);
+    String name(ChoiceOption o) => context.tr(o.label);
+    final labelLength = c.options.fold<int>(0, (n, o) => n + name(o).length);
     final segmented = c.options.length <= 4 && labelLength <= 34;
 
     final Widget input;
@@ -1180,7 +1206,7 @@ class _ChoiceInput extends StatelessWidget {
             for (final o in c.options)
               ButtonSegment(
                 value: o.id,
-                label: Text(o.label, textAlign: TextAlign.center),
+                label: Text(name(o), textAlign: TextAlign.center),
               ),
           ],
           selected: {?value},
@@ -1198,7 +1224,7 @@ class _ChoiceInput extends StatelessWidget {
         children: [
           for (final o in c.options)
             ChoiceChip(
-              label: Text(o.label),
+              label: Text(name(o)),
               selected: o.id == value,
               showCheckmark: false,
               onSelected: (_) => onSelect(c.id, o.id),
@@ -1211,12 +1237,12 @@ class _ChoiceInput extends StatelessWidget {
         initialValue: value,
         isExpanded: true,
         decoration: const InputDecoration(),
-        hint: const Text('Choose one'),
+        hint: Text(context.tr('Choose one')),
         items: [
           for (final o in c.options)
             DropdownMenuItem(
               value: o.id,
-              child: Text(o.label, overflow: TextOverflow.ellipsis),
+              child: Text(name(o), overflow: TextOverflow.ellipsis),
             ),
         ],
         onChanged: (v) {
@@ -1227,16 +1253,23 @@ class _ChoiceInput extends StatelessWidget {
 
     return Semantics(
       container: true,
-      label: c.label,
+      label: context.tr(c.label),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Flexible(child: Text(c.label, style: theme.textTheme.labelLarge)),
+              Flexible(
+                child: Text(
+                  context.tr(c.label),
+                  style: theme.textTheme.labelLarge,
+                ),
+              ),
               if (definition != null)
                 IconButton(
-                  tooltip: 'What is ${c.label.toLowerCase()}?',
+                  tooltip: context.tr('What is {term}?', {
+                    'term': context.tr(c.label).toLowerCase(),
+                  }),
                   style: IconButton.styleFrom(
                     minimumSize: const Size.square(32),
                     padding: EdgeInsets.zero,
@@ -1252,7 +1285,7 @@ class _ChoiceInput extends StatelessWidget {
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.of(dialog).pop(),
-                          child: const Text('OK'),
+                          child: Text(context.tr('OK')),
                         ),
                       ],
                     ),
@@ -1263,7 +1296,7 @@ class _ChoiceInput extends StatelessWidget {
           if (c.helper != null) ...[
             const SizedBox(height: 2),
             Text(
-              c.helper!,
+              context.tr(c.helper!),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -1379,7 +1412,7 @@ class _ResultBar extends StatelessWidget {
                           FilledButton.icon(
                             onPressed: onUpdate,
                             icon: const Icon(Icons.check),
-                            label: const Text('Update'),
+                            label: Text(context.tr('Update')),
                           )
                         else
                           FilledButton.icon(

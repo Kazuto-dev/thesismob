@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
 import '../../core/format.dart';
 import '../../core/layout.dart';
 import '../../core/theme.dart';
@@ -66,7 +67,7 @@ class AppShell extends StatelessWidget {
                 NavigationDestination(
                   icon: icon(d, d.icon),
                   selectedIcon: icon(d, d.selectedIcon),
-                  label: d.label,
+                  label: context.tr(d.label),
                 ),
             ],
           ),
@@ -108,7 +109,7 @@ class AppShell extends StatelessWidget {
                 NavigationRailDestination(
                   icon: icon(d, d.icon),
                   selectedIcon: icon(d, d.selectedIcon),
-                  label: Text(d.label),
+                  label: Text(context.tr(d.label)),
                 ),
             ],
           ),

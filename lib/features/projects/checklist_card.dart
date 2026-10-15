@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
 import '../../data/project.dart';
@@ -66,15 +67,18 @@ class _ChecklistCardState extends State<ChecklistCard> {
                       Semantics(
                         header: true,
                         child: Text(
-                          'Checklist',
+                          context.tr('Checklist'),
                           style: theme.textTheme.titleMedium,
                         ),
                       ),
                       Text(
                         toDo.isEmpty
-                            ? 'All $needed done'
-                            : '$done of $needed done · next: '
-                                  '${toDo.first.name}',
+                            ? context.tr('All {n} done', {'n': needed})
+                            : context.tr('{done} of {n} done · next: {item}', {
+                                'done': done,
+                                'n': needed,
+                                'item': context.tr(toDo.first.name),
+                              }),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: scheme.onSurfaceVariant,
                         ),
@@ -84,7 +88,7 @@ class _ChecklistCardState extends State<ChecklistCard> {
                 ),
                 MenuAnchor(
                   builder: (context, menu, _) => IconButton(
-                    tooltip: 'Checklist actions',
+                    tooltip: context.tr('Checklist actions'),
                     icon: const Icon(Icons.more_vert),
                     onPressed: () => menu.isOpen ? menu.close() : menu.open(),
                   ),
@@ -92,7 +96,7 @@ class _ChecklistCardState extends State<ChecklistCard> {
                     MenuItemButton(
                       leadingIcon: const Icon(Icons.playlist_remove),
                       onPressed: () => controller.removeChecklist(p.id),
-                      child: const Text('Remove checklist'),
+                      child: Text(context.tr('Remove checklist')),
                     ),
                   ],
                 ),
@@ -127,7 +131,9 @@ class _ChecklistCardState extends State<ChecklistCard> {
                 child: TextButton(
                   onPressed: () => setState(() => _all = !_all),
                   child: Text(
-                    _all ? 'Show what is next' : 'Show all ${entries.length}',
+                    _all
+                        ? context.tr('Show what is next')
+                        : context.tr('Show all {n}', {'n': entries.length}),
                   ),
                 ),
               ),
@@ -163,6 +169,7 @@ class _Entry extends StatelessWidget {
         : notNeeded
         ? 'Not needed'
         : spec.blurb;
+    final name = context.tr(spec.name);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: Space.xs),
       child: Row(
@@ -180,7 +187,7 @@ class _Entry extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  spec.name,
+                  name,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     decoration: notNeeded ? TextDecoration.lineThrough : null,
@@ -188,7 +195,7 @@ class _Entry extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  status,
+                  context.tr(status),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -199,19 +206,25 @@ class _Entry extends StatelessWidget {
             ),
           ),
           if (!done && !notNeeded) ...[
-            TextButton(onPressed: onEstimate, child: const Text('Estimate')),
+            TextButton(
+              onPressed: onEstimate,
+              child: Text(context.tr('Estimate')),
+            ),
             IconButton(
-              tooltip: '${spec.name} not needed',
+              tooltip: context.tr('{item} not needed', {'item': name}),
               icon: const Icon(Icons.remove_circle_outline),
               onPressed: () => onNeeded(false),
             ),
           ] else if (notNeeded)
             TextButton(
               onPressed: () => onNeeded(true),
-              child: const Text('Needed'),
+              child: Text(context.tr('Needed')),
             )
           else
-            TextButton(onPressed: onEstimate, child: const Text('Add more')),
+            TextButton(
+              onPressed: onEstimate,
+              child: Text(context.tr('Add more')),
+            ),
         ],
       ),
     );

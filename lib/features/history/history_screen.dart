@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
 import '../../core/format.dart';
 import '../../core/layout.dart';
 import '../../core/theme.dart';
@@ -29,9 +30,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final removed = controller.clearHistory();
     showMessage(
       context,
-      'History cleared.',
+      context.tr('History cleared.'),
       action: SnackBarAction(
-        label: 'Undo',
+        label: context.tr('Undo'),
         onPressed: () => controller.restoreHistory(removed),
       ),
     );
@@ -59,12 +60,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
     final wide = WindowSize.of(context) == WindowSize.expanded;
     final header = PageHeader(
-      title: 'History',
-      subtitle: 'Your last 100 calculations, newest first',
+      title: context.tr('History'),
+      subtitle: context.tr('Your last 100 calculations, newest first'),
       actions: [
         if (history.isNotEmpty)
           IconButton(
-            tooltip: 'Clear history',
+            tooltip: context.tr('Clear history'),
             icon: const Icon(Icons.delete_sweep_outlined),
             onPressed: _clear,
           ),
@@ -73,7 +74,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     if (history.isEmpty) {
       return PageTitle(
-        title: 'History',
+        title: context.tr('History'),
         child: Scaffold(
           body: SafeArea(
             child: Column(
@@ -82,13 +83,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 Expanded(
                   child: EmptyState(
                     icon: Icons.history,
-                    title: 'No calculations yet',
-                    message:
-                        'Every estimate you work out is kept here, so you can '
-                        'reopen and adjust it later.',
+                    title: context.tr('No calculations yet'),
+                    message: context.tr(
+                      'Every estimate you work out is kept here, so you can '
+                      'reopen and adjust it later.',
+                    ),
                     action: FilledButton(
                       onPressed: () => context.go(Routes.home),
-                      child: const Text('Start an estimate'),
+                      child: Text(context.tr('Start an estimate')),
                     ),
                   ),
                 ),
@@ -108,7 +110,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
 
     return PageTitle(
-      title: 'History',
+      title: context.tr('History'),
       child: Scaffold(
         body: SafeArea(
           bottom: false,
@@ -328,7 +330,7 @@ class HistoryDetails extends StatelessWidget {
         ],
         if (inputs.isNotEmpty) ...[
           const SizedBox(height: Space.lg),
-          Text('Inputs', style: theme.textTheme.titleSmall),
+          Text(context.tr('Inputs'), style: theme.textTheme.titleSmall),
           const SizedBox(height: Space.xs),
           for (final (label, value) in inputs)
             KeyValueLine(
@@ -349,7 +351,7 @@ class HistoryDetails extends StatelessWidget {
                   context.go(Routes.material(spec, fromEstimate: e.id));
                 },
                 icon: const Icon(Icons.edit_outlined),
-                label: const Text('Open in calculator'),
+                label: Text(context.tr('Open in calculator')),
               ),
             OutlinedButton.icon(
               onPressed: inProject
@@ -361,7 +363,7 @@ class HistoryDetails extends StatelessWidget {
                         context,
                         'Added ${e.label} to $projectName.',
                         action: SnackBarAction(
-                          label: 'View',
+                          label: context.tr('View'),
                           onPressed: () => context.go(Routes.project),
                         ),
                       );
@@ -384,7 +386,7 @@ class HistoryDetails extends StatelessWidget {
                   context,
                   'Deleted ${e.label}.',
                   action: SnackBarAction(
-                    label: 'Undo',
+                    label: context.tr('Undo'),
                     onPressed: () => controller.restoreToHistory(
                       removed.index,
                       removed.estimate,
@@ -393,7 +395,7 @@ class HistoryDetails extends StatelessWidget {
                 );
               },
               icon: const Icon(Icons.delete_outline),
-              label: const Text('Delete'),
+              label: Text(context.tr('Delete')),
             ),
           ],
         ),

@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
 import '../../core/layout.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
@@ -32,7 +33,7 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final wide = WindowSize.of(context) == WindowSize.expanded;
     return PageTitle(
-      title: 'Sign in',
+      title: context.tr('Sign in'),
       child: Scaffold(
         body: wide
             ? Row(
@@ -113,7 +114,7 @@ class _Intro extends StatelessWidget {
         BrandMark(size: wide ? 44 : 36),
         const SizedBox(width: Space.md),
         Text(
-          'BuildQuantify',
+          context.tr('BuildQuantify'),
           style: theme.textTheme.titleLarge?.copyWith(
             color: palette.onInk,
             fontWeight: FontWeight.w800,
@@ -125,7 +126,7 @@ class _Intro extends StatelessWidget {
     final headline = Semantics(
       header: true,
       child: Text(
-        'Estimate every material.\nPrice every job.',
+        context.tr('Estimate every material.\nPrice every job.'),
         style:
             (wide
                     ? theme.textTheme.displaySmall
@@ -134,8 +135,10 @@ class _Intro extends StatelessWidget {
       ),
     );
     final lede = Text(
-      'Quantities and costs for Philippine construction, from a single wall '
-      'to a contractor\'s bid.',
+      context.tr(
+        'Quantities and costs for Philippine construction, from a single wall '
+        'to a contractor\'s bid.',
+      ),
       style: theme.textTheme.bodyLarge?.copyWith(color: palette.onInkMuted),
     );
     final features = Column(
@@ -159,7 +162,7 @@ class _Intro extends StatelessWidget {
                 const SizedBox(width: Space.md),
                 Expanded(
                   child: Text(
-                    text,
+                    context.tr(text),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: palette.onInk,
                     ),
@@ -205,8 +208,10 @@ class _Intro extends StatelessWidget {
         ),
         const Spacer(),
         Text(
-          'Planning estimates. Confirm quantities and prices with your '
-          'engineer and supplier before buying.',
+          context.tr(
+            'Planning estimates. Confirm quantities and prices with your '
+            'engineer and supplier before buying.',
+          ),
           style: theme.textTheme.bodySmall?.copyWith(color: palette.onInkMuted),
         ),
       ],
@@ -245,12 +250,17 @@ class _SignInState extends State<_SignIn> {
       children: [
         Semantics(
           header: true,
-          child: Text('Welcome', style: theme.textTheme.headlineMedium),
+          child: Text(
+            context.tr('Welcome'),
+            style: theme.textTheme.headlineMedium,
+          ),
         ),
         const SizedBox(height: Space.sm),
         Text(
-          'Sign in with Google to save your projects as spreadsheets in your '
-          'own Google Drive.',
+          context.tr(
+            'Sign in with Google to save your projects as spreadsheets in your '
+            'own Google Drive.',
+          ),
           style: theme.textTheme.bodyLarge?.copyWith(
             color: scheme.onSurfaceVariant,
           ),
@@ -297,7 +307,7 @@ class _SignInState extends State<_SignIn> {
             const Expanded(child: Divider()),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: Space.md),
-              child: Text('or', style: muted),
+              child: Text(context.tr('or'), style: muted),
             ),
             const Expanded(child: Divider()),
           ],
@@ -308,13 +318,15 @@ class _SignInState extends State<_SignIn> {
               ? null
               : () => context.read<GoogleAccountController>().skipSignIn(),
           style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
-          child: const Text('Continue without signing in'),
+          child: Text(context.tr('Continue without signing in')),
         ),
         const SizedBox(height: Space.xl),
         Text(
-          'BuildQuantify can only open the spreadsheets it creates. Your '
-          'projects stay in this browser, and you can sign in later from '
-          'Settings.',
+          context.tr(
+            'BuildQuantify can only open the spreadsheets it creates. Your '
+            'projects stay in this browser, and you can sign in later from '
+            'Settings.',
+          ),
           style: theme.textTheme.bodySmall?.copyWith(
             color: scheme.onSurfaceVariant,
           ),

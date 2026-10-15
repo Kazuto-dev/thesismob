@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
 import '../../core/format.dart';
 import '../../core/layout.dart';
 import '../../core/theme.dart';
@@ -23,9 +24,9 @@ class ProjectsScreen extends StatelessWidget {
     final activeId = controller.active.id;
     final wide = WindowSize.of(context) != WindowSize.compact;
     return PageTitle(
-      title: 'Projects',
+      title: context.tr('Projects'),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Projects')),
+        appBar: AppBar(title: Text(context.tr('Projects'))),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () async {
             final created = await createProject(context);
@@ -34,7 +35,7 @@ class ProjectsScreen extends StatelessWidget {
             }
           },
           icon: const Icon(Icons.add),
-          label: const Text('New project'),
+          label: Text(context.tr('New project')),
         ),
         body: SingleChildScrollView(
           padding: EdgeInsets.only(
@@ -47,8 +48,10 @@ class ProjectsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Keep each house, renovation or bid separate. Estimates go '
-                  'to the active project.',
+                  context.tr(
+                    'Keep each house, renovation or bid separate. Estimates go '
+                    'to the active project.',
+                  ),
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -117,7 +120,7 @@ class _ProjectCard extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(left: Space.sm),
                     child: Chip(
-                      label: const Text('Active'),
+                      label: Text(context.tr('Active')),
                       visualDensity: VisualDensity.compact,
                       side: BorderSide(color: scheme.primary),
                     ),
@@ -132,12 +135,12 @@ class _ProjectCard extends StatelessWidget {
                     MenuItemButton(
                       leadingIcon: const Icon(Icons.copy_all_outlined),
                       onPressed: () => duplicateProject(context, p),
-                      child: const Text('Duplicate'),
+                      child: Text(context.tr('Duplicate')),
                     ),
                     MenuItemButton(
                       leadingIcon: const Icon(Icons.delete_outline),
                       onPressed: () => confirmDeleteProject(context, p),
-                      child: const Text('Delete'),
+                      child: Text(context.tr('Delete')),
                     ),
                   ],
                 ),

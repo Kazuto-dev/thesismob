@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/i18n.dart';
 import '../../core/format.dart';
 import '../../core/layout.dart';
 import '../../core/theme.dart';
@@ -59,26 +60,28 @@ class ResultPanel extends StatelessWidget {
       add = FilledButton.icon(
         onPressed: onUpdate,
         icon: const Icon(Icons.check),
-        label: const Text('Update item'),
+        label: Text(context.tr('Update item')),
       );
       change = TextButton.icon(
         onPressed: onAddNew,
         icon: const Icon(Icons.add, size: 18),
-        label: const Text('Add as a new item'),
+        label: Text(context.tr('Add as a new item')),
       );
     } else {
       add = FilledButton.icon(
         onPressed: inProject ? null : onAdd,
         icon: Icon(inProject ? Icons.check : Icons.add),
         label: Text(
-          inProject ? 'Added to $projectName' : 'Add to $projectName',
+          context.tr(inProject ? 'Added to {project}' : 'Add to {project}', {
+            'project': projectName,
+          }),
           overflow: TextOverflow.ellipsis,
         ),
       );
       change = TextButton.icon(
         onPressed: onChangeProject,
         icon: const Icon(Icons.swap_horiz, size: 18),
-        label: const Text('Change project'),
+        label: Text(context.tr('Change project')),
       );
     }
     return Card(
@@ -95,7 +98,7 @@ class ResultPanel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Your estimate · ${r.label}',
+                      '${context.tr('Your estimate')} · ${r.label}',
                       style: theme.textTheme.labelLarge?.copyWith(
                         color: palette.onInkMuted,
                       ),
@@ -134,11 +137,18 @@ class ResultPanel extends StatelessWidget {
                     ),
                     Text(
                       e.companions.isEmpty
-                          ? 'at ${formatMoney(r.unitPrice)} per '
-                                '${r.unit.singular}'
-                          : '${formatMoney(e.total)} ${r.unit.plural} + '
-                                '${formatMoney(e.companionsTotal)} other '
-                                'materials',
+                          ? context.tr('at {price} per {unit}', {
+                              'price': formatMoney(r.unitPrice),
+                              'unit': r.unit.singular,
+                            })
+                          : context.tr(
+                              '{main} {unit} + {others} other materials',
+                              {
+                                'main': formatMoney(e.total),
+                                'unit': r.unit.plural,
+                                'others': formatMoney(e.companionsTotal),
+                              },
+                            ),
                       style: tabular(
                         theme.textTheme.bodySmall?.copyWith(
                           color: palette.onInkMuted,
@@ -146,8 +156,10 @@ class ResultPanel extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Materials only. Labour and markups are added in the '
-                      'project budget.',
+                      context.tr(
+                        'Materials only. Labour and markups are added in the '
+                        'project budget.',
+                      ),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: palette.onInkMuted,
                       ),
@@ -169,12 +181,16 @@ class ResultPanel extends StatelessWidget {
               children: [
                 if (e.companions.isNotEmpty) ...[
                   _Heading(
-                    'Materials for this job',
+                    context.tr('Materials for this job'),
                     caption: unpriced > 0
-                        ? '$unpriced ${unpriced == 1 ? 'item has' : 'items have'} '
-                              'no price yet. Tap a line to set one.'
-                        : 'Priced from your price book. Tap a line to change '
-                              'its price.',
+                        ? context.tr(
+                            '{n} without a price yet. Tap a line to set one.',
+                            {'n': formatCount(unpriced, 'item')},
+                          )
+                        : context.tr(
+                            'Priced from your price book. Tap a line to '
+                            'change its price.',
+                          ),
                   ),
                   DecoratedBox(
                     decoration: BoxDecoration(
@@ -301,7 +317,7 @@ class _MaterialLine extends StatelessWidget {
                 ),
                 Text(
                   missing
-                      ? '$amount · no price yet'
+                      ? '$amount · ${context.tr('no price yet')}'
                       : '$amount × '
                             '${formatMoney(unitPrice)}',
                   style: tabular(
@@ -316,7 +332,7 @@ class _MaterialLine extends StatelessWidget {
           const SizedBox(width: Space.md),
           if (missing && onTap != null)
             Text(
-              'Set price',
+              context.tr('Set price'),
               style: theme.textTheme.labelLarge?.copyWith(
                 color: scheme.primary,
               ),
@@ -336,7 +352,7 @@ class _MaterialLine extends StatelessWidget {
     if (onTap == null) return MergeSemantics(child: row);
     return Semantics(
       button: true,
-      hint: 'Change price',
+      hint: context.tr('Change price'),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(Radii.md),
@@ -421,7 +437,9 @@ class ResultPending extends StatelessWidget {
               ),
               const SizedBox(height: Space.md),
               Text(
-                hasError ? 'Check your measurements' : 'Your estimate',
+                context.tr(
+                  hasError ? 'Check your measurements' : 'Your estimate',
+                ),
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: hasError ? scheme.onErrorContainer : null,
                 ),
@@ -430,8 +448,11 @@ class ResultPending extends StatelessWidget {
               Text(
                 hasError
                     ? '$error.'
-                    : 'Enter ${_list(missing)} to see the estimate. It '
-                          'updates as you type.',
+                    : context.tr(
+                        'Enter {fields} to see the estimate. It updates as '
+                        'you type.',
+                        {'fields': _list(context, missing)},
+                      ),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: hasError
                       ? scheme.onErrorContainer
@@ -445,11 +466,21 @@ class ResultPending extends StatelessWidget {
     );
   }
 
-  static String _list(List<String> items) {
-    if (items.isEmpty) return 'your measurements';
-    final named = [for (final i in items) i.startsWith('price') ? 'the $i' : i];
+  /// The missing inputs as a phrase: "wall length and the price per
+  /// block".
+  static String _list(BuildContext context, List<String> labels) {
+    if (labels.isEmpty) return context.tr('your measurements');
+    final english = AppLanguageScope.of(context) == AppLanguage.english;
+    final named = [
+      for (final label in labels)
+        english
+            ? (label.toLowerCase().startsWith('price')
+                  ? 'the ${label.toLowerCase()}'
+                  : label.toLowerCase())
+            : context.tr(label).toLowerCase(),
+    ];
     if (named.length == 1) return named.first;
-    return '${named.sublist(0, named.length - 1).join(', ')} and '
-        '${named.last}';
+    return '${named.sublist(0, named.length - 1).join(', ')} '
+        '${context.tr('and')} ${named.last}';
   }
 }

@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../core/i18n.dart';
 import '../core/widgets.dart';
 import '../router.dart';
 
@@ -9,16 +10,18 @@ class NotFoundScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => PageTitle(
-    title: 'Page not found',
+    title: context.tr('Page not found'),
     child: Scaffold(
       appBar: AppBar(),
       body: EmptyState(
         icon: Icons.explore_off_outlined,
-        title: 'Page not found',
-        message: "That link doesn't lead anywhere in BuildQuantify.",
+        title: context.tr('Page not found'),
+        message: context.tr(
+          "That link doesn't lead anywhere in BuildQuantify.",
+        ),
         action: FilledButton(
           onPressed: () => context.go(Routes.home),
-          child: const Text('Go to home'),
+          child: Text(context.tr('Go to home')),
         ),
       ),
     ),

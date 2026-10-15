@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/i18n.dart';
 import 'core/theme.dart';
 import 'data/estimate_repository.dart';
 import 'data/google_auth.dart';
@@ -116,6 +117,10 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
           darkTheme: _dark,
           themeMode: context.watch<AppearanceController>().mode,
           routerConfig: _router,
+          builder: (context, child) => AppLanguageScope(
+            language: context.watch<AppearanceController>().language,
+            child: child!,
+          ),
         ),
       ),
     );

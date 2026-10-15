@@ -295,6 +295,16 @@ void main() {
     expect(find.textContaining('joined by overlapping'), findsOneWidget);
   });
 
+  testWidgets('calculators speak Filipino when asked', (tester) async {
+    await pumpApp(tester, location: chb, prefs: {'language_v1': 'filipino'});
+    expect(field('Haba ng pader'), findsOneWidget);
+    expect(find.textContaining('Ilagay ang haba ng pader'), findsOneWidget);
+    await tester.enterText(field('Haba ng pader'), '10');
+    await tester.enterText(field('Taas ng pader'), '3');
+    await tester.pump();
+    expect(find.text('394 blocks'), findsWidgets);
+  });
+
   testWidgets('roofing switches inputs for long-span sheets', (tester) async {
     await pumpApp(tester, location: '/category/architectural/roof');
     expect(find.text('Side lap'), findsOneWidget);

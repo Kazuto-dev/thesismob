@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/i18n.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
@@ -42,12 +43,16 @@ class MaterialTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(spec.name, style: theme.textTheme.titleMedium),
+                  Text(
+                    context.tr(spec.name),
+                    style: theme.textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     showCategory
-                        ? '${spec.category.label} · ${spec.blurb}'
-                        : spec.blurb,
+                        ? '${context.tr(spec.category.label)} · '
+                              '${context.tr(spec.blurb)}'
+                        : context.tr(spec.blurb),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

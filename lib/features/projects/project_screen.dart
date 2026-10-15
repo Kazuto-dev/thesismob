@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/i18n.dart';
 import '../../core/format.dart';
 import '../../core/layout.dart';
 import '../../core/theme.dart';
@@ -64,7 +65,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
           : details,
       actions: [
         IconButton(
-          tooltip: 'All projects',
+          tooltip: context.tr('All projects'),
           icon: const Icon(Icons.folder_copy_outlined),
           onPressed: () => context.go(Routes.projects),
         ),
@@ -105,7 +106,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
                 Expanded(
                   child: EmptyState(
                     icon: Icons.request_quote_outlined,
-                    title: 'No estimates yet',
+                    title: context.tr('No estimates yet'),
                     message:
                         'Work out a material, then choose "Add to '
                         '${project.name}". The project builds a bill of '
@@ -122,11 +123,11 @@ class _ProjectScreenState extends State<ProjectScreen> {
                             projectId: project.id,
                           ),
                           icon: const Icon(Icons.add),
-                          label: const Text('Add an estimate'),
+                          label: Text(context.tr('Add an estimate')),
                         ),
                         OutlinedButton(
                           onPressed: () => context.go(Routes.projects),
-                          child: const Text('All projects'),
+                          child: Text(context.tr('All projects')),
                         ),
                       ],
                     ),
@@ -143,20 +144,20 @@ class _ProjectScreenState extends State<ProjectScreen> {
     final tabs = SegmentedButton<_Tab>(
       showSelectedIcon: false,
       segments: [
-        const ButtonSegment(
+        ButtonSegment(
           value: _Tab.items,
-          label: Text('Items'),
+          label: Text(context.tr('Items')),
           icon: Icon(Icons.list_alt_outlined),
         ),
-        const ButtonSegment(
+        ButtonSegment(
           value: _Tab.materials,
-          label: Text('To buy'),
+          label: Text(context.tr('To buy')),
           icon: Icon(Icons.shopping_cart_outlined),
         ),
         if (!wide)
-          const ButtonSegment(
+          ButtonSegment(
             value: _Tab.budget,
-            label: Text('Budget'),
+            label: Text(context.tr('Budget')),
             icon: Icon(Icons.tune),
           ),
       ],
@@ -266,14 +267,14 @@ class _NotActiveBanner extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'New estimates go to another project.',
+                context.tr('New estimates go to another project.'),
                 style: TextStyle(color: scheme.onSecondaryContainer),
               ),
             ),
             TextButton(
               onPressed: () =>
                   context.read<ProjectsController>().setActive(project.id),
-              child: const Text('Add estimates here'),
+              child: Text(context.tr('Add estimates here')),
             ),
           ],
         ),
@@ -305,7 +306,7 @@ class _ProjectMenu extends StatelessWidget {
       context,
       'Removed all estimates from ${project.name}.',
       action: SnackBarAction(
-        label: 'Undo',
+        label: context.tr('Undo'),
         onPressed: () =>
             controller.restoreItems(removed, projectId: project.id),
       ),
@@ -320,7 +321,7 @@ class _ProjectMenu extends StatelessWidget {
     );
     return MenuAnchor(
       builder: (context, controller, _) => IconButton(
-        tooltip: 'Project actions',
+        tooltip: context.tr('Project actions'),
         icon: const Icon(Icons.more_vert),
         onPressed: () =>
             controller.isOpen ? controller.close() : controller.open(),
@@ -329,7 +330,7 @@ class _ProjectMenu extends StatelessWidget {
         MenuItemButton(
           leadingIcon: const Icon(Icons.edit_outlined),
           onPressed: () => _edit(context),
-          child: const Text('Edit details'),
+          child: Text(context.tr('Edit details')),
         ),
         MenuItemButton(
           leadingIcon: const Icon(Icons.add),
@@ -339,12 +340,12 @@ class _ProjectMenu extends StatelessWidget {
               context.go(Routes.project);
             }
           },
-          child: const Text('New project'),
+          child: Text(context.tr('New project')),
         ),
         MenuItemButton(
           leadingIcon: const Icon(Icons.copy_all_outlined),
           onPressed: () => duplicateProject(context, project),
-          child: const Text('Duplicate'),
+          child: Text(context.tr('Duplicate')),
         ),
         if (project.checklist.isEmpty)
           SubmenuButton(
@@ -355,10 +356,14 @@ class _ProjectMenu extends StatelessWidget {
                   onPressed: () => context
                       .read<ProjectsController>()
                       .addChecklist(project.id, t.materials),
-                  child: Text('${t.name} checklist'),
+                  child: Text(
+                    context.tr('{name} checklist', {
+                      'name': context.tr(t.name),
+                    }),
+                  ),
                 ),
             ],
-            child: const Text('Add a checklist'),
+            child: Text(context.tr('Add a checklist')),
           ),
         const Divider(),
         MenuItemButton(
@@ -366,19 +371,19 @@ class _ProjectMenu extends StatelessWidget {
           onPressed: hasItems
               ? () => downloadProjectPdf(context, project)
               : null,
-          child: const Text('Download PDF'),
+          child: Text(context.tr('Download PDF')),
         ),
         MenuItemButton(
           leadingIcon: const Icon(Icons.grid_on_outlined),
           onPressed: hasItems
               ? () => downloadProjectCsv(context, project)
               : null,
-          child: const Text('Download for Excel (CSV)'),
+          child: Text(context.tr('Download for Excel (CSV)')),
         ),
         MenuItemButton(
           leadingIcon: const Icon(Icons.content_copy_outlined),
           onPressed: hasItems ? () => copyProjectText(context, project) : null,
-          child: const Text('Copy as text'),
+          child: Text(context.tr('Copy as text')),
         ),
         MenuItemButton(
           leadingIcon: const Icon(Icons.table_chart_outlined),
@@ -395,18 +400,18 @@ class _ProjectMenu extends StatelessWidget {
           MenuItemButton(
             leadingIcon: const Icon(Icons.open_in_new),
             onPressed: () => openProjectSheet(project),
-            child: const Text('Open in Google Sheets'),
+            child: Text(context.tr('Open in Google Sheets')),
           ),
         const Divider(),
         MenuItemButton(
           leadingIcon: const Icon(Icons.delete_sweep_outlined),
           onPressed: hasItems ? () => _clear(context) : null,
-          child: const Text('Remove all estimates'),
+          child: Text(context.tr('Remove all estimates')),
         ),
         MenuItemButton(
           leadingIcon: const Icon(Icons.delete_outline),
           onPressed: () => confirmDeleteProject(context, project),
-          child: const Text('Delete project'),
+          child: Text(context.tr('Delete project')),
         ),
       ],
     );
@@ -467,8 +472,8 @@ class _BudgetHero extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${bid ? 'Total contract price' : 'Project budget'} · '
-                      '${count == 1 ? '1 item' : '$count items'}',
+                      '${context.tr(bid ? 'Total contract price' : 'Project budget')} · '
+                      '${context.tr(count == 1 ? '1 item' : '{n} items', {'n': count})}',
                       style: theme.textTheme.labelLarge?.copyWith(
                         color: palette.onInkMuted,
                       ),
@@ -502,7 +507,7 @@ class _BudgetHero extends StatelessWidget {
               if (trades.length > 1) ...[
                 const SizedBox(height: Space.xl),
                 Semantics(
-                  label: 'Materials by trade',
+                  label: context.tr('Materials by trade'),
                   child: ProportionBar(format: formatMoney, parts: trades),
                 ),
               ],
@@ -514,12 +519,12 @@ class _BudgetHero extends StatelessWidget {
                   FilledButton.icon(
                     onPressed: () => downloadProjectPdf(context, project),
                     icon: const Icon(Icons.picture_as_pdf_outlined),
-                    label: const Text('Download PDF'),
+                    label: Text(context.tr('Download PDF')),
                   ),
                   OutlinedButton.icon(
                     onPressed: () => downloadProjectCsv(context, project),
                     icon: const Icon(Icons.grid_on_outlined),
-                    label: const Text('Excel'),
+                    label: Text(context.tr('Excel')),
                   ),
                   if (google.isConfigured)
                     OutlinedButton.icon(
@@ -563,7 +568,7 @@ class _ItemsTab extends StatelessWidget {
     final add = OutlinedButton.icon(
       onPressed: () => showMaterialPicker(context, projectId: project.id),
       icon: const Icon(Icons.add),
-      label: const Text('Add an estimate'),
+      label: Text(context.tr('Add an estimate')),
     );
     if (grid) {
       return Column(
@@ -647,7 +652,9 @@ class _MaterialsTab extends StatelessWidget {
       text.writeln('• ${l.label}: ${formatNumber(l.quantity)} ${l.unit}');
     }
     await Clipboard.setData(ClipboardData(text: text.toString()));
-    if (context.mounted) showMessage(context, 'Copied the shopping list.');
+    if (context.mounted) {
+      showMessage(context, context.tr('Copied the shopping list.'));
+    }
   }
 
   @override
@@ -666,8 +673,10 @@ class _MaterialsTab extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Every material merged across the estimates. Tap a line to '
-                'change its price.',
+                context.tr(
+                  'Every material merged across the estimates. Tap a line to '
+                  'change its price.',
+                ),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: scheme.onSurfaceVariant,
                 ),
@@ -677,7 +686,7 @@ class _MaterialsTab extends StatelessWidget {
             TextButton.icon(
               onPressed: () => _copy(context, lines),
               icon: const Icon(Icons.content_copy_outlined, size: 18),
-              label: const Text('Copy list'),
+              label: Text(context.tr('Copy list')),
             ),
           ],
         ),
@@ -698,7 +707,7 @@ class _MaterialsTab extends StatelessWidget {
                   if (i > 0) const Divider(height: 1, indent: Space.lg),
                   Semantics(
                     button: true,
-                    hint: 'Change price',
+                    hint: context.tr('Change price'),
                     child: InkWell(
                       onTap: () => _setPrice(context, l),
                       child: Padding(
@@ -811,27 +820,36 @@ class _BudgetEditor extends StatelessWidget {
                 Expanded(
                   child: Semantics(
                     header: true,
-                    child: Text('Budget', style: theme.textTheme.titleMedium),
+                    child: Text(
+                      context.tr('Budget'),
+                      style: theme.textTheme.titleMedium,
+                    ),
                   ),
                 ),
                 TextButton.icon(
                   onPressed: () => _showGlossary(context),
-                  icon: const Icon(Icons.help_outline, size: 18),
-                  label: const Text('What these mean'),
+                  icon: Icon(Icons.help_outline, size: 18),
+                  label: Text(context.tr('What these mean')),
                 ),
               ],
             ),
-            const SizedBox(height: Space.md),
+            SizedBox(height: Space.md),
             SegmentedButton<_Preset>(
               showSelectedIcon: false,
               emptySelectionAllowed: true,
-              segments: const [
-                ButtonSegment(value: _Preset.owner, label: Text('Owner')),
+              segments: [
+                ButtonSegment(
+                  value: _Preset.owner,
+                  label: Text(context.tr('Owner')),
+                ),
                 ButtonSegment(
                   value: _Preset.contractor,
-                  label: Text('Contractor'),
+                  label: Text(context.tr('Contractor')),
                 ),
-                ButtonSegment(value: _Preset.dpwh, label: Text('DPWH')),
+                ButtonSegment(
+                  value: _Preset.dpwh,
+                  label: Text(context.tr('DPWH')),
+                ),
               ],
               selected: {if (preset != _Preset.custom) preset},
               onSelectionChanged: (s) {
@@ -876,13 +894,13 @@ class _BudgetEditor extends StatelessWidget {
             const SizedBox(height: Space.lg),
             _FieldPair(
               left: _NumberSetting(
-                label: 'Labour',
+                label: context.tr('Labour'),
                 suffix: '% of materials',
                 value: c.labourPct,
                 onChanged: (v) => update(c.copyWith(labourPct: v)),
               ),
               right: _NumberSetting(
-                label: 'Minor tools',
+                label: context.tr('Minor tools'),
                 suffix: '% of labour',
                 value: c.toolsPct,
                 onChanged: (v) => update(c.copyWith(toolsPct: v)),
@@ -891,14 +909,14 @@ class _BudgetEditor extends StatelessWidget {
             const SizedBox(height: Space.md),
             _FieldPair(
               left: _NumberSetting(
-                label: 'Hauling and delivery',
+                label: context.tr('Hauling and delivery'),
                 prefix: '₱ ',
                 value: c.hauling,
                 max: 100000000,
                 onChanged: (v) => update(c.copyWith(hauling: v)),
               ),
               right: _NumberSetting(
-                label: 'Contingency',
+                label: context.tr('Contingency'),
                 suffix: '%',
                 value: c.contingencyPct,
                 onChanged: (v) => update(c.copyWith(contingencyPct: v)),
@@ -907,13 +925,13 @@ class _BudgetEditor extends StatelessWidget {
             const SizedBox(height: Space.md),
             _FieldPair(
               left: _NumberSetting(
-                label: 'Overhead (OCM)',
+                label: context.tr('Overhead (OCM)'),
                 suffix: '%',
                 value: c.overheadPct,
                 onChanged: (v) => update(c.copyWith(overheadPct: v)),
               ),
               right: _NumberSetting(
-                label: 'Profit',
+                label: context.tr('Profit'),
                 suffix: '%',
                 value: c.profitPct,
                 onChanged: (v) => update(c.copyWith(profitPct: v)),
@@ -922,7 +940,7 @@ class _BudgetEditor extends StatelessWidget {
             const SizedBox(height: Space.md),
             _FieldPair(
               left: _NumberSetting(
-                label: 'VAT',
+                label: context.tr('VAT'),
                 suffix: '%',
                 value: c.vatPct,
                 onChanged: (v) => update(c.copyWith(vatPct: v)),
@@ -935,17 +953,21 @@ class _BudgetEditor extends StatelessWidget {
                 tilePadding: EdgeInsets.zero,
                 childrenPadding: const EdgeInsets.only(bottom: Space.md),
                 title: Text(
-                  'Labour by trade',
+                  context.tr('Labour by trade'),
                   style: theme.textTheme.titleSmall,
                 ),
                 subtitle: Text(
-                  'Leave empty to use ${formatNumber(c.labourPct)}%',
+                  context.tr('Leave empty to use {pct}%', {
+                    'pct': formatNumber(c.labourPct),
+                  }),
                   style: theme.textTheme.bodySmall,
                 ),
                 children: [
                   for (final trade in MaterialCategory.values) ...[
                     _NumberSetting(
-                      label: '${trade.label} labour',
+                      label: context.tr('{trade} labour', {
+                        'trade': context.tr(trade.label),
+                      }),
                       suffix: '% of materials',
                       value: c.labourByTrade[trade.name],
                       onChanged: (v) {
@@ -974,9 +996,11 @@ class _BudgetEditor extends StatelessWidget {
               ),
             const SizedBox(height: Space.sm),
             Text(
-              'Labour as a share of materials is a planning rule of thumb, '
-              'about 30–45% for houses. Use your own quotes when you have '
-              'them.',
+              context.tr(
+                'Labour as a share of materials is a planning rule of thumb, '
+                'about 30–45% for houses. Use your own quotes when you have '
+                'them.',
+              ),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -1044,13 +1068,16 @@ void _showGlossary(BuildContext context) => showModalBottomSheet<void>(
           children: [
             Semantics(
               header: true,
-              child: Text('Budget terms', style: theme.textTheme.titleLarge),
+              child: Text(
+                context.tr('Budget terms'),
+                style: theme.textTheme.titleLarge,
+              ),
             ),
             for (final (term, meaning) in _glossary) ...[
               const SizedBox(height: Space.lg),
-              Text(term, style: theme.textTheme.titleSmall),
+              Text(context.tr(term), style: theme.textTheme.titleSmall),
               const SizedBox(height: 2),
-              Text(meaning, style: theme.textTheme.bodyMedium),
+              Text(context.tr(meaning), style: theme.textTheme.bodyMedium),
             ],
           ],
         );

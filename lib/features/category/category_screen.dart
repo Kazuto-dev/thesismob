@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/i18n.dart';
 import '../../core/layout.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
@@ -18,9 +19,15 @@ class CategoryScreen extends StatelessWidget {
     final materials = materialsIn(category);
     final colors = AppPalette.of(context).category(category);
     return PageTitle(
-      title: category.label,
+      title: context.tr(category.label),
       child: Scaffold(
-        appBar: AppBar(title: Text('${category.label} materials')),
+        appBar: AppBar(
+          title: Text(
+            context.tr('{category} materials', {
+              'category': context.tr(category.label),
+            }),
+          ),
+        ),
         body: SingleChildScrollView(
           padding: EdgeInsets.only(bottom: bottomClearance(context)),
           child: ContentWidth(
@@ -48,14 +55,16 @@ class CategoryScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                category.tagline,
+                                context.tr(category.tagline),
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   color: colors.onContainer,
                                 ),
                               ),
                               const SizedBox(height: Space.xs),
                               Text(
-                                '${materials.length} calculators',
+                                context.tr('{n} calculators', {
+                                  'n': materials.length,
+                                }),
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: colors.onContainer,
                                 ),

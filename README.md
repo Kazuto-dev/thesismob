@@ -26,8 +26,10 @@ light or dark mode.
 
 - [How each material is calculated, with sources](docs/calculations.md)
 - [Prices, budgets and exports](docs/prices-and-costing.md)
-- [Saving to Google Sheets](docs/google-sheets.md)
+- [Google Sheets and Drive backups](docs/google-sheets.md)
 - [Design system](docs/design-system.md) and [design QA](docs/design-qa.md)
+- [Translations](docs/translations.md)
+- [Usability test kit](docs/usability-test.md)
 
 - **Structural:** concrete hollow blocks (adjustable rebar spacing),
   concrete slabs, footings, columns and beams (concrete, bars, ties, forms),

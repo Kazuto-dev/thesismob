@@ -330,6 +330,19 @@ void main() {
       expect(find.text('Sign in with Google'), findsOneWidget);
     });
 
+    testWidgets('the app can be shown in Filipino', (tester) async {
+      await pumpApp(tester, location: '/settings');
+      await tester.ensureVisible(find.text('Filipino'));
+      await tester.tap(find.text('Filipino'));
+      await tester.pumpAndSettle();
+      expect(find.text('Kasaysayan'), findsOneWidget);
+      expect(find.text('Hitsura at unit'), findsOneWidget);
+
+      await tester.tap(find.text('Estimate').first);
+      await tester.pumpAndSettle();
+      expect(find.text('Mga kategorya'), findsOneWidget);
+    });
+
     testWidgets('switches between light and dark themes', (tester) async {
       await pumpApp(tester, location: '/settings');
       expect(
