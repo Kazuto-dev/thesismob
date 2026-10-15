@@ -5,6 +5,7 @@ import 'calc_helpers.dart';
 import 'factors.dart';
 import 'items.dart';
 import 'material_spec.dart';
+import 'work_items.dart';
 
 /// Vertical bars in a block wall, metres of bar per m² (laps included),
 /// by spacing.
@@ -17,6 +18,9 @@ const chbHorizontalBars = {'2': 3.30, '3': 2.15, '4': 1.72};
 /// Foam rolls are 1 m wide; a 50 mm taped lap leaves 0.95 m of cover.
 const foamRollWidth = 1.0;
 const foamLap = 0.05;
+
+/// Rounds a measured area or weight to the hundredth.
+double _hundredths(double value) => (value * 100).roundToDouble() / 100;
 
 final chb = MaterialSpec(
   id: 'chb',
@@ -163,6 +167,18 @@ final chb = MaterialSpec(
         buy('tie_wire', ties * tieWirePerTie(barMm) / tieWireMetresPerKg),
       ],
       note: 'Cement and sand use Class B mortar (1:3).',
+      // Cement and sand for laying and plaster are bought together, so
+      // they stay with the wall; bars and tie wire go to the rebar.
+      works: [
+        WorkQuantity(switch (size.id) {
+          '6' => Work.chb6,
+          '8' => Work.chb8,
+          _ => Work.chb4,
+        }, _hundredths(net)),
+        if (faces > 0) WorkQuantity(Work.plaster, _hundredths(net * faces)),
+        if (rebar > 0)
+          WorkQuantity(Work.rebar, _hundredths(rebar * rebarKgPerMetre(barMm))),
+      ],
     );
   },
   definitions: const [
@@ -346,6 +362,7 @@ final plywood = MaterialSpec(
         ),
         ...wasteDetail(count, waste, QuantityUnit.sheets),
       ],
+      works: [WorkQuantity(Work.plywood, _hundredths(area))],
     );
   },
   definitions: const [
@@ -493,6 +510,7 @@ final insulation = MaterialSpec(
         if (tape > 0)
           buy('foil_tape', tape / 50, label: 'Foil tape for the laps'),
       ],
+      works: [WorkQuantity(Work.insulation, _hundredths(eave * slope * sides))],
     );
   },
   definitions: const [
@@ -677,6 +695,7 @@ final ceiling = MaterialSpec(
         buy('board_screws', area * screwsPerM2 * 1.05 / 100),
       ],
       note: 'Check spacing against the board maker\'s fixing guide.',
+      works: [WorkQuantity(Work.ceiling, _hundredths(area))],
     );
   },
   definitions: const [

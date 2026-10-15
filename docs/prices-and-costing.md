@@ -362,10 +362,13 @@ have no unit price of their own.
 
 ## Project cost build-up
 
-Calculators price materials only. A project adds labour, tools, hauling,
-contingency, markups and VAT in its **Budget** section (a tab on phones).
-The model is in [`lib/data/project.dart`](../lib/data/project.dart)
-(`CostSettings` and `CostBreakdown.of`).
+Calculators price materials and measure the work. A project adds labour,
+tools, equipment, hauling, general requirements, contingency, markups and
+VAT in its **Budget** section (a tab on phones). The model is in
+[`lib/data/project.dart`](../lib/data/project.dart) (`CostSettings` and
+`CostBreakdown.of`) and
+[`lib/data/unit_prices.dart`](../lib/data/unit_prices.dart) (crews and unit
+price analyses).
 
 ### Materials by trade
 
@@ -378,9 +381,13 @@ are the sum of its estimates' materials totals, companions included.
 
 ```
 materials      = Σ materials of each trade
-labour         = Σ (materials of the trade × labour % of the trade)
+labour         = Σ crew-days × crew's daily labour     (by crew output)
+               or Σ (materials of the trade × labour %) (% of materials)
+equipment      = Σ crew-days × crew's daily equipment rental
 minor tools    = labour × tools %
-direct cost    = materials + labour + minor tools + hauling
+general        = Σ general requirement lump sums
+direct cost    = materials + labour + minor tools + equipment + hauling
+                 + general requirements
 contingency    = direct cost × contingency %
 overhead (OCM) = direct cost × overhead %
 profit         = direct cost × profit %
@@ -390,8 +397,11 @@ total          = subtotal + VAT
 ```
 
 - Each line is rounded to the centavo.
-- Labour is a percentage of material cost. A trade can have its own
-  percentage under **Labour by trade**; empty trades use the main one.
+- Labour is priced **by crew output** (the default for new projects; see
+  below) or as **% of materials**, chosen under Budget → Labour. With a
+  percentage, a trade can have its own under **Labour by trade**; empty
+  trades use the main one. Projects saved before crews existed keep the
+  percentage.
 - Hauling and delivery is a lump sum in pesos.
 - Contingency, overhead and profit are each a percentage of the direct cost.
   They are not compounded on each other.
@@ -399,6 +409,133 @@ total          = subtotal + VAT
   paid on materials; the VAT line is the tax on the contract price.
 - The last line reads **Project budget**, or **Total contract price** when
   overhead, profit or VAT is above zero.
+
+### Labour by crews
+
+Every calculator reports the work it measures, in the units of a bill of
+quantities: concrete in m³, reinforcing steel in kg (the net weight of the
+bars as placed, laps included), formwork, walls, plaster, tiles and paint in
+m², pipes and wire in metres, fixtures by the set. Each work item has a
+crew and the output that crew usually achieves in an eight-hour day:
+
+```
+crew-days        = quantity × effort ÷ (output × productivity)
+labour           = crew-days × (foremen × foreman rate
+                                + skilled × skilled rate
+                                + helpers × helper rate)
+equipment        = crew-days × Σ (units × daily rental)
+```
+
+- **Effort** multiplies the time for work done in passes: painting is
+  measured once by area and its effort is the number of coats, plus one for
+  primer and one and a half for each skim coat.
+- **Crew productivity** (100% by default) scales every output: 80% means
+  slower crews and 25% more crew-days.
+- Fractions of a foreman or helper are shared between crews.
+- Estimates saved before work items existed are measured again from their
+  saved inputs; an estimate that cannot be (one from the original app) is
+  priced as a share of its materials.
+
+| Work item | Unit | Crew per day | Output a day | Labour and equipment per unit | DPWH item |
+| --- | --- | --- | ---: | ---: | --- |
+| Structure excavation, common soil, by hand | m³ | 0.1 foreman, 1 helper | 3 | ₱346.67 | 103 |
+| Backfill and compaction, by hand | m³ | 0.1 foreman, 1 helper | 5 | ₱208.00 | 104 |
+| Gravel bedding, compacted | m³ | 0.1 foreman, 2 helpers | 5 | ₱388.00 | 200 |
+| Structural concrete, footings | m³ | 0.5 foreman, 1 skilled, 4 helpers, 1 one-bagger mixer, 1 concrete vibrator | 4 | ₱2050.00 | 900 |
+| Structural concrete, slab on fill | m³ | 0.5 foreman, 1 skilled, 4 helpers, 1 one-bagger mixer, 1 concrete vibrator | 6 | ₱1366.67 | 900 |
+| Structural concrete, suspended slab | m³ | 0.5 foreman, 1 skilled, 6 helpers, 1 one-bagger mixer, 1 concrete vibrator | 5 | ₱2000.00 | 900 |
+| Structural concrete, columns | m³ | 0.5 foreman, 1 skilled, 4 helpers, 1 one-bagger mixer, 1 concrete vibrator | 2.5 | ₱3280.00 | 900 |
+| Structural concrete, beams | m³ | 0.5 foreman, 1 skilled, 4 helpers, 1 one-bagger mixer, 1 concrete vibrator | 3 | ₱2733.33 | 900 |
+| Reinforcing steel, cut, bent and tied in place | kg | 0.1 foreman, 1 skilled, 1 helper | 175 | ₱12.23 | 902 |
+| Formwork and falsework, made, set and stripped | m² | 0.1 foreman, 1 skilled, 1 helper | 9 | ₱237.78 | 903 |
+| CHB wall, 4" | m² | 1 skilled, 1 helper | 11 | ₱181.82 | 1046 |
+| CHB wall, 6" | m² | 1 skilled, 1 helper | 9 | ₱222.22 | 1046 |
+| CHB wall, 8" | m² | 1 skilled, 1 helper | 7 | ₱285.71 | 1046 |
+| Cement plaster finish, 16 mm | m² | 1 skilled, 1 helper, 0.5 scaffolding set | 14 | ₱164.29 | 1027 |
+| Plywood sheathing, installed | m² | 1 skilled, 1 helper | 15 | ₱133.33 | – |
+| Ceiling, boards on framing | m² | 1 skilled, 1 helper, 1 scaffolding set | 10 | ₱260.00 | 1013 |
+| Roof insulation, foil-faced foam | m² | 1 skilled, 1 helper | 60 | ₱33.33 | – |
+| Painting, per coat | m² | 1 skilled, 0.5 helper, 0.5 scaffolding set | 40 | ₱46.25 | 1032 |
+| Tiles, set and grouted | m² | 1 skilled, 1 helper | 7 | ₱285.71 | 1018 |
+| Tile skirting | m | 1 skilled, 0.5 helper | 25 | ₱62.00 | – |
+| Roofing sheets, installed | m² | 2 skilled, 1 helper | 35 | ₱88.57 | 1014 |
+| Steel purlins, installed | m | 1 skilled, 1 helper | 60 | ₱33.33 | – |
+| Gutters and downspouts | m | 1 skilled, 1 helper | 20 | ₱100.00 | – |
+| Doors with jambs and hardware, installed | set | 1 skilled, 1 helper | 1.5 | ₱1333.33 | 1006 |
+| Aluminium windows, installed | m² | 1 skilled, 1 helper | 6 | ₱333.33 | 1010 |
+| Carpet, laid | m² | 1 skilled, 1 helper | 30 | ₱66.67 | – |
+| Wallpaper, hung | m² | 1 skilled, 0.5 helper | 20 | ₱77.50 | – |
+| Electrical rough-in: conduit, boxes and wiring, per outlet | pt | 1 skilled, 1 helper | 6 | ₱333.33 | 1100 |
+| Panel board with breakers, installed | set | 1 skilled, 0.5 helper | 1 | ₱1550.00 | 1102 |
+| Building wire, pulled in conduit | m | 1 skilled, 1 helper | 300 | ₱6.67 | – |
+| Lighting fixtures, installed | pc | 1 skilled, 0.5 helper | 12 | ₱129.17 | – |
+| Switches and outlets, installed | pc | 1 skilled, 0.5 helper | 15 | ₱103.33 | – |
+| Junction and utility boxes, installed | pc | 1 skilled | 20 | ₱55.00 | – |
+| Water and drainage pipes with fittings, installed | m | 1 skilled, 1 helper | 20 | ₱100.00 | 1200 |
+| Water closets, installed | set | 1 skilled, 0.5 helper | 1.5 | ₱1033.33 | – |
+| Lavatories and sinks, installed | set | 1 skilled, 0.5 helper | 3 | ₱516.67 | – |
+| Faucets, installed | pc | 1 skilled, 0.5 helper | 10 | ₱155.00 | – |
+| Shower sets, installed | set | 1 skilled, 0.5 helper | 3 | ₱516.67 | – |
+| Water or septic tanks, set in place | set | 1 skilled, 2 helpers | 1 | ₱2900.00 | – |
+| Septic tank, CHB with concrete slabs, built on site | m³ | 0.2 foreman, 1 skilled, 2 helpers | 0.5 | ₱6360.00 | 1203 |
+
+Outputs are planning norms in line with Fajardo's *Simplified Construction
+Estimate* and DPWH detailed unit price analyses for small buildings. Real
+outputs vary with the site, access, weather and the crew; adjust **Crew
+productivity**, or the rates, to match yours. The per-unit column uses the
+default rates below.
+
+#### Daily rates
+
+| Rate | Default, a day |
+| --- | ---: |
+| Foreman | ₱1,400 |
+| Skilled worker (mason, carpenter, steelman, electrician, plumber, painter) | ₱1,100 |
+| Helper | ₱900 |
+| One-bagger concrete mixer | ₱1,800 |
+| Concrete vibrator | ₱1,000 |
+| Plate compactor | ₱2,000 |
+| Scaffolding set | ₱600 |
+
+Labour rates are for Metro Manila in late 2026: the minimum wage is ₱755 a
+day from 26 September 2026, and the rates add the employer's share of
+13th-month pay and SSS, PhilHealth and Pag-IBIG contributions, as DPWH's
+labour cost factor does. Provincial minimum wages are lower; enter what you
+pay under Budget → Daily rates. Equipment rates are typical day rentals.
+
+### Unit price analysis
+
+Each project item's details show a **unit price analysis** per work item,
+like a DPWH DUPA:
+
+```
+materials        the estimate's materials that go into this work item
+labour           crew-days × daily rates, by trade level
+minor tools      labour × tools %
+equipment        crew-days × daily rentals
+direct cost      the sum of the above
+unit cost        direct cost ÷ quantity
+markups          direct cost × (contingency + overhead + profit) %
+VAT              (direct cost + markups) × VAT %
+unit price       (direct cost + markups + VAT) ÷ quantity
+```
+
+Materials are split between an estimate's work items: bars and tie wire go
+to the reinforcing steel, plywood, lumber and nails to the formwork, gravel
+bedding to the bedding, materials a calculator names to their work (purlins,
+gutters, breakers), and the rest to the main work. A CHB wall's cement and
+sand for laying and plaster are one line, so they stay with the wall.
+
+### General requirements
+
+Lump sums for running the site, in pesos (DPWH Part A and B items):
+mobilization and demobilization; temporary facilities (bodega, toilet,
+power and water); permits, clearances and fees; occupational safety and
+health; the project signboard; and clean-up and disposal of debris.
+**Suggest amounts** fills in about 5% of the direct cost in all (1%, 1.5%,
+1%, 1% and 0.5%, rounded up to ₱500) plus ₱5,000 for a signboard; change
+them to your own. They are part of the direct cost, so contingency,
+overhead and profit apply to them as to hauling.
 
 ### Presets
 
@@ -417,9 +554,8 @@ total          = subtotal + VAT
   (`CostSettings.dpwh` and `dpwhMarkups`). The contingency is inside the OCM.
 - A new project starts as **Owner budget** or **Contractor bid**, chosen when
   it is created.
-- Presets do not set labour or hauling. Labour starts at 40% of materials
-  in a new project, and switching presets keeps the project's own labour
-  percentages and hauling.
+- Presets do not set labour, rates, hauling or general requirements.
+  Switching presets keeps the project's own.
 - Any setting can be changed; the preset then shows as none.
 
 The DPWH preset sets OCM and profit by the size of the direct cost:
@@ -474,15 +610,13 @@ job would be ₱2,016,000.
 
 ### What the model leaves out
 
-- Labour from crews and days. DPWH's detailed unit price analysis (DUPA)
-  prices labour as crew-days × daily rates. DO 125 s.2025 sets the rates
-  from the regional minimum wage times a labour cost factor; the NCR minimum
-  is ₱755 a day since 26 September 2026. The app uses a percentage of
-  materials instead.
-- Equipment rental other than minor tools.
-- Mobilization and demobilization, permits and clearances, and the service
-  vehicle. Under DPWH rules these are not marked up with OCM or profit; add
-  them to hauling only if you accept that they will be marked up.
+- Regional labour cost factors. DO 125 s.2025 sets DPWH labour rates from
+  the regional minimum wage times a labour cost factor; the app uses one
+  set of rates per project, which you can change.
+- Heavy equipment such as backhoes and cranes, and equipment for work the
+  calculators don't measure.
+- Under DPWH rules, general requirements are not marked up with OCM or
+  profit; the app marks them up with the rest of the direct cost.
 - Professional fees, land, utility connections and the electrical service
   entrance.
 - DPWH's own engineering and administrative overhead (DO 7 s.2025), which is
@@ -514,6 +648,13 @@ and [`lib/export/project_pdf.dart`](../lib/export/project_pdf.dart).
 
 ### Bill of quantities
 
+The exported bill of quantities lists **work items**, each estimate's work
+in its own line: description (with the estimate's name), quantity, unit,
+direct unit cost and amount. General requirements and hauling follow in
+section F, one lot each. The lines add up to the direct cost; markups and
+VAT are in the cost summary. A **Unit price analysis** section (a tab in
+Google Sheets) follows with every line's analysis, numbered the same way.
+
 Estimates are grouped by trade into lettered sections:
 
 | Section | Trade |
@@ -526,9 +667,10 @@ Estimates are grouped by trade into lettered sections:
 
 - A section appears only when the project has items in that trade. Letters
   stay fixed, so a project with only electrical items has section C alone.
-- Each estimate is numbered within its section (A.1, A.2…) and followed by
-  its companion lines, unnumbered.
-- Each section ends with a subtotal of its main materials and companions.
+- Each work item is numbered within its section (A.1, A.2…).
+- Each section ends with a subtotal of its direct cost.
+- The app's Items tab, and its table on wide screens, still list each
+  estimate's materials, where unit prices can be changed.
 - Columns: Item, Description, Quantity, Unit, Unit cost, Amount.
 - These letters are the app's own. They are not DPWH pay item numbers or
   part letters, which vary from contract to contract.

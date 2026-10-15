@@ -2,6 +2,7 @@ import '../core/format.dart';
 import 'calc_helpers.dart';
 import 'items.dart';
 import 'material_spec.dart';
+import 'work_items.dart';
 
 /// Share of a bulb's light that reaches the room's work surface after
 /// fixture, wall and dust losses (utilisation × maintenance factor).
@@ -88,7 +89,8 @@ String _pricePer(QuantityUnit unit) =>
 
 /// A fixture bought by the piece or set from the price book entry
 /// [itemKey]. [companions] lists the items each one also needs and how
-/// many; [alsoNeeded] explains them in the Solution sheet.
+/// many; [alsoNeeded] explains them in the Solution sheet. Each one counts
+/// as one of [work] to install.
 MaterialSpec _fixture({
   required String id,
   required String name,
@@ -97,6 +99,7 @@ MaterialSpec _fixture({
   required String blurb,
   required String quantityLabel,
   required String itemKey,
+  required String work,
   QuantityUnit unit = QuantityUnit.pieces,
   PriceRef? Function(Map<String, String> selected)? priceRef,
   String? quantityHint,
@@ -137,6 +140,7 @@ MaterialSpec _fixture({
       companions: companions,
       itemKey: itemKey,
       note: note,
+      work: work,
     ),
     definitions: definitions,
     solution: [
@@ -242,6 +246,7 @@ final bulb = MaterialSpec(
         unitPrice: input['price'],
         itemKey: itemKey,
         companions: [buy('lamp_holder', quantity)],
+        works: [if (quantity > 0) WorkQuantity(Work.lightFixture, quantity)],
       );
     }
     final area = input['length'] * input['width'];
@@ -276,6 +281,7 @@ final bulb = MaterialSpec(
         buy('junction_box', bulbs.toDouble()),
       ],
       note: 'Spread the bulbs evenly over the ceiling.',
+      works: [if (bulbs > 0) WorkQuantity(Work.lightFixture, bulbs.toDouble())],
     );
   },
   definitions: const [
@@ -343,6 +349,7 @@ final lightSwitch = _fixture(
   quantityLabel: 'Number of switches',
   quantityHint: 'One per room entrance; a stair needs a pair of 3-way',
   itemKey: 'switch',
+  work: Work.wiringDevice,
   choices: [
     descriptor('type', 'Switch type', [
       ('1gang', '1 gang'),
@@ -391,6 +398,7 @@ final junctionBox = _fixture(
   quantityLabel: 'Number of boxes',
   quantityHint: 'One per ceiling light, plus one at each splice',
   itemKey: 'junction_box',
+  work: Work.boxes,
   choices: [
     descriptor('type', 'Box type', [
       ('octagonal', 'Octagonal 4" × 4"'),
@@ -485,6 +493,7 @@ final outlet = MaterialSpec(
         itemKey: 'outlet',
         companions: [buy('utility_box', quantity)],
         note: note,
+        works: [if (quantity > 0) WorkQuantity(Work.wiringDevice, quantity)],
       );
     }
     final perimeter = 2 * (input['length'] + input['width']);
@@ -507,6 +516,9 @@ final outlet = MaterialSpec(
       ],
       companions: [buy('utility_box', outlets.toDouble())],
       note: note,
+      works: [
+        if (outlets > 0) WorkQuantity(Work.wiringDevice, outlets.toDouble()),
+      ],
     );
   },
   definitions: const [
@@ -639,6 +651,7 @@ final wires = MaterialSpec(
       ),
     ];
     final conduit = buy('conduit_half', run * (1 + pipeAllowance) / 3);
+    final works = [if (metres > 0) WorkQuantity(Work.wiring, metres)];
     if (input.chose('buy', 'metre')) {
       final bought = ceilCount(metres).toDouble();
       return CalcResult(
@@ -649,6 +662,7 @@ final wires = MaterialSpec(
         itemKey: wireMetreKey(size.id),
         details: details,
         companions: [conduit],
+        works: works,
       );
     }
     final boxes = ceilCount(metres / wireBoxLength);
@@ -663,6 +677,7 @@ final wires = MaterialSpec(
         ResultDetail('Boxes of 150 m', formatCount(boxes, 'box', 'boxes')),
       ],
       companions: [conduit],
+      works: works,
     );
   },
   definitions: const [
@@ -731,6 +746,7 @@ final utilityBox = _fixture(
   quantityLabel: 'Number of boxes',
   quantityHint: 'One per switch and outlet location',
   itemKey: 'utility_box',
+  work: Work.boxes,
   choices: [
     descriptor('type', 'Mounting', [
       ('flush', 'Flush'),
@@ -863,6 +879,7 @@ final pvc = MaterialSpec(
       note:
           'Fittings are an allowance of 40% of the pipe cost. Count them '
           'from your plan for a closer figure.',
+      works: [if (run > 0) WorkQuantity(Work.piping, run)],
     );
   },
   definitions: const [
@@ -1017,6 +1034,7 @@ final sink = MaterialSpec(
       note:
           'Add the faucets with the Faucet calculator. Some lavatory sets '
           'come with a P-trap; check before buying.',
+      works: [if (quantity > 0) WorkQuantity(Work.sink, quantity)],
     );
   },
   definitions: const [
@@ -1109,6 +1127,7 @@ final toilet = MaterialSpec(
       note: squat
           ? 'A squat bowl is set in mortar, so it needs no wax ring or bolts.'
           : null,
+      works: [if (quantity > 0) WorkQuantity(Work.toilet, quantity)],
     );
   },
   definitions: const [
@@ -1160,6 +1179,7 @@ final faucet = _fixture(
   keywords: const ['gripo', 'tap', 'bibb'],
   quantityLabel: 'Number of faucets',
   itemKey: 'faucet',
+  work: Work.faucet,
   choices: [
     descriptor('type', 'Faucet type', [
       ('single', 'Single-handle'),
@@ -1199,6 +1219,7 @@ final shower = _fixture(
   keywords: const ['dutsa', 'shower head', 'bathroom', 'banyo'],
   quantityLabel: 'Number of showers',
   itemKey: 'shower_set',
+  work: Work.shower,
   unit: QuantityUnit.sets,
   choices: [
     descriptor('type', 'Shower type', [

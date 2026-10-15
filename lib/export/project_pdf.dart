@@ -102,7 +102,7 @@ Future<Uint8List> projectPdf(Project project, {DateTime? date}) async {
     ),
     children: [
       header('Item'),
-      for (final r in boqRows(project))
+      for (final r in workBoqRows(project))
         if (r.isHeading)
           pw.TableRow(
             children: [
@@ -133,6 +133,45 @@ Future<Uint8List> projectPdf(Project project, {DateTime? date}) async {
               cell(_money(r.amount), right: true, strong: r.isSubtotal),
             ],
           ),
+    ],
+  );
+
+  final dupa = pw.Table(
+    columnWidths: widths,
+    border: const pw.TableBorder(
+      horizontalInside: pw.BorderSide(color: _line, width: 0.5),
+    ),
+    children: [
+      pw.TableRow(
+        decoration: const pw.BoxDecoration(color: _band),
+        children: [
+          headerRowCell('Item'),
+          headerRowCell('Description'),
+          headerRowCell('Qty', right: true),
+          headerRowCell('Unit'),
+          headerRowCell('Rate', right: true),
+          headerRowCell('Amount', right: true),
+        ],
+      ),
+      for (final r in dupaRows(project))
+        pw.TableRow(
+          decoration: r.isHeading || r.isTotal
+              ? const pw.BoxDecoration(color: _band)
+              : null,
+          children: [
+            cell(r.number, strong: r.isHeading),
+            cell(
+              r.description.trimLeft(),
+              strong: r.isHeading || r.isTotal,
+              indent: r.description.startsWith('  ') ? 10 : 0,
+              color: r.description.startsWith('  ') ? _muted : _ink,
+            ),
+            cell(_qty(r.quantity), right: true),
+            cell(r.unit),
+            cell(_money(r.rate), right: true),
+            cell(_money(r.amount), right: true, strong: r.isTotal),
+          ],
+        ),
     ],
   );
 
@@ -238,9 +277,25 @@ Future<Uint8List> projectPdf(Project project, {DateTime? date}) async {
         heading('Cost summary'),
         summary,
         heading('Bill of quantities'),
+        pw.Text(
+          'Unit costs are direct costs: materials, labour, tools and '
+          'equipment. Markups and VAT are in the cost summary.',
+          style: const pw.TextStyle(fontSize: 8, color: _muted),
+        ),
+        pw.SizedBox(height: 4),
         boq,
         heading('Materials to buy'),
         materialTable,
+        pw.NewPage(),
+        heading('Unit price analysis'),
+        pw.Text(
+          'Each work item\'s materials, crew and equipment for its measured '
+          'quantity. Crew-days follow usual daily outputs at '
+          '${formatNumber(project.costs.productivityPct)}% pace.',
+          style: const pw.TextStyle(fontSize: 8, color: _muted),
+        ),
+        pw.SizedBox(height: 4),
+        dupa,
       ],
     ),
   );

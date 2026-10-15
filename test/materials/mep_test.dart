@@ -3,6 +3,7 @@ import 'package:thesismob/materials/fixtures.dart';
 import 'package:thesismob/materials/items.dart';
 import 'package:thesismob/materials/material_spec.dart';
 import 'package:thesismob/materials/services.dart';
+import 'package:thesismob/materials/work_items.dart';
 
 final mep = [
   bulb,
@@ -30,6 +31,11 @@ CalcResult run(
 /// Quantity of the companion bought from [itemKey], or null if none.
 double? bought(CalcResult r, String itemKey) =>
     r.companions.where((c) => c.itemKey == itemKey).firstOrNull?.quantity;
+
+/// The work a result measures, main work first, as (key, quantity).
+List<(String, double)> worksOf(CalcResult r) => [
+  for (final w in r.works) (w.key, w.quantity),
+];
 
 String? detail(CalcResult r, String label) =>
     r.details.where((d) => d.label.startsWith(label)).firstOrNull?.value;
@@ -563,6 +569,168 @@ void main() {
       );
       expect(septicTank.priceRef!(pe)!.itemKey, 'septic_tank');
       expect(septicTank.priceRef!(septicTank.initialChoices)!.itemKey, 'chb_6');
+    });
+  });
+
+  group('Bill of quantities work', () {
+    test('every result measures known work; companions go to one of it', () {
+      for (final m in mep) {
+        for (final selected in variants(m)) {
+          final r = m.calculate(plain(m, selected), selected);
+          expect(r.works, isNotEmpty, reason: '${m.id} $selected');
+          for (final w in r.works) {
+            expect(workItemByKey(w.key), isNotNull, reason: '${m.id} ${w.key}');
+            expect(w.quantity, greaterThan(0), reason: '${m.id} ${w.key}');
+          }
+          final keys = r.works.map((w) => w.key);
+          for (final c in r.companions) {
+            if (c.work != null) {
+              expect(keys, contains(c.work), reason: '${m.id} ${c.itemKey}');
+            }
+          }
+        }
+      }
+    });
+
+    test('lights, switches, outlets and boxes are counted as installed', () {
+      // 7 bulbs by the lumen method (see above), or 4 counted.
+      expect(worksOf(run(bulb, {'length': 5, 'width': 4, 'price': 120})), [
+        (Work.lightFixture, 7.0),
+      ]);
+      expect(
+        worksOf(run(bulb, {'quantity': 4, 'price': 150}, {'mode': 'count'})),
+        [(Work.lightFixture, 4.0)],
+      );
+      expect(worksOf(run(lightSwitch, {'quantity': 4, 'price': 60})), [
+        (Work.wiringDevice, 4.0),
+      ]);
+      // 13.1 m of wall ÷ 3.6 → 4 outlets.
+      expect(
+        worksOf(
+          run(outlet, {'length': 4, 'width': 3, 'doors': 0.9, 'price': 150}),
+        ),
+        [(Work.wiringDevice, 4.0)],
+      );
+      expect(
+        worksOf(run(outlet, {'quantity': 6, 'price': 150}, {'mode': 'count'})),
+        [(Work.wiringDevice, 6.0)],
+      );
+      expect(worksOf(run(junctionBox, {'quantity': 5, 'price': 30})), [
+        (Work.boxes, 5.0),
+      ]);
+      expect(worksOf(run(utilityBox, {'quantity': 8, 'price': 25})), [
+        (Work.boxes, 8.0),
+      ]);
+    });
+
+    test('wire is measured as the metres pulled, before boxes', () {
+      // 30 m × 3 wires × 1.1 = 99 m, bought as 1 box.
+      final r = run(wires, {'run': 30, 'boxPrice': 5200});
+      expect(r.works.single.key, Work.wiring);
+      expect(r.works.single.quantity, closeTo(99, 1e-9));
+      // 30 m × 2 wires × 1.1 = 66 m, by the metre.
+      final m = run(
+        wires,
+        {'run': 30, 'price': 40},
+        {'buy': 'metre', 'conductors': '2'},
+      );
+      expect(m.works.single.key, Work.wiring);
+      expect(m.works.single.quantity, closeTo(66, 1e-9));
+    });
+
+    test('pipe is measured as the run; fixtures by the set or piece', () {
+      // The 24 m run, not the 26.4 m bought with the 10% allowance.
+      expect(worksOf(run(pvc, {'run': 24, 'price': 165})), [
+        (Work.piping, 24.0),
+      ]);
+      expect(worksOf(run(sink, {'quantity': 3, 'price': 2500})), [
+        (Work.sink, 3.0),
+      ]);
+      expect(
+        worksOf(
+          run(sink, {'quantity': 2, 'piecePrice': 2500}, {'use': 'kitchen'}),
+        ),
+        [(Work.sink, 2.0)],
+      );
+      expect(worksOf(run(toilet, {'quantity': 2, 'price': 5500})), [
+        (Work.toilet, 2.0),
+      ]);
+      expect(worksOf(run(faucet, {'quantity': 3, 'price': 700})), [
+        (Work.faucet, 3.0),
+      ]);
+      expect(worksOf(run(shower, {'quantity': 2, 'price': 1500})), [
+        (Work.shower, 2.0),
+      ]);
+    });
+
+    test('rough-in: one point per light, switch and outlet, and a panel', () {
+      final r = run(
+        roughIn,
+        {
+          'lights': 12,
+          'outlets': 14,
+          'aircons': 2,
+          'dedicated': 1,
+          'homeRun': 10,
+          'price': 3500,
+        },
+        {'storeys': '2'},
+      );
+      // 12 lights + 6 switches (1 per 2 lights) + 14 outlets + 2 aircon
+      // outlets + 1 appliance outlet = 35 points.
+      expect(worksOf(r), [(Work.roughIn, 35.0), (Work.panel, 1.0)]);
+      for (final c in r.companions) {
+        expect(
+          c.work,
+          c.itemKey.startsWith('breaker_') ? Work.panel : isNull,
+          reason: c.itemKey,
+        );
+      }
+      // Entered switches count as they are: 3 + 4 + 3 = 10 points.
+      expect(
+        worksOf(
+          run(roughIn, {
+            'lights': 3,
+            'outlets': 4,
+            'switches': 3,
+            'homeRun': 10,
+            'price': 2000,
+          }),
+        ),
+        [(Work.roughIn, 10.0), (Work.panel, 1.0)],
+      );
+    });
+
+    test('tanks are set in place; a block septic tank by its capacity', () {
+      expect(worksOf(run(waterTank, {'persons': 6, 'price': 8000})), [
+        (Work.tank, 1.0),
+      ]);
+      // 2,700 L in 2,000 L tanks: 2 tanks.
+      expect(
+        worksOf(
+          run(
+            waterTank,
+            {'persons': 6, 'price': 1},
+            {'days': '3', 'size': '2000'},
+          ),
+        ),
+        [(Work.tank, 2.0)],
+      );
+      // 3 bedrooms: 3.785 m³ of liquid capacity.
+      expect(worksOf(run(septicTank, {'bedrooms': 3, 'price': 32})), [
+        (Work.septicChb, 3.785),
+      ]);
+      // 30 people × 0.15 m³ = 4.5 m³ beats 2.838 m³ for 2 bedrooms.
+      final large = run(septicTank, {'bedrooms': 2, 'persons': 30, 'price': 1});
+      expect(large.works.single.key, Work.septicChb);
+      expect(large.works.single.quantity, closeTo(4.5, 1e-9));
+      // Ready-made tanks are set in place as one septic tank.
+      expect(
+        worksOf(
+          run(septicTank, {'bedrooms': 3, 'tankPrice': 25000}, {'type': 'pe'}),
+        ),
+        [(Work.tank, 1.0)],
+      );
     });
   });
 }

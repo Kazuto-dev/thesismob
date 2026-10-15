@@ -9,8 +9,10 @@ import '../../core/theme.dart';
 import '../../core/widgets.dart';
 import '../../data/estimate.dart';
 import '../../data/project.dart';
+import '../../data/unit_prices.dart';
 import '../../materials/catalog.dart';
 import '../../router.dart';
+import 'unit_price_view.dart';
 import '../../state/projects_controller.dart';
 
 // What can be done to an item in a project, from its menu, its details
@@ -108,6 +110,7 @@ void showItemDetails(BuildContext context, Project project, Estimate e) {
         ),
         child: _ItemDetails(
           estimate: e,
+          analyses: analyseEstimate(e, project.costs),
           onEdit: materialById(e.materialId) == null
               ? null
               : () => then(() => editItem(context, project, e)),
@@ -193,6 +196,7 @@ class ItemMenu extends StatelessWidget {
 class _ItemDetails extends StatelessWidget {
   const _ItemDetails({
     required this.estimate,
+    required this.analyses,
     required this.onEdit,
     required this.onLabel,
     required this.onDuplicate,
@@ -200,6 +204,9 @@ class _ItemDetails extends StatelessWidget {
   });
 
   final Estimate estimate;
+
+  /// The unit price analysis of each work item in the estimate.
+  final List<WorkAnalysis> analyses;
   final VoidCallback? onEdit;
   final VoidCallback onLabel;
   final VoidCallback onDuplicate;
@@ -254,10 +261,34 @@ class _ItemDetails extends StatelessWidget {
         ],
         const Divider(),
         KeyValueLine(
-          'Materials total',
+          context.tr('Materials total'),
           formatMoney(e.grandTotal),
           emphasize: true,
         ),
+        if (analyses.isNotEmpty) ...[
+          const SizedBox(height: Space.lg),
+          Semantics(
+            header: true,
+            child: Text(
+              context.tr('Unit price analysis'),
+              style: theme.textTheme.titleMedium,
+            ),
+          ),
+          const SizedBox(height: Space.xs),
+          Text(
+            context.tr(
+              'Each work item with its materials, crew and equipment. Tap '
+              'one to see how its unit cost is built up.',
+            ),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          for (final a in analyses) ...[
+            const SizedBox(height: Space.sm),
+            UnitPriceCard(analysis: a),
+          ],
+        ],
         const SizedBox(height: Space.xl),
         Wrap(
           spacing: Space.sm,

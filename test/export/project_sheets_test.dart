@@ -33,9 +33,10 @@ void main() {
   );
   final tabs = projectSheetTabs(project, date: DateTime(2026, 10, 15));
 
-  test('three tabs with a frozen heading row', () {
+  test('four tabs with a frozen heading row', () {
     expect(tabs.map((t) => t.title), [
       'Bill of quantities',
+      'Unit price analysis',
       'Materials',
       'Budget',
     ]);
@@ -48,7 +49,7 @@ void main() {
     expect(projectSheetTitle(project), 'BuildQuantify – Santos residence');
   });
 
-  test('the bill of quantities ends with the materials total in bold', () {
+  test('the bill of quantities lists work at direct cost', () {
     final boq = tabs[0];
     expect(boq.rows[boq.headerRow], [
       'Item',
@@ -59,17 +60,31 @@ void main() {
       'Amount (₱)',
     ]);
     expect(boq.rows[boq.headerRow + 1].take(2), ['A', 'STRUCTURAL WORKS']);
-    expect(boq.rows[boq.headerRow + 2][1], 'CHB 4"');
-    expect(boq.rows[boq.headerRow + 3][1], '    Cement');
-    expect(boq.rows.last.last, 9850 + 28 * 240);
+    // An estimate saved without its inputs: one line, labour at 40% of
+    // its materials and tools at 10% of labour.
+    const materials = 9850 + 28 * 240;
+    const direct = materials * 1.4 + materials * 0.4 * 0.1;
+    final line = boq.rows[boq.headerRow + 2];
+    expect(line.take(4), ['A.1', 'CHB 4"', 394.0, 'blocks']);
+    expect(line[5], closeTo(direct, 0.01));
+    expect(boq.rows.last.last, project.breakdown.direct);
     expect(boq.boldRows, contains(boq.rows.length - 1));
     expect(boq.boldRows, contains(boq.headerRow + 1), reason: 'trade heading');
   });
 
+  test('the unit price analysis builds up each line', () {
+    final dupa = tabs[1];
+    final rows = dupa.rows.skip(dupa.headerRow + 1).toList();
+    expect(rows.first.take(2), ['A.1', 'CHB 4"']);
+    expect(rows[1], ['', 'Materials', null, '', null, 16570.0]);
+    expect(rows.map((r) => r[1]), contains('Direct cost'));
+    expect(rows.map((r) => r[1]), contains('Unit price per blocks'));
+  });
+
   test('materials and budget add up', () {
-    final materials = tabs[1];
+    final materials = tabs[2];
     expect(materials.rows.last.last, project.breakdown.materials);
-    final budget = tabs[2];
+    final budget = tabs[3];
     final total = budget.rows.firstWhere(
       (r) => r.isNotEmpty && r.first == 'Total contract price',
     );

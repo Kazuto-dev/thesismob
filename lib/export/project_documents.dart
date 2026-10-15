@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../core/format.dart';
 import '../data/estimate.dart';
 import '../data/project.dart';
+import '../data/unit_prices.dart';
 import '../materials/catalog.dart';
 import '../materials/items.dart';
 import '../materials/material_spec.dart';
@@ -110,20 +111,263 @@ List<BoqRow> boqRows(Project project) {
   return rows;
 }
 
+/// A project's work in bill of quantities order: by trade, each
+/// estimate's work items numbered A.1, A.2…
+List<
+  ({
+    String letter,
+    MaterialCategory? trade,
+    List<({String number, WorkAnalysis analysis})> entries,
+  })
+>
+workSections(Project project) => [
+  for (final g in groupByTrade(project.items))
+    (
+      letter: g.letter,
+      trade: g.trade,
+      entries: [
+        for (final (i, a) in [
+          for (final e in g.items) ...analyseEstimate(e, project.costs),
+        ].indexed)
+          (number: '${g.letter}.${i + 1}', analysis: a),
+      ],
+    ),
+];
+
+/// The description of an analysed work item in a bill of quantities,
+/// naming the estimate it came from.
+String workDescription(WorkAnalysis a) {
+  final title = a.estimate.title;
+  final base = a.item == null ? title : '${a.description} ($title)';
+  return a.estimate.note == null ? base : '$base. ${a.estimate.note}';
+}
+
+/// The bill of quantities by work item: each trade's work with its
+/// quantity, direct unit cost and amount, then the general requirements.
+/// Markups are added in the cost summary.
+List<BoqRow> workBoqRows(Project project) {
+  final rows = <BoqRow>[];
+  for (final section in workSections(project)) {
+    rows.add(
+      _row(
+        section.letter,
+        tradeLabel(section.trade).toUpperCase(),
+        heading: true,
+      ),
+    );
+    var subtotal = 0.0;
+    for (final (:number, :analysis) in section.entries) {
+      final a = analysis;
+      rows.add(
+        _row(
+          number,
+          workDescription(a),
+          quantity: a.quantity,
+          unit: a.unit,
+          unitPrice: a.unitCost,
+          amount: a.directCost,
+        ),
+      );
+      subtotal += a.directCost;
+    }
+    rows.add(
+      _row(
+        '',
+        'Subtotal, ${tradeLabel(section.trade).toLowerCase()}',
+        amount: (subtotal * 100).roundToDouble() / 100,
+        subtotal: true,
+      ),
+    );
+  }
+  final c = project.costs;
+  final general = [
+    for (final MapEntry(:key, :value) in generalRequirements.entries)
+      if ((c.general[key] ?? 0) > 0) (value, c.general[key]!),
+    if (c.hauling > 0) ('Hauling and delivery of materials', c.hauling),
+  ];
+  if (general.isNotEmpty) {
+    rows.add(_row('F', 'GENERAL REQUIREMENTS', heading: true));
+    for (final (i, (label, amount)) in general.indexed) {
+      rows.add(
+        _row(
+          'F.${i + 1}',
+          label,
+          quantity: 1,
+          unit: 'lot',
+          unitPrice: amount,
+          amount: amount,
+        ),
+      );
+    }
+    rows.add(
+      _row(
+        '',
+        'Subtotal, general requirements',
+        amount: general.fold<double>(0, (s, g) => s + g.$2),
+        subtotal: true,
+      ),
+    );
+  }
+  return rows;
+}
+
+/// One row of a unit price analysis table.
+typedef DupaRow = ({
+  String number,
+  String description,
+  double? quantity,
+  String unit,
+  double? rate,
+  double? amount,
+  bool isHeading,
+  bool isTotal,
+});
+
+DupaRow _dupa(
+  String description, {
+  String number = '',
+  double? quantity,
+  String unit = '',
+  double? rate,
+  double? amount,
+  bool heading = false,
+  bool total = false,
+}) => (
+  number: number,
+  description: description,
+  quantity: quantity,
+  unit: unit,
+  rate: rate,
+  amount: amount,
+  isHeading: heading,
+  isTotal: total,
+);
+
+/// The detailed unit price analysis of every work item, numbered as in
+/// the bill of quantities.
+List<DupaRow> dupaRows(Project project) {
+  double r(double v) => (v * 100).roundToDouble() / 100;
+  final rows = <DupaRow>[];
+  for (final section in workSections(project)) {
+    for (final (:number, :analysis) in section.entries) {
+      final a = analysis;
+      rows
+        ..add(
+          _dupa(
+            workDescription(a),
+            number: number,
+            quantity: a.quantity,
+            unit: a.unit,
+            heading: true,
+          ),
+        )
+        ..add(_dupa('Materials', amount: a.materialCost))
+        ..addAll([
+          for (final m in a.materials)
+            _dupa(
+              '  ${m.label}',
+              quantity: m.quantity,
+              unit: m.unit,
+              rate: m.unitPrice,
+              amount: m.amount,
+            ),
+        ])
+        ..add(_dupa('Labour', amount: a.labourCost))
+        ..addAll([
+          for (final l in a.labour)
+            l.days == 0
+                ? _dupa('  ${l.label}', amount: l.amount)
+                : _dupa(
+                    '  ${l.label} × ${formatNumber(l.count)}',
+                    quantity: r(l.count * l.days),
+                    unit: 'days',
+                    rate: l.rate,
+                    amount: l.amount,
+                  ),
+        ]);
+      if (a.toolsCost > 0) {
+        rows.add(
+          _dupa(
+            'Minor tools, ${formatNumber(a.toolsPct)}% of labour',
+            amount: a.toolsCost,
+          ),
+        );
+      }
+      if (a.equipmentCost > 0) {
+        rows
+          ..add(_dupa('Equipment', amount: a.equipmentCost))
+          ..addAll([
+            for (final l in a.equipment)
+              _dupa(
+                '  ${l.label}',
+                quantity: r(l.count * l.days),
+                unit: 'days',
+                rate: l.rate,
+                amount: l.amount,
+              ),
+          ]);
+      }
+      rows
+        ..add(_dupa('Direct cost', amount: a.directCost, total: true))
+        ..add(
+          _dupa(
+            'Direct cost per ${a.unit}',
+            quantity: 1,
+            unit: a.unit,
+            amount: a.unitCost,
+          ),
+        );
+      if (a.markupPct > 0 || a.vatPct > 0) {
+        rows
+          ..add(
+            _dupa(
+              'Contingency, overhead and profit, '
+              '${formatNumber(a.markupPct)}%',
+              amount: a.markups,
+            ),
+          )
+          ..addAll([
+            if (a.vat > 0)
+              _dupa('VAT, ${formatNumber(a.vatPct)}%', amount: a.vat),
+          ])
+          ..add(
+            _dupa(
+              'Unit price per ${a.unit}',
+              quantity: 1,
+              unit: a.unit,
+              amount: a.unitPrice,
+              total: true,
+            ),
+          );
+      }
+    }
+  }
+  return rows;
+}
+
 /// The cost summary lines, from materials to the total.
 List<(String, double, {bool strong})> costLines(Project project) {
   final b = project.breakdown;
   final s = project.costs;
   return [
     ('Materials', b.materials, strong: false),
-    ('Labour', b.labour, strong: false),
+    (
+      s.labourMethod == LabourMethod.crews && b.crewDays > 0
+          ? 'Labour, ${formatNumber((b.crewDays * 10).ceilToDouble() / 10)} '
+                'crew-days'
+          : 'Labour',
+      b.labour,
+      strong: false,
+    ),
     if (b.tools > 0)
       (
         'Minor tools, ${formatNumber(s.toolsPct)}% of labour',
         b.tools,
         strong: false,
       ),
+    if (b.equipment > 0) ('Equipment rental', b.equipment, strong: false),
     if (b.hauling > 0) ('Hauling and delivery', b.hauling, strong: false),
+    if (b.general > 0) ('General requirements', b.general, strong: false),
     ('Direct cost', b.direct, strong: true),
     if (b.contingency > 0)
       (
@@ -159,8 +403,8 @@ String _csvCell(Object? value) {
       : text;
 }
 
-/// The project as CSV for Excel or Google Sheets: bill of quantities,
-/// materials list and cost summary.
+/// The project as CSV for Excel or Google Sheets: bill of quantities by
+/// work item, unit price analyses, materials list and cost summary.
 String projectCsv(Project project) {
   final lines = <List<Object?>>[
     ['Project', project.name],
@@ -177,8 +421,13 @@ String projectCsv(Project project) {
       'Unit cost (PHP)',
       'Amount (PHP)',
     ],
-    for (final r in boqRows(project))
+    for (final r in workBoqRows(project))
       [r.number, r.description, r.quantity, r.unit, r.unitPrice, r.amount],
+    [],
+    ['UNIT PRICE ANALYSIS'],
+    ['Item', 'Description', 'Quantity', 'Unit', 'Rate (PHP)', 'Amount (PHP)'],
+    for (final r in dupaRows(project))
+      [r.number, r.description, r.quantity, r.unit, r.rate, r.amount],
     [],
     ['MATERIALS LIST'],
     [

@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart' show Icons;
 import '../core/format.dart';
 import 'calc_helpers.dart';
 import 'material_spec.dart';
+import 'work_items.dart';
 
 /// Door sets by option id: size, price list entry, and the hinges and
 /// lockset each door takes. PVC door sets come with their hinges.
@@ -93,6 +94,7 @@ final doors = MaterialSpec(
       note: type.hinges == 0
           ? 'PVC door sets come with their hinges.'
           : 'Door sets include the jamb; paint or varnish is not included.',
+      works: [if (count > 0) WorkQuantity(Work.doors, count)],
     );
   },
   definitions: const [
@@ -232,6 +234,7 @@ final windows = MaterialSpec(
       note:
           'Fabricators often quote per square foot. Multiply a price per '
           'ft² by 10.764 for the price per m².',
+      works: [if (area > 0) WorkQuantity(Work.windows, area)],
     );
   },
   definitions: const [

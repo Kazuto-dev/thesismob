@@ -18,6 +18,7 @@ class EstimateLine {
     required this.quantity,
     required this.unit,
     required this.unitPrice,
+    this.work,
   });
 
   /// Prices [companion] with [priceOf], the price book lookup.
@@ -32,6 +33,7 @@ class EstimateLine {
       quantity: companion.quantity,
       unit: item?.unitFor(companion.quantity) ?? '',
       unitPrice: companion.unitPrice ?? priceOf(companion.itemKey),
+      work: companion.work,
     );
   }
 
@@ -51,6 +53,7 @@ class EstimateLine {
       quantity: quantity.toDouble(),
       unit: json['unit'] is String ? json['unit'] as String : '',
       unitPrice: unitPrice.toDouble(),
+      work: json['work'] is String ? json['work'] as String : null,
     );
   }
 
@@ -60,6 +63,9 @@ class EstimateLine {
   final String unit;
   final double unitPrice;
 
+  /// The work item this material goes into, when the calculator named one.
+  final String? work;
+
   double get total => _centavos(quantity * unitPrice);
 
   EstimateLine withPrice(double price) => EstimateLine(
@@ -68,6 +74,7 @@ class EstimateLine {
     quantity: quantity,
     unit: unit,
     unitPrice: price,
+    work: work,
   );
 
   Map<String, dynamic> toJson() => {
@@ -76,7 +83,51 @@ class EstimateLine {
     'quantity': quantity,
     'unit': unit,
     'unitPrice': unitPrice,
+    if (work != null) 'work': work,
   };
+}
+
+/// A measured quantity of work in an estimate, such as 2.4 m³ of footing
+/// concrete, by work item key.
+@immutable
+class EstimateWork {
+  const EstimateWork(this.key, this.quantity, {this.effort = 1});
+
+  factory EstimateWork.fromJson(Map<String, dynamic> json) {
+    final key = json['key'];
+    final quantity = json['quantity'];
+    if (key is! String || quantity is! num || !quantity.isFinite) {
+      throw FormatException('EstimateWork is malformed', json);
+    }
+    final effort = json['effort'];
+    return EstimateWork(
+      key,
+      quantity.toDouble(),
+      effort: effort is num && effort.isFinite ? effort.toDouble() : 1,
+    );
+  }
+
+  final String key;
+  final double quantity;
+
+  /// Multiplies the crew time, e.g. the number of coats of paint.
+  final double effort;
+
+  Map<String, dynamic> toJson() => {
+    'key': key,
+    'quantity': quantity,
+    if (effort != 1) 'effort': effort,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is EstimateWork &&
+      other.key == key &&
+      other.quantity == quantity &&
+      other.effort == effort;
+
+  @override
+  int get hashCode => Object.hash(key, quantity, effort);
 }
 
 /// One calculated estimate: the main material plus the companion materials
@@ -100,6 +151,7 @@ class Estimate {
     this.companions = const [],
     this.mark,
     this.note,
+    this.works = const [],
   });
 
   /// Builds an estimate from a calculation, pricing its companions with
@@ -130,6 +182,10 @@ class Estimate {
       companions: List.unmodifiable([
         for (final c in result.companions)
           if (c.quantity > 0) EstimateLine.fromCompanion(c, lookup),
+      ]),
+      works: List.unmodifiable([
+        for (final w in result.works)
+          if (w.quantity > 0) EstimateWork(w.key, w.quantity, effort: w.effort),
       ]),
     );
   }
@@ -186,6 +242,10 @@ class Estimate {
       companions: List.unmodifiable(companions),
       mark: _optionalText(json['mark']),
       note: _optionalText(json['note']),
+      works: List.unmodifiable([
+        for (final w in json['works'] as List? ?? const [])
+          if (w is Map<String, dynamic>) ?_work(w),
+      ]),
     );
   }
 
@@ -225,6 +285,18 @@ class Estimate {
 
   /// The user's note on this item, printed in the bill of quantities.
   final String? note;
+
+  /// The work this estimate measures for a bill of quantities, main work
+  /// first. Empty for estimates saved before work items existed.
+  final List<EstimateWork> works;
+
+  static EstimateWork? _work(Map<String, dynamic> json) {
+    try {
+      return EstimateWork.fromJson(json);
+    } on FormatException {
+      return null;
+    }
+  }
 
   /// The mark and the label, as shown in lists and documents.
   String get title => mark == null ? label : '$mark – $label';
@@ -290,6 +362,7 @@ class Estimate {
       companions: companions ?? this.companions,
       mark: mark == null ? this.mark : _optionalText(mark),
       note: note == null ? this.note : _optionalText(note),
+      works: works,
     );
   }
 
@@ -321,5 +394,6 @@ class Estimate {
       'companions': [for (final l in companions) l.toJson()],
     if (mark != null) 'mark': mark,
     if (note != null) 'note': note,
+    if (works.isNotEmpty) 'works': [for (final w in works) w.toJson()],
   };
 }

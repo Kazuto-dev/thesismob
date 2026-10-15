@@ -304,10 +304,21 @@ class ResultDetail {
 /// item's unit and already rounded to what can be bought.
 @immutable
 class Companion {
-  const Companion(this.itemKey, this.quantity, {this.label, this.unitPrice});
+  const Companion(
+    this.itemKey,
+    this.quantity, {
+    this.label,
+    this.unitPrice,
+    this.work,
+  });
 
   final String itemKey;
   final double quantity;
+
+  /// The work item this material goes into, by [Work] key, when it is not
+  /// the calculation's main work. Bars and tie wire go to the rebar work
+  /// and form materials to the formwork by themselves.
+  final String? work;
 
   /// Replaces the item's name, e.g. "Cement, laying and plaster".
   final String? label;
@@ -315,6 +326,19 @@ class Companion {
   /// A fixed price that overrides the price book, for allowances worked
   /// out from the main cost.
   final double? unitPrice;
+}
+
+/// How much of a work item a calculation measured, such as 2.4 m³ of
+/// footing concrete or 310 kg of reinforcing steel, in the work item's
+/// unit. [effort] multiplies the crew time, e.g. by the number of coats.
+@immutable
+class WorkQuantity {
+  const WorkQuantity(this.key, this.quantity, {this.effort = 1});
+
+  /// A [Work] key from `work_items.dart`.
+  final String key;
+  final double quantity;
+  final double effort;
 }
 
 /// Points a calculator's price field at a price book entry. The suggested
@@ -340,6 +364,7 @@ class CalcResult {
     this.companions = const [],
     this.note,
     this.itemKey,
+    this.works = const [],
   }) : total = (quantity * unitPrice * 100).roundToDouble() / 100;
 
   /// Short description used in the summary, e.g. `CHB 4"`.
@@ -364,6 +389,11 @@ class CalcResult {
   /// A short remark shown under the breakdown.
   final String? note;
   final double total;
+
+  /// The work this measures for a bill of quantities, main work first:
+  /// the main material and companions without a work of their own go into
+  /// it.
+  final List<WorkQuantity> works;
 }
 
 typedef Calculation = CalcResult Function(CalcInput input);

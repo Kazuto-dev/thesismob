@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:thesismob/materials/catalog.dart';
+import 'package:thesismob/materials/work_items.dart';
 import 'package:thesismob/materials/fixtures.dart';
 import 'package:thesismob/materials/material_spec.dart';
 import 'package:thesismob/materials/structural.dart';
@@ -75,6 +76,18 @@ void main() {
         final r = m.calculate(numbers, selected);
         expect(r.quantity, greaterThan(0), reason: m.id);
         expect(r.total, closeTo(r.quantity * 3, 0.005), reason: m.id);
+        // Every calculator measures its work for the bill of quantities,
+        // in work items the costing knows.
+        expect(r.works, isNotEmpty, reason: m.id);
+        for (final w in r.works) {
+          expect(workItemByKey(w.key), isNotNull, reason: '${m.id} ${w.key}');
+          expect(w.quantity, greaterThan(0), reason: '${m.id} ${w.key}');
+        }
+        for (final c in r.companions) {
+          if (c.work != null) {
+            expect(r.works.map((w) => w.key), contains(c.work), reason: m.id);
+          }
+        }
       }
     });
 

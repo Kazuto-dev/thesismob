@@ -1,5 +1,6 @@
 import '../data/google_sheets_client.dart';
 import '../data/project.dart';
+import '../materials/work_items.dart';
 import 'project_documents.dart';
 
 /// The spreadsheet name for [project] in the user's Drive.
@@ -8,8 +9,8 @@ String projectSheetTitle(Project project) => 'BuildQuantify – ${project.name}'
 String _percent(double value) =>
     '${value == value.roundToDouble() ? value.toInt() : value}%';
 
-/// The project as three Google Sheets tabs: the bill of quantities, the
-/// materials to buy and the budget.
+/// The project as Google Sheets tabs: the bill of quantities, the unit
+/// price analyses, the materials to buy and the budget.
 List<SheetTab> projectSheetTabs(Project project, {DateTime? date}) {
   final day = (date ?? DateTime.now()).toIso8601String().substring(0, 10);
   final heading = <List<Object?>>[
@@ -24,7 +25,7 @@ List<SheetTab> projectSheetTabs(Project project, {DateTime? date}) {
     [],
   ];
 
-  final boq = boqRows(project);
+  final boq = workBoqRows(project);
   final boqHeader = heading.length;
   final boqTab = (
     title: 'Bill of quantities',
@@ -50,7 +51,7 @@ List<SheetTab> projectSheetTabs(Project project, {DateTime? date}) {
           r.amount,
         ],
       [],
-      ['', 'Total materials', null, null, null, project.breakdown.materials],
+      ['', 'Direct cost', null, null, null, project.breakdown.direct],
     ],
     headerRow: boqHeader,
     moneyColumns: const [4, 5],
@@ -59,6 +60,25 @@ List<SheetTab> projectSheetTabs(Project project, {DateTime? date}) {
       for (final (i, r) in boq.indexed)
         if (r.isHeading || r.isSubtotal) boqHeader + 1 + i,
       boqHeader + boq.length + 2,
+    ],
+  );
+
+  final dupa = dupaRows(project);
+  final dupaHeader = heading.length;
+  final dupaTab = (
+    title: 'Unit price analysis',
+    rows: <List<Object?>>[
+      ...heading,
+      ['Item', 'Description', 'Quantity', 'Unit', 'Rate (₱)', 'Amount (₱)'],
+      for (final r in dupa)
+        [r.number, r.description, r.quantity, r.unit, r.rate, r.amount],
+    ],
+    headerRow: dupaHeader,
+    moneyColumns: const [4, 5],
+    quantityColumns: const [2],
+    boldRows: [
+      for (final (i, r) in dupa.indexed)
+        if (r.isHeading || r.isTotal) dupaHeader + 1 + i,
     ],
   );
 
@@ -91,9 +111,15 @@ List<SheetTab> projectSheetTabs(Project project, {DateTime? date}) {
       for (final (label, amount, strong: _) in lines) [label, amount],
       [],
       ['Settings'],
-      ['Labour', '${_percent(s.labourPct)} of materials'],
-      for (final e in s.labourByTrade.entries)
-        ['Labour, ${e.key}', '${_percent(e.value)} of materials'],
+      if (s.labourMethod == LabourMethod.crews) ...[
+        ['Labour', 'By crew output, ${_percent(s.productivityPct)} pace'],
+        for (final MapEntry(:key, :value) in s.dailyRates.entries)
+          ['${DailyRates.labels[key] ?? key}, a day', value],
+      ] else ...[
+        ['Labour', '${_percent(s.labourPct)} of materials'],
+        for (final e in s.labourByTrade.entries)
+          ['Labour, ${e.key}', '${_percent(e.value)} of materials'],
+      ],
       ['Minor tools', '${_percent(s.toolsPct)} of labour'],
       ['Contingency', _percent(s.contingencyPct)],
       ['Overhead (OCM)', _percent(s.overheadPct)],
@@ -110,5 +136,5 @@ List<SheetTab> projectSheetTabs(Project project, {DateTime? date}) {
     ],
   );
 
-  return [boqTab, materialsTab, budgetTab];
+  return [boqTab, dupaTab, materialsTab, budgetTab];
 }

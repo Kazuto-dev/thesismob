@@ -7,6 +7,7 @@ import 'calc_helpers.dart';
 import 'factors.dart';
 import 'items.dart';
 import 'material_spec.dart';
+import 'work_items.dart';
 
 // Reinforced concrete: slabs, footings, columns and beams. Each works out
 // the cement, sand and gravel for its volume, the reinforcing bars cut from
@@ -45,6 +46,44 @@ int stockBars(int pieces, double length, double lap) {
   }
   final splices = ceilCount(length / rebarStockLength) - 1;
   return ceilCount(pieces * (length + splices * lap) / rebarStockLength);
+}
+
+/// Metres of bar placed in [pieces] bars each [length] metres long, with
+/// the laps [stockBars] adds where a bar longer than 6 m is spliced.
+/// Offcuts are not counted.
+double _barMetres(int pieces, double length, double lap) {
+  if (pieces <= 0 || length <= 0) return 0;
+  if (length <= rebarStockLength) return pieces * length;
+  final splices = ceilCount(length / rebarStockLength) - 1;
+  return pieces * (length + splices * lap);
+}
+
+/// Rounds a measured quantity to [decimals] places.
+double _rounded(double value, int decimals) {
+  final factor = math.pow(10, decimals).toDouble();
+  return (value * factor).roundToDouble() / factor;
+}
+
+/// The bill of quantities works of a concrete member: [volume] m³ of
+/// [concrete] (net, before the waste allowance) first, then [rebarKg] of
+/// bars, [formArea] m² of forms and [bedding] m³ of gravel, where there are
+/// any.
+List<WorkQuantity> _concreteWorks(
+  String concrete,
+  double volume, {
+  double rebarKg = 0,
+  double formArea = 0,
+  double bedding = 0,
+}) {
+  final steel = _rounded(rebarKg, 2);
+  final forms = _rounded(formArea, 2);
+  final gravel = _rounded(bedding, 3);
+  return [
+    WorkQuantity(concrete, _rounded(volume, 3)),
+    if (steel > 0) WorkQuantity(Work.rebar, steel),
+    if (forms > 0) WorkQuantity(Work.formwork, forms),
+    if (gravel > 0) WorkQuantity(Work.gravelBedding, gravel),
+  ];
 }
 
 final _classChoice = ChoiceField(
@@ -317,6 +356,7 @@ final slab = MaterialSpec(
     var ties = 0;
     var alongLength = 0;
     var alongWidth = 0;
+    var barMetres = 0.0;
     if (spacingOption.id != 'none') {
       alongLength = ((width - 2 * cover) / spacing + 1e-9).floor() + 1;
       alongWidth = ((length - 2 * cover) / spacing + 1e-9).floor() + 1;
@@ -324,6 +364,9 @@ final slab = MaterialSpec(
           stockBars(alongLength, length - 2 * cover, lap) +
           stockBars(alongWidth, width - 2 * cover, lap);
       ties = alongLength * alongWidth;
+      barMetres =
+          _barMetres(alongLength, length - 2 * cover, lap) +
+          _barMetres(alongWidth, width - 2 * cover, lap);
     }
     final bedding = suspended ? 0.0 : input.choice('bedding').value;
     final uses = suspended ? input.choice('reuse').value : 1.0;
@@ -369,6 +412,15 @@ final slab = MaterialSpec(
       note:
           'Quantities follow the dimensions entered. Bar sizes and spacing '
           'must follow the structural plans.',
+      // Concrete is the net volume, before the waste allowance; forms are
+      // the soffit of a suspended slab, the area its plywood is sized for.
+      works: _concreteWorks(
+        suspended ? Work.concreteSlabSuspended : Work.concreteSlabOnFill,
+        volume,
+        rebarKg: barMetres * rebarKgPerMetre(barMm),
+        formArea: suspended ? area : 0,
+        bedding: area * bedding,
+      ),
     );
   },
   definitions: const [
@@ -572,6 +624,15 @@ final footing = MaterialSpec(
       note:
           'Column dowels are counted with the columns. Footing size, bars '
           'and spacing must follow the structural plans.',
+      works: _concreteWorks(
+        Work.concreteFooting,
+        volume,
+        rebarKg:
+            (_barMetres(count * alongLength, length - 2 * coverEarth, 0) +
+                _barMetres(count * alongWidth, width - 2 * coverEarth, 0)) *
+            rebarKgPerMetre(barMm),
+        formArea: formArea,
+      ),
     );
   },
   definitions: const [
@@ -773,6 +834,15 @@ final column = MaterialSpec(
       note:
           'Columns with 6 or more bars also need cross ties, not counted '
           'here. Bars and ties must follow the structural plans.',
+      works: _concreteWorks(
+        Work.concreteColumn,
+        volume,
+        rebarKg:
+            _barMetres(count * perColumn, mainLength, lap) *
+                rebarKgPerMetre(barMm) +
+            _barMetres(count * tiesEach, tieLength, 0) * rebarKgPerMetre(tieMm),
+        formArea: formArea,
+      ),
     );
   },
   definitions: const [
@@ -989,6 +1059,16 @@ final beam = MaterialSpec(
       note:
           'Extra bars over the supports and shoring posts are not counted. '
           'Bars and stirrups must follow the structural plans.',
+      works: _concreteWorks(
+        Work.concreteBeam,
+        volume,
+        rebarKg:
+            _barMetres(count * perBeam, mainLength, lap) *
+                rebarKgPerMetre(barMm) +
+            _barMetres(count * stirrupsEach, stirrupLength, 0) *
+                rebarKgPerMetre(tieMm),
+        formArea: formArea,
+      ),
     );
   },
   definitions: const [

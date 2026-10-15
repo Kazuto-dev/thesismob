@@ -4,6 +4,7 @@ import 'package:thesismob/materials/concrete.dart';
 import 'package:thesismob/materials/items.dart';
 import 'package:thesismob/materials/material_spec.dart';
 import 'package:thesismob/materials/structural.dart';
+import 'package:thesismob/materials/work_items.dart';
 
 CalcResult run(
   MaterialSpec spec,
@@ -13,6 +14,11 @@ CalcResult run(
 
 double? qty(CalcResult r, String itemKey) =>
     r.companions.where((c) => c.itemKey == itemKey).firstOrNull?.quantity;
+
+/// The bill of quantities works of [r], main work first.
+List<(String, double)> works(CalcResult r) => [
+  for (final w in r.works) (w.key, w.quantity),
+];
 
 final _specs = [chb, plywood, insulation, ceiling, slab, footing, column, beam];
 
@@ -225,9 +231,9 @@ void main() {
     expect(r.quantity, 8); // 0.8 m³ × 1.05 × 9 = 7.56
     // 4.384 m bars, one per stock bar.
     expect(qty(r, 'rebar_16'), 8);
-    // 27 stirrups per beam of 1.13 m, 5 per bar.
+    // 27 stirrups per beam of 1.19 m, 5 per bar.
     expect(qty(r, 'rebar_10'), 11);
-    expect(qty(r, 'marine_plywood_12'), 2); // 8.4 m² ÷ 2.88 ÷ 2 uses
+    expect(qty(r, 'marine_plywood_12'), 2); // 9.2 m² ÷ 2.88 ÷ 2 uses
   });
 
   test('companion names come from the price book', () {
@@ -240,5 +246,164 @@ void main() {
     });
     expect(r.companions.first.name, 'Washed sand');
     expect(r.companions.first.amount, '0.5 m³');
+  });
+
+  // Bars weigh d² ÷ 162.2 kg per metre: 0.6165 for 10 mm, 0.8878 for 12 mm
+  // and 1.5783 for 16 mm. Concrete is the volume before waste.
+  group('bill of quantities works', () {
+    test('a plastered 4" wall: blocks, plaster and bars', () {
+      final r = run(chb, {'length': 10, 'height': 3, 'price': 24});
+      // 30 m² × (2.13 + 2.15) m = 128.4 m × 0.6165 kg = 79.16 kg.
+      expect(works(r), [
+        (Work.chb4, 30.0),
+        (Work.plaster, 60.0),
+        (Work.rebar, 79.16),
+      ]);
+    });
+
+    test('an unplastered 8" wall with openings has no plaster', () {
+      final r = run(
+        chb,
+        {'length': 10, 'height': 3, 'openings': 4, 'price': 45},
+        {'size': '8', 'plaster': '0'},
+      );
+      // 26 m² × 4.28 m = 111.28 m × 0.6165 kg = 68.61 kg.
+      expect(works(r), [(Work.chb8, 26.0), (Work.rebar, 68.61)]);
+    });
+
+    test('one plastered face of a 6" wall', () {
+      final r = run(
+        chb,
+        {'length': 5, 'height': 2, 'price': 32},
+        {'size': '6', 'plaster': '1', 'vertical': '0.4', 'horizontal': '2'},
+      );
+      // 10 m² × (2.93 + 3.30) m = 62.3 m × 0.6165 kg = 38.41 kg.
+      expect(works(r), [
+        (Work.chb6, 10.0),
+        (Work.plaster, 10.0),
+        (Work.rebar, 38.41),
+      ]);
+    });
+
+    test('a slab on fill: concrete, bars and gravel bed', () {
+      final r = run(slab, {
+        'length': 10,
+        'width': 5,
+        'thickness': 0.1,
+        'price': 240,
+      });
+      // 13 runs of 9.92 m with a 0.40 m lap each + 25 runs of 4.92 m =
+      // 257.16 m × 0.6165 kg = 158.55 kg. Bed: 50 m² × 0.10 m.
+      expect(works(r), [
+        (Work.concreteSlabOnFill, 5.0),
+        (Work.rebar, 158.55),
+        (Work.gravelBedding, 5.0),
+      ]);
+    });
+
+    test('a suspended slab: concrete, bars and soffit forms', () {
+      final r = run(
+        slab,
+        {'length': 6, 'width': 4, 'thickness': 0.12, 'price': 240},
+        {'type': 'suspended'},
+      );
+      // 20 runs of 5.96 m + 30 runs of 3.96 m = 238 m × 0.6165 kg.
+      expect(works(r), [
+        (Work.concreteSlabSuspended, 2.88),
+        (Work.rebar, 146.73),
+        (Work.formwork, 24.0),
+      ]);
+    });
+
+    test('an unreinforced slab has no rebar work', () {
+      final r = run(
+        slab,
+        {'length': 3, 'width': 3, 'thickness': 0.1, 'price': 240},
+        {'spacing': 'none'},
+      );
+      expect(works(r), [
+        (Work.concreteSlabOnFill, 0.9),
+        (Work.gravelBedding, 0.9),
+      ]);
+    });
+
+    test('footings with side forms', () {
+      final r = run(
+        footing,
+        {
+          'count': 6,
+          'length': 1.2,
+          'width': 1.2,
+          'thickness': 0.25,
+          'price': 240,
+        },
+        {'sides': 'plywood'},
+      );
+      // 96 bars of 1.05 m = 100.8 m × 0.8878 kg = 89.49 kg.
+      // Forms: 6 × 2 × (1.2 + 1.2) × 0.25 = 7.2 m².
+      expect(works(r), [
+        (Work.concreteFooting, 2.16),
+        (Work.rebar, 89.49),
+        (Work.formwork, 7.2),
+      ]);
+    });
+
+    test('footings cast against the soil have no formwork', () {
+      final r = run(footing, {
+        'count': 6,
+        'length': 1.2,
+        'width': 1.2,
+        'thickness': 0.25,
+        'price': 240,
+      });
+      expect(works(r), [(Work.concreteFooting, 2.16), (Work.rebar, 89.49)]);
+    });
+
+    test('columns: main bars and ties', () {
+      final r = run(column, {
+        'count': 4,
+        'width': 0.3,
+        'depth': 0.3,
+        'height': 3,
+        'price': 240,
+      });
+      // 16 bars of 3.64 m × 1.5783 kg = 91.92 kg, plus 84 ties of 1.09 m
+      // × 0.6165 kg = 56.45 kg. Forms: 4 × (1.2 + 0.2) × 3 = 16.8 m².
+      expect(works(r), [
+        (Work.concreteColumn, 1.08),
+        (Work.rebar, 148.37),
+        (Work.formwork, 16.8),
+      ]);
+    });
+
+    test('beams: main bars and stirrups', () {
+      final r = run(beam, {
+        'count': 2,
+        'width': 0.25,
+        'depth': 0.4,
+        'length': 4,
+        'price': 240,
+      });
+      // 8 bars of 4.384 m × 1.5783 kg = 55.35 kg, plus 54 stirrups of
+      // 1.19 m × 0.6165 kg = 39.62 kg. Forms: 2 × (0.8 + 0.25 + 0.1) × 4.
+      expect(works(r), [
+        (Work.concreteBeam, 0.8),
+        (Work.rebar, 94.97),
+        (Work.formwork, 9.2),
+      ]);
+    });
+
+    test('boards and insulation measure the area covered', () {
+      expect(works(run(plywood, {'length': 4, 'width': 3, 'price': 700})), [
+        (Work.plywood, 12.0),
+      ]);
+      expect(works(run(ceiling, {'length': 5, 'width': 4, 'price': 560})), [
+        (Work.ceiling, 20.0),
+      ]);
+      // 10 m of eaves × 4 m rafters × 2 sides.
+      expect(works(run(insulation, {'eave': 10, 'rafter': 4, 'price': 1800})), [
+        (Work.insulation, 80.0),
+      ]);
+    });
   });
 }

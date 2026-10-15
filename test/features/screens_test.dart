@@ -198,7 +198,7 @@ void main() {
         size: desktop,
         prefs: projectPrefs(items),
       );
-      expect(find.text('Labour by trade'), findsOneWidget);
+      expect(find.text('Daily rates'), findsOneWidget);
       expect(find.text('Items'), findsOneWidget);
     });
 

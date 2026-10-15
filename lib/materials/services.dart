@@ -8,6 +8,7 @@ import 'factors.dart';
 import 'fixtures.dart' show wireAllowance, wireBoxLength;
 import 'items.dart';
 import 'material_spec.dart';
+import 'work_items.dart';
 
 // Whole-house services: electrical rough-in, water storage and septic
 // tank. Sources are listed in docs/calculations.md.
@@ -259,6 +260,8 @@ final roughIn = MaterialSpec(
     ];
 
     final circuits = schedule.fold(0, (sum, c) => sum + c.count);
+    // Every light, switch, outlet, aircon and appliance outlet is a point.
+    final points = lights + switches + outlets + aircons + dedicated;
     final spaces = ceilCount(circuits * (1 + panelSpare));
     final recommended = panelBranches.where((n) => n >= spaces).firstOrNull;
     final branches = input.choice('panel').value.round();
@@ -300,7 +303,8 @@ final roughIn = MaterialSpec(
       buy('switch_plate', switches.toDouble()),
       buy('outlet', (outlets + dedicated).toDouble()),
       buy('aircon_outlet', aircons.toDouble()),
-      for (final a in amps) buy(breakerKey(a), breakers[a]!.toDouble()),
+      for (final a in amps)
+        buy(breakerKey(a), breakers[a]!.toDouble(), work: Work.panel),
       buy('ground_rod', 1),
       buy('electrical_tape', circuits / circuitsPerTapeRoll),
     ];
@@ -349,6 +353,10 @@ final roughIn = MaterialSpec(
           'the circuits and sign the plans under the Philippine Electrical '
           'Code. The service entrance, meter base and main feeder are not '
           'included.',
+      works: [
+        if (points > 0) WorkQuantity(Work.roughIn, points.toDouble()),
+        const WorkQuantity(Work.panel, 1),
+      ],
     );
   },
   definitions: const [
@@ -556,6 +564,7 @@ final waterTank = MaterialSpec(
       note:
           'Set tanks on a level, sturdy base. A full 1,000 L tank weighs '
           'about a tonne.',
+      works: [if (tanks > 0) WorkQuantity(Work.tank, tanks.toDouble())],
     );
   },
   definitions: const [
@@ -748,6 +757,7 @@ final septicTank = MaterialSpec(
         note:
             'Set the tank at least 15 m from any well, outside the house. '
             'Check the size with the tank supplier.',
+        works: const [WorkQuantity(Work.tank, 1)],
       );
     }
 
@@ -844,6 +854,7 @@ final septicTank = MaterialSpec(
           'Leave two manholes of at least 0.50 m in the cover slab, one over '
           'each chamber. Keep the tank at least 15 m from any well and '
           'outside the house.',
+      works: [WorkQuantity(Work.septicChb, volume)],
     );
   },
   definitions: const [

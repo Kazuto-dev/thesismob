@@ -3,9 +3,40 @@ import 'package:flutter/foundation.dart';
 import '../materials/catalog.dart';
 import '../materials/items.dart';
 import '../materials/material_spec.dart';
+import '../materials/work_items.dart';
 import 'estimate.dart';
+import 'unit_prices.dart';
 
 double _centavos(double value) => (value * 100).roundToDouble() / 100;
+
+/// How labour is priced: from each work item's crew and daily output, or
+/// as a share of the materials.
+enum LabourMethod { crews, percent }
+
+/// The general requirements of a job: costs of running the site rather
+/// than of any one work item, each a lump sum (DPWH Part A and B).
+const generalRequirements = <String, String>{
+  'mobilization': 'Mobilization and demobilization',
+  'temporary': 'Temporary facilities: bodega, toilet, power and water',
+  'permits': 'Permits, clearances and fees',
+  'safety': 'Occupational safety and health',
+  'signboard': 'Project signboard',
+  'cleanup': 'Clean-up and disposal of debris',
+};
+
+/// Typical general requirements for a small building with [direct] cost
+/// of work, rounded to ₱500: about 5% in all plus a signboard.
+Map<String, double> suggestGeneralRequirements(double direct) {
+  double share(double pct) => ((direct * pct / 100) / 500).ceilToDouble() * 500;
+  return {
+    'mobilization': share(1),
+    'temporary': share(1.5),
+    'permits': share(1),
+    'safety': share(1),
+    'signboard': direct > 0 ? 5000 : 0,
+    'cleanup': share(0.5),
+  }..removeWhere((_, v) => v <= 0);
+}
 
 /// How a project's material cost is built up into a budget or a bid.
 /// Percentages are whole numbers (35 means 35%).
@@ -20,6 +51,10 @@ class CostSettings {
     this.overheadPct = 0,
     this.profitPct = 0,
     this.vatPct = 0,
+    this.labourMethod = LabourMethod.crews,
+    this.rates = const {},
+    this.productivityPct = 100,
+    this.general = const {},
   });
 
   /// For an owner hiring workers directly: materials, labour, a margin for
@@ -52,6 +87,10 @@ class CostSettings {
       overheadPct: ocm,
       profitPct: profit,
       vatPct: 5,
+      labourMethod: from?.labourMethod ?? LabourMethod.crews,
+      rates: from?.rates ?? const {},
+      productivityPct: from?.productivityPct ?? 100,
+      general: from?.general ?? const {},
     );
   }
 
@@ -64,11 +103,16 @@ class CostSettings {
         _ => (8, 8),
       };
 
-  /// This preset's markups with the job's own labour and hauling.
+  /// This preset's markups with the job's own labour, rates, hauling and
+  /// general requirements.
   CostSettings keepingJobCosts(CostSettings job) => copyWith(
     labourPct: job.labourPct,
     labourByTrade: job.labourByTrade,
     hauling: job.hauling,
+    labourMethod: job.labourMethod,
+    rates: job.rates,
+    productivityPct: job.productivityPct,
+    general: job.general,
   );
 
   factory CostSettings.fromJson(Map<String, dynamic> json) {
@@ -77,7 +121,24 @@ class CostSettings {
       return v is num && v.isFinite && v >= 0 ? v.toDouble() : fallback;
     }
 
+    Map<String, double> amounts(String key) => {
+      for (final e in (json[key] as Map? ?? const {}).entries)
+        if (e.key is String &&
+            e.value is num &&
+            (e.value as num).isFinite &&
+            (e.value as num) >= 0)
+          e.key as String: (e.value as num).toDouble(),
+    };
+
     return CostSettings(
+      // Projects saved before crews existed keep their percentage.
+      labourMethod: LabourMethod.values.firstWhere(
+        (m) => m.name == json['labourMethod'],
+        orElse: () => LabourMethod.percent,
+      ),
+      rates: amounts('rates'),
+      productivityPct: pct('productivityPct', 100),
+      general: amounts('general'),
       labourPct: pct('labourPct', 40),
       labourByTrade: {
         for (final e in (json['labourByTrade'] as Map? ?? const {}).entries)
@@ -117,6 +178,24 @@ class CostSettings {
   /// Value-added tax on the price before tax.
   final double vatPct;
 
+  final LabourMethod labourMethod;
+
+  /// Daily rates that differ from [DailyRates.defaults], by key.
+  final Map<String, double> rates;
+
+  /// How fast the crews work against the usual outputs, in percent: 80
+  /// means slower crews and 25% more crew-days.
+  final double productivityPct;
+
+  /// General requirements in pesos, by [generalRequirements] key.
+  final Map<String, double> general;
+
+  /// Every daily rate, the project's own where set.
+  Map<String, double> get dailyRates => {...DailyRates.defaults, ...rates};
+
+  /// The general requirements together.
+  double get generalTotal => general.values.fold(0, (sum, v) => sum + v);
+
   double labourFor(MaterialCategory? trade) =>
       (trade == null ? null : labourByTrade[trade.name]) ?? labourPct;
 
@@ -131,6 +210,10 @@ class CostSettings {
     double? overheadPct,
     double? profitPct,
     double? vatPct,
+    LabourMethod? labourMethod,
+    Map<String, double>? rates,
+    double? productivityPct,
+    Map<String, double>? general,
   }) => CostSettings(
     labourPct: labourPct ?? this.labourPct,
     labourByTrade: labourByTrade ?? this.labourByTrade,
@@ -140,6 +223,10 @@ class CostSettings {
     overheadPct: overheadPct ?? this.overheadPct,
     profitPct: profitPct ?? this.profitPct,
     vatPct: vatPct ?? this.vatPct,
+    labourMethod: labourMethod ?? this.labourMethod,
+    rates: rates ?? this.rates,
+    productivityPct: productivityPct ?? this.productivityPct,
+    general: general ?? this.general,
   );
 
   Map<String, dynamic> toJson() => {
@@ -151,6 +238,10 @@ class CostSettings {
     'overheadPct': overheadPct,
     'profitPct': profitPct,
     'vatPct': vatPct,
+    'labourMethod': labourMethod.name,
+    if (rates.isNotEmpty) 'rates': rates,
+    if (productivityPct != 100) 'productivityPct': productivityPct,
+    if (general.isNotEmpty) 'general': general,
   };
 
   @override
@@ -163,7 +254,11 @@ class CostSettings {
       other.contingencyPct == contingencyPct &&
       other.overheadPct == overheadPct &&
       other.profitPct == profitPct &&
-      other.vatPct == vatPct;
+      other.vatPct == vatPct &&
+      other.labourMethod == labourMethod &&
+      mapEquals(other.rates, rates) &&
+      other.productivityPct == productivityPct &&
+      mapEquals(other.general, general);
 
   @override
   int get hashCode => Object.hash(
@@ -175,6 +270,10 @@ class CostSettings {
     overheadPct,
     profitPct,
     vatPct,
+    labourMethod,
+    Object.hashAllUnordered(rates.entries.map((e) => e.toString())),
+    productivityPct,
+    Object.hashAllUnordered(general.entries.map((e) => e.toString())),
   );
 }
 
@@ -187,6 +286,9 @@ class CostBreakdown {
     required this.labour,
     required this.tools,
     required this.hauling,
+    this.equipment = 0,
+    this.general = 0,
+    this.crewDays = 0,
     required this.contingency,
     required this.overhead,
     required this.profit,
@@ -202,14 +304,20 @@ class CostBreakdown {
     final materials = _centavos(
       byTrade.values.fold<double>(0, (sum, v) => sum + v),
     );
-    final labour = _centavos(
-      byTrade.entries.fold<double>(
-        0,
-        (sum, e) => sum + e.value * s.labourFor(e.key) / 100,
-      ),
-    );
+    var labourSum = 0.0;
+    var equipmentSum = 0.0;
+    var days = 0.0;
+    for (final e in items) {
+      final cost = labourOf(e, s);
+      labourSum += cost.labour;
+      equipmentSum += cost.equipment;
+      days += cost.crewDays;
+    }
+    final labour = _centavos(labourSum);
+    final equipment = _centavos(equipmentSum);
     final tools = _centavos(labour * s.toolsPct / 100);
-    final direct = materials + labour + tools + s.hauling;
+    final general = _centavos(s.generalTotal);
+    final direct = materials + labour + tools + equipment + s.hauling + general;
     return CostBreakdown(
       materials: materials,
       materialsByTrade: {
@@ -217,6 +325,9 @@ class CostBreakdown {
       },
       labour: labour,
       tools: tools,
+      equipment: equipment,
+      general: general,
+      crewDays: days,
       hauling: _centavos(s.hauling),
       contingency: _centavos(direct * s.contingencyPct / 100),
       overhead: _centavos(direct * s.overheadPct / 100),
@@ -239,13 +350,24 @@ class CostBreakdown {
   final double labour;
   final double tools;
   final double hauling;
+
+  /// Rented equipment such as concrete mixers, from the crews.
+  final double equipment;
+
+  /// General requirements: mobilization, temporary facilities and the like.
+  final double general;
+
+  /// Crew-days of work, when labour is priced by crews.
+  final double crewDays;
   final double contingency;
   final double overhead;
   final double profit;
   final double vat;
 
-  /// Materials, labour, tools and hauling.
-  double get direct => _centavos(materials + labour + tools + hauling);
+  /// Materials, labour, tools, equipment, hauling and general
+  /// requirements.
+  double get direct =>
+      _centavos(materials + labour + tools + equipment + hauling + general);
 
   /// Before tax.
   double get subtotal => _centavos(direct + contingency + overhead + profit);

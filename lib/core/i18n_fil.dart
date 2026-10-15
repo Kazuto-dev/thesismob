@@ -337,4 +337,57 @@ const filipino = <String, String>{
       'Nananatiling metric ang resulta, dokumento at presyo, gaya ng benta '
       'ng mga supplier.',
   'Help and about': 'Tulong at tungkol sa app',
+
+  // Crews and unit prices
+  'By crew output': 'Ayon sa output ng grupo',
+  '% of materials': '% ng materyales',
+  "Crew-days for each work item from usual daily outputs, at the daily rates below. Each item's unit price analysis shows the crew.":
+      'Ilang araw ng grupo sa bawat trabaho batay sa karaniwang output, sa '
+      'arawang singil sa ibaba. Makikita ang grupo sa unit price analysis '
+      'ng bawat item.',
+  'A planning rule of thumb, about 30–45% of materials for houses. Use your own quotes when you have them.':
+      'Tantiyang pang-plano, mga 30–45% ng materyales para sa bahay. Gamitin '
+      'ang sariling quotation kapag mayroon na.',
+  'Crew productivity': 'Bilis ng grupo',
+  'Daily rates': 'Arawang singil',
+  'Skilled {skilled}, helper {helper} a day':
+      'Skilled {skilled}, helper {helper} bawat araw',
+  'a day': 'bawat araw',
+  'Foreman': 'Kapatas',
+  'Skilled worker': 'Skilled na trabahador',
+  'Helper': 'Helper',
+  'One-bagger mixer': 'One-bagger mixer',
+  'Concrete vibrator': 'Vibrator ng konkreto',
+  'Plate compactor': 'Plate compactor',
+  'Scaffolding set': 'Set ng scaffolding',
+  'Suggested rates are Metro Manila market rates for 2026, with meals and benefits. Enter what you pay.':
+      'Ang mungkahing singil ay presyo sa Metro Manila sa 2026, kasama ang '
+      'pagkain at benepisyo. Ilagay ang inyong ibinabayad.',
+  'Use the suggested rates': 'Gamitin ang mungkahing singil',
+  'General requirements': 'Pangkalahatang pangangailangan',
+  'Mobilization, temporary facilities, permits…':
+      'Mobilization, pansamantalang pasilidad, permit…',
+  'Mobilization and demobilization': 'Mobilization at demobilization',
+  'Temporary facilities: bodega, toilet, power and water':
+      'Pansamantalang pasilidad: bodega, CR, kuryente at tubig',
+  'Permits, clearances and fees': 'Permit, clearance at bayarin',
+  'Occupational safety and health': 'Kaligtasan at kalusugan sa trabaho',
+  'Project signboard': 'Signboard ng proyekto',
+  'Clean-up and disposal of debris': 'Paglilinis at pagtapon ng debris',
+  'Suggest amounts': 'Magmungkahi ng halaga',
+  'Suggestions are about 4–6% of the direct cost in all, spread as small builders usually spend it.':
+      'Mga 4–6% ng direktang gastos ang kabuuang mungkahi, hinati gaya ng '
+      'karaniwang gastos ng maliliit na builder.',
+  'Unit price analysis': 'Unit price analysis',
+  'Each work item with its materials, crew and equipment. Tap one to see how its unit cost is built up.':
+      'Bawat trabaho kasama ang materyales, grupo at kagamitan. I-tap para '
+      'makita kung paano nabuo ang unit cost.',
+  'Materials': 'Materyales',
+  'days': 'araw',
+  'Minor tools, {pct}% of labour': 'Maliliit na gamit, {pct}% ng labor',
+  'Equipment rental': 'Upa sa kagamitan',
+  'Direct cost per {unit}': 'Direktang gastos bawat {unit}',
+  'Markups, {pct}%': 'Markup, {pct}%',
+  'VAT, {pct}%': 'VAT, {pct}%',
+  'Unit price per {unit}': 'Unit price bawat {unit}',
 };

@@ -166,8 +166,9 @@ try {
     await page.waitForTimeout(1500);
     check(await waitForText(page, 'Project budget · 1 item'), 'the project shows one item');
     check(await hasText(page, '₱23,705.00'), 'the item costs ₱23,705.00 with its materials');
-    // 40% labour and a 10% contingency: 23,705 × 1.4 × 1.1.
-    check(await hasText(page, '₱36,505.70'), 'the owner budget is ₱36,505.70');
+    // Labour by crews (₱14,993.99 for laying, plastering and rebar),
+    // scaffolding ₱1,285.71 and a 10% contingency.
+    check(await hasText(page, '₱43,983.17'), 'the owner budget is ₱43,983.17');
     const [download] = await Promise.all([
       page.waitForEvent('download', { timeout: 30000 }),
       tap(page, (n) => n.label === 'Download PDF', 'Download PDF'),

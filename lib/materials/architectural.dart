@@ -5,6 +5,10 @@ import 'calc_helpers.dart';
 import 'factors.dart';
 import 'items.dart';
 import 'material_spec.dart';
+import 'work_items.dart';
+
+/// A measured work quantity, to the nearest hundredth of its unit.
+double _hundredths(double value) => (value * 100).roundToDouble() / 100;
 
 /// Paint "gallon" cans in the Philippines hold 4 litres.
 const litresPerGallon = 4.0;
@@ -233,6 +237,11 @@ final paint = MaterialSpec(
         ? (litres + primerLitres) * thinnerShare + thinnerCleanup
         : 0.0;
     final coatLabel = coats == 1 ? '1 coat' : '${formatNumber(coats)} coats';
+    // The painting output is m² per coat, so the crew time counts every
+    // coat over the area: the finish coats, the primer, and each skim coat
+    // at 1.5 since troweling and sanding it is slower.
+    final paintEffort =
+        coats + (input.chose('primer', 'yes') ? 1 : 0) + 1.5 * skimCoats;
     return CalcResult(
       label: 'Paint, ${_paintNames[type.id]}, $coatLabel',
       area: area,
@@ -277,6 +286,10 @@ final paint = MaterialSpec(
         'wood' => 'Sand bare wood or metal before the primer.',
         _ => null,
       },
+      works: [
+        if (area > 0)
+          WorkQuantity(Work.painting, _hundredths(area), effort: paintEffort),
+      ],
     );
   },
   definitions: const [
@@ -572,6 +585,13 @@ final tiles = MaterialSpec(
       note: mortar
           ? 'Cement and sand are for a 25 mm bed of Class B (1:3) mortar.'
           : null,
+      // The skirting tiles, bed and grout are bought together with the
+      // floor's, so they all go to the tiling.
+      works: [
+        if (area > 0) WorkQuantity(Work.tiling, _hundredths(area)),
+        if (skirting > 0)
+          WorkQuantity(Work.tileSkirting, _hundredths(skirting)),
+      ],
     );
   },
   definitions: const [
@@ -949,17 +969,29 @@ final roof = MaterialSpec(
           'c_purlin',
           purlins.toDouble(),
           label: _named('c_purlin', '$purlinLines lines per side'),
+          work: Work.purlins,
         ),
       buy('tek_screw', area * (longSpan ? longSpanScrews : corrugatedScrews)),
       if (ridge + hips > 0) buy('ridge_roll', (ridge + hips) / ridgeRollCover),
       if (gutter) ...[
-        buy('gutter', eaves),
+        buy('gutter', eaves, work: Work.gutter),
         buy(
           'downspout',
           downspouts * drop,
           label: _named('downspout', '$downspouts × ${formatLength(drop)}'),
+          work: Work.gutter,
         ),
       ],
+    ];
+    // Purlins installed: every line runs the roof length on each side.
+    final purlinLength = purlins > 0 ? purlinLines * length * sides : 0.0;
+    final gutterLength = gutter ? eaves + downspouts * drop : 0.0;
+    final works = [
+      if (area > 0) WorkQuantity(Work.roofing, _hundredths(area)),
+      if (purlinLength > 0)
+        WorkQuantity(Work.purlins, _hundredths(purlinLength)),
+      if (gutterLength > 0)
+        WorkQuantity(Work.gutter, _hundredths(gutterLength)),
     ];
     final hipNote = hip
         ? ' Hip faces are cut from full sheets, so 10% is added.'
@@ -996,6 +1028,7 @@ final roof = MaterialSpec(
         note:
             'Long-span sheets are cut to length and sold by the metre.'
             '$hipNote',
+        works: works,
       );
     }
     final cover = input.choice('sideLap').value;
@@ -1035,6 +1068,7 @@ final roof = MaterialSpec(
       ],
       companions: companions,
       note: hip ? hipNote.trim() : null,
+      works: works,
     );
   },
   definitions: const [
@@ -1240,6 +1274,7 @@ final carpet = MaterialSpec(
     final length = input['length'];
     final width = input['width'];
     final area = length * width;
+    final works = [if (area > 0) WorkQuantity(Work.carpet, _hundredths(area))];
     if (input.chose('type', 'tiles')) {
       final tiles = ceilCount(area * 1.05 / 0.25);
       final boxes = ceilCount(tiles / 20);
@@ -1255,6 +1290,7 @@ final carpet = MaterialSpec(
           ResultDetail('Tiles with 5% waste', formatCount(tiles, 'tile')),
           const ResultDetail('Tiles per box (5 m²)', '20'),
         ],
+        works: works,
       );
     }
     final roll = input.choice('rollWidth').value;
@@ -1282,6 +1318,7 @@ final carpet = MaterialSpec(
         if (lay.drops > 1) buy('seam_tape_m', (lay.drops - 1) * lay.cut),
       ],
       note: 'Drops run the way that needs less carpet.',
+      works: works,
     );
   },
   definitions: const [
@@ -1478,6 +1515,10 @@ final wallpaper = MaterialSpec(
       companions: [
         if (input.chose('backing', 'paste'))
           buy('wallpaper_paste', standardRolls / rollsPerPastePack),
+      ],
+      works: [
+        if (width * height > 0)
+          WorkQuantity(Work.wallpaper, _hundredths(width * height)),
       ],
     );
   },

@@ -88,6 +88,7 @@ void main() {
     expect(c.isSignedIn, isTrue, reason: 'saving signs the user in');
     expect(api.spreadsheets['sheet1'], [
       'Bill of quantities',
+      'Unit price analysis',
       'Materials',
       'Budget',
     ]);

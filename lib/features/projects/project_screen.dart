@@ -12,6 +12,7 @@ import '../../data/checklists.dart';
 import '../../data/project.dart';
 import '../../export/project_documents.dart';
 import '../../materials/items.dart';
+import '../../materials/work_items.dart';
 import '../../materials/material_spec.dart';
 import '../../router.dart';
 import '../../state/price_book_controller.dart';
@@ -892,21 +893,159 @@ class _BudgetEditor extends StatelessWidget {
               ),
             ),
             const SizedBox(height: Space.lg),
-            _FieldPair(
-              left: _NumberSetting(
-                label: context.tr('Labour'),
-                suffix: '% of materials',
-                value: c.labourPct,
-                onChanged: (v) => update(c.copyWith(labourPct: v)),
+            Text(context.tr('Labour'), style: theme.textTheme.labelLarge),
+            const SizedBox(height: Space.sm),
+            SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<LabourMethod>(
+                showSelectedIcon: false,
+                segments: [
+                  ButtonSegment(
+                    value: LabourMethod.crews,
+                    label: Text(context.tr('By crew output')),
+                  ),
+                  ButtonSegment(
+                    value: LabourMethod.percent,
+                    label: Text(context.tr('% of materials')),
+                  ),
+                ],
+                selected: {c.labourMethod},
+                onSelectionChanged: (s) =>
+                    update(c.copyWith(labourMethod: s.first)),
               ),
-              right: _NumberSetting(
-                label: context.tr('Minor tools'),
-                suffix: '% of labour',
-                value: c.toolsPct,
-                onChanged: (v) => update(c.copyWith(toolsPct: v)),
+            ),
+            const SizedBox(height: Space.sm),
+            Text(
+              context.tr(
+                c.labourMethod == LabourMethod.crews
+                    ? 'Crew-days for each work item from usual daily outputs, '
+                          'at the daily rates below. Each item\'s unit price '
+                          'analysis shows the crew.'
+                    : 'A planning rule of thumb, about 30–45% of materials '
+                          'for houses. Use your own quotes when you have '
+                          'them.',
+              ),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: Space.md),
+            if (c.labourMethod == LabourMethod.crews)
+              _FieldPair(
+                left: _NumberSetting(
+                  label: context.tr('Crew productivity'),
+                  suffix: '%',
+                  value: c.productivityPct,
+                  max: 300,
+                  onChanged: (v) => update(
+                    c.copyWith(productivityPct: v == null || v <= 0 ? 100 : v),
+                  ),
+                ),
+                right: _NumberSetting(
+                  label: context.tr('Minor tools'),
+                  suffix: '% of labour',
+                  value: c.toolsPct,
+                  onChanged: (v) => update(c.copyWith(toolsPct: v)),
+                ),
+              )
+            else
+              _FieldPair(
+                left: _NumberSetting(
+                  label: context.tr('Labour'),
+                  suffix: '% of materials',
+                  value: c.labourPct,
+                  onChanged: (v) => update(c.copyWith(labourPct: v)),
+                ),
+                right: _NumberSetting(
+                  label: context.tr('Minor tools'),
+                  suffix: '% of labour',
+                  value: c.toolsPct,
+                  onChanged: (v) => update(c.copyWith(toolsPct: v)),
+                ),
+              ),
+            if (c.labourMethod == LabourMethod.crews)
+              _Expander(
+                title: context.tr('Daily rates'),
+                subtitle: context.tr(
+                  'Skilled {skilled}, helper {helper} a day',
+                  {
+                    'skilled': formatMoney(
+                      c.dailyRates[DailyRates.skilled] ?? 0,
+                    ),
+                    'helper': formatMoney(c.dailyRates[DailyRates.helper] ?? 0),
+                  },
+                ),
+                children: [
+                  for (final key in DailyRates.defaults.keys) ...[
+                    _NumberSetting(
+                      label: context.tr(DailyRates.labels[key]!),
+                      prefix: '₱ ',
+                      suffix: context.tr('a day'),
+                      value: c.dailyRates[key],
+                      max: 100000,
+                      clearable: true,
+                      onChanged: (v) {
+                        if (v == null) return;
+                        final rates = {...c.rates};
+                        if (v == DailyRates.defaults[key]) {
+                          rates.remove(key);
+                        } else {
+                          rates[key] = v;
+                        }
+                        update(c.copyWith(rates: rates));
+                      },
+                    ),
+                    const SizedBox(height: Space.md),
+                  ],
+                  Text(
+                    context.tr(
+                      'Suggested rates are Metro Manila market rates for '
+                      '2026, with meals and benefits. Enter what you pay.',
+                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  if (c.rates.isNotEmpty)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: () => update(c.copyWith(rates: const {})),
+                        child: Text(context.tr('Use the suggested rates')),
+                      ),
+                    ),
+                ],
+              )
+            else
+              _Expander(
+                title: context.tr('Labour by trade'),
+                subtitle: context.tr('Leave empty to use {pct}%', {
+                  'pct': formatNumber(c.labourPct),
+                }),
+                children: [
+                  for (final trade in MaterialCategory.values) ...[
+                    _NumberSetting(
+                      label: context.tr('{trade} labour', {
+                        'trade': context.tr(trade.label),
+                      }),
+                      suffix: '% of materials',
+                      value: c.labourByTrade[trade.name],
+                      onChanged: (v) {
+                        final map = {...c.labourByTrade};
+                        if (v == null) {
+                          map.remove(trade.name);
+                        } else {
+                          map[trade.name] = v;
+                        }
+                        update(c.copyWith(labourByTrade: map));
+                      },
+                      clearable: true,
+                    ),
+                    const SizedBox(height: Space.md),
+                  ],
+                ],
+              ),
+            const SizedBox(height: Space.sm),
             _FieldPair(
               left: _NumberSetting(
                 label: context.tr('Hauling and delivery'),
@@ -922,7 +1061,58 @@ class _BudgetEditor extends StatelessWidget {
                 onChanged: (v) => update(c.copyWith(contingencyPct: v)),
               ),
             ),
-            const SizedBox(height: Space.md),
+            _Expander(
+              title: context.tr('General requirements'),
+              subtitle: c.generalTotal > 0
+                  ? formatMoney(c.generalTotal)
+                  : context.tr('Mobilization, temporary facilities, permits…'),
+              children: [
+                for (final MapEntry(:key, :value)
+                    in generalRequirements.entries) ...[
+                  _NumberSetting(
+                    label: context.tr(value),
+                    prefix: '₱ ',
+                    value: c.general[key],
+                    max: 100000000,
+                    clearable: true,
+                    onChanged: (v) {
+                      final general = {...c.general};
+                      if (v == null || v == 0) {
+                        general.remove(key);
+                      } else {
+                        general[key] = v;
+                      }
+                      update(c.copyWith(general: general));
+                    },
+                  ),
+                  const SizedBox(height: Space.md),
+                ],
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: () => update(
+                      c.copyWith(
+                        general: suggestGeneralRequirements(
+                          b.materials + b.labour + b.tools + b.equipment,
+                        ),
+                      ),
+                    ),
+                    icon: const Icon(Icons.auto_fix_high, size: 18),
+                    label: Text(context.tr('Suggest amounts')),
+                  ),
+                ),
+                Text(
+                  context.tr(
+                    'Suggestions are about 4–6% of the direct cost in all, '
+                    'spread as small builders usually spend it.',
+                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: Space.sm),
             _FieldPair(
               left: _NumberSetting(
                 label: context.tr('Overhead (OCM)'),
@@ -947,45 +1137,7 @@ class _BudgetEditor extends StatelessWidget {
               ),
               right: const SizedBox.shrink(),
             ),
-            Theme(
-              data: theme.copyWith(dividerColor: Colors.transparent),
-              child: ExpansionTile(
-                tilePadding: EdgeInsets.zero,
-                childrenPadding: const EdgeInsets.only(bottom: Space.md),
-                title: Text(
-                  context.tr('Labour by trade'),
-                  style: theme.textTheme.titleSmall,
-                ),
-                subtitle: Text(
-                  context.tr('Leave empty to use {pct}%', {
-                    'pct': formatNumber(c.labourPct),
-                  }),
-                  style: theme.textTheme.bodySmall,
-                ),
-                children: [
-                  for (final trade in MaterialCategory.values) ...[
-                    _NumberSetting(
-                      label: context.tr('{trade} labour', {
-                        'trade': context.tr(trade.label),
-                      }),
-                      suffix: '% of materials',
-                      value: c.labourByTrade[trade.name],
-                      onChanged: (v) {
-                        final map = {...c.labourByTrade};
-                        if (v == null) {
-                          map.remove(trade.name);
-                        } else {
-                          map[trade.name] = v;
-                        }
-                        update(c.copyWith(labourByTrade: map));
-                      },
-                      clearable: true,
-                    ),
-                    const SizedBox(height: Space.md),
-                  ],
-                ],
-              ),
-            ),
+            const SizedBox(height: Space.md),
             const Divider(),
             for (final (label, amount, strong: strong) in costLines(project))
               KeyValueLine(
@@ -994,17 +1146,6 @@ class _BudgetEditor extends StatelessWidget {
                 emphasize: strong,
                 padding: const EdgeInsets.symmetric(vertical: 6),
               ),
-            const SizedBox(height: Space.sm),
-            Text(
-              context.tr(
-                'Labour as a share of materials is a planning rule of thumb, '
-                'about 30–45% for houses. Use your own quotes when you have '
-                'them.',
-              ),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
           ],
         ),
       ),
@@ -1085,6 +1226,34 @@ void _showGlossary(BuildContext context) => showModalBottomSheet<void>(
     ),
   ),
 );
+
+/// A collapsible group of settings with a summary.
+class _Expander extends StatelessWidget {
+  const _Expander({
+    required this.title,
+    required this.subtitle,
+    required this.children,
+  });
+
+  final String title;
+  final String subtitle;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Theme(
+      data: theme.copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: const EdgeInsets.only(bottom: Space.md),
+        title: Text(title, style: theme.textTheme.titleSmall),
+        subtitle: Text(subtitle, style: theme.textTheme.bodySmall),
+        children: children,
+      ),
+    );
+  }
+}
 
 class _FieldPair extends StatelessWidget {
   const _FieldPair({required this.left, required this.right});

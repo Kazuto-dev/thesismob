@@ -127,27 +127,38 @@ extension CompanionText on Companion {
 }
 
 /// A companion material, rounded up to an amount that can be bought.
-Companion buy(String itemKey, double quantity, {String? label}) {
+/// [work] names the work item it goes into when that is not the main one.
+Companion buy(String itemKey, double quantity, {String? label, String? work}) {
   final item = itemByKey(itemKey);
   if (item == null) {
     throw ArgumentError.value(itemKey, 'itemKey', 'Unknown item');
   }
-  return Companion(itemKey, item.purchasable(quantity), label: label);
+  return Companion(
+    itemKey,
+    item.purchasable(quantity),
+    label: label,
+    work: work,
+  );
 }
 
 /// A lump sum worked out from the main cost, such as fittings at 40% of
 /// the pipe cost. Bought as one lot at [amount] pesos.
-Companion allowance(String itemKey, double amount, {String? label}) =>
-    Companion(
-      itemKey,
-      1,
-      label: label,
-      unitPrice: (amount * 100).roundToDouble() / 100,
-    );
+Companion allowance(
+  String itemKey,
+  double amount, {
+  String? label,
+  String? work,
+}) => Companion(
+  itemKey,
+  1,
+  label: label,
+  unitPrice: (amount * 100).roundToDouble() / 100,
+  work: work,
+);
 
 /// Calculation for fixtures bought by the piece: quantity × price, with
 /// [companions] listing the price book items each piece also needs and
-/// how many of each.
+/// how many of each. Each piece counts as one of [work] to install.
 Calculation perPiece(
   String name, {
   List<String> descriptors = const [],
@@ -155,6 +166,7 @@ Calculation perPiece(
   List<(String, double)> companions = const [],
   String? itemKey,
   String? note,
+  String? work,
 }) => (input) {
   final quantity = input['quantity'];
   return CalcResult(
@@ -167,6 +179,7 @@ Calculation perPiece(
       for (final (key, each) in companions) buy(key, quantity * each),
     ],
     note: note,
+    works: [?(work == null ? null : WorkQuantity(work, quantity))],
   );
 };
 

@@ -3,6 +3,7 @@ import 'package:thesismob/materials/architectural.dart';
 import 'package:thesismob/materials/items.dart';
 import 'package:thesismob/materials/material_spec.dart';
 import 'package:thesismob/materials/openings.dart';
+import 'package:thesismob/materials/work_items.dart';
 
 final specs = [paint, tiles, roof, carpet, wallpaper, doors, windows];
 
@@ -18,6 +19,16 @@ double? bought(CalcResult r, String itemKey) =>
 
 String? detail(CalcResult r, String label) =>
     r.details.where((d) => d.label.startsWith(label)).firstOrNull?.value;
+
+/// Key, quantity and effort of each work a result measures, in order.
+List<(String, double, double)> works(CalcResult r) => [
+  for (final w in r.works) (w.key, w.quantity, w.effort),
+];
+
+/// The work each companion goes into, by item key; null is the main work.
+Map<String, String?> companionWorks(CalcResult r) => {
+  for (final c in r.companions) c.itemKey: c.work,
+};
 
 /// Every combination of the choices that are visible for it.
 List<Map<String, String>> combinations(MaterialSpec spec) {
@@ -495,6 +506,160 @@ void main() {
       // 3 × 4.8 m × 2 sides = 28.8 m ÷ 7 m = 4.1 → 5 tubes.
       expect(bought(r, 'sealant'), 5);
       expect(windows.priceRef!(const {})?.itemKey, 'window_m2');
+    });
+  });
+
+  group('Works', () {
+    test('every combination measures its main work first', () {
+      const main = {
+        'paint': Work.painting,
+        'tiles': Work.tiling,
+        'roof': Work.roofing,
+        'carpet': Work.carpet,
+        'wallpaper': Work.wallpaper,
+        'doors': Work.doors,
+        'windows': Work.windows,
+      };
+      for (final m in specs) {
+        for (final selected in combinations(m)) {
+          final numbers = {
+            for (final f in m.visibleNumbers(selected))
+              if (!f.optional) f.id: 3.0,
+          };
+          final r = m.calculate(numbers, selected);
+          final reason = '${m.id} $selected';
+          expect(r.works.first.key, main[m.id], reason: reason);
+          for (final w in r.works) {
+            expect(workItemByKey(w.key), isNotNull, reason: reason);
+            expect(w.quantity, greaterThan(0), reason: '$reason ${w.key}');
+          }
+          for (final c in r.companions) {
+            if (c.work != null) {
+              expect(r.works.map((w) => w.key), contains(c.work));
+            }
+          }
+        }
+      }
+    });
+
+    test('paint counts every coat over the painted area', () {
+      // 30 m², 2 finish coats + 1 primer.
+      expect(works(run(paint, {'length': 10, 'height': 3, 'price': 1})), [
+        (Work.painting, 30.0, 3.0),
+      ]);
+      // (30 − 2) × 2 faces = 56 m²; 2 coats + primer + 1.5 for a skim coat.
+      final r = run(
+        paint,
+        {'length': 10, 'height': 3, 'openings': 2, 'price': 1},
+        {'faces': '2', 'skim': '1'},
+      );
+      expect(works(r), [(Work.painting, 56.0, 4.5)]);
+      expect(companionWorks(r).values, everyElement(isNull));
+      // One coat, no primer, no skim coat on a repaint.
+      final repaint = run(
+        paint,
+        {'length': 10, 'height': 3, 'price': 1},
+        {'coats': '1', 'prep': 'repaint', 'primer': 'no', 'skim': '2'},
+      );
+      expect(works(repaint), [(Work.painting, 30.0, 1.0)]);
+    });
+
+    test('tiles measure the floor, and the skirting in metres', () {
+      const floor = {'length': 5.0, 'width': 4.0, 'price': 185.0};
+      expect(works(run(tiles, floor, {'size': '60x60'})), [
+        (Work.tiling, 20.0, 1.0),
+      ]);
+      final r = run(tiles, {...floor, 'skirting': 18}, {'size': '60x60'});
+      expect(works(r), [
+        (Work.tiling, 20.0, 1.0),
+        (Work.tileSkirting, 18.0, 1.0),
+      ]);
+      // The skirting is cut from the floor tiles and set in the same bed.
+      expect(companionWorks(r).values, everyElement(isNull));
+    });
+
+    test('roof: sheets, purlins and gutters each have their work', () {
+      final r = run(
+        roof,
+        {'eave': 10, 'rafter': 4, 'price': 624},
+        {'purlins': 'yes', 'gutter': 'eaves'},
+      );
+      // 80 m² of roof; 8 purlin lines × 10 m × 2 sides = 160 m; 20 m of
+      // gutter + 2 downspouts × 3 m = 26 m.
+      expect(works(r), [
+        (Work.roofing, 80.0, 1.0),
+        (Work.purlins, 160.0, 1.0),
+        (Work.gutter, 26.0, 1.0),
+      ]);
+      expect(companionWorks(r), {
+        'c_purlin': Work.purlins,
+        'tek_screw': null,
+        'ridge_roll': null,
+        'gutter': Work.gutter,
+        'downspout': Work.gutter,
+      });
+      // Hip: 89.44 m²; 9 lines × 10 m × 2 = 180 m; 36 m + 4 × 3 m = 48 m.
+      final hip = run(
+        roof,
+        {'eave': 10, 'width': 8, 'priceMetre': 380},
+        {
+          'type': 'longspan',
+          'shape': 'hip',
+          'pitch': '6',
+          'purlins': 'yes',
+          'gutter': 'eaves',
+        },
+      );
+      expect(works(hip), [
+        (Work.roofing, 89.44, 1.0),
+        (Work.purlins, 180.0, 1.0),
+        (Work.gutter, 48.0, 1.0),
+      ]);
+      // Without purlins or gutters, only the sheets.
+      expect(works(run(roof, {'eave': 6, 'rafter': 3, 'price': 1})), [
+        (Work.roofing, 36.0, 1.0),
+      ]);
+    });
+
+    test('carpet and wallpaper measure the area covered', () {
+      expect(works(run(carpet, {'length': 5, 'width': 3.5, 'price': 800})), [
+        (Work.carpet, 17.5, 1.0),
+      ]);
+      expect(
+        works(
+          run(
+            carpet,
+            {'length': 4, 'width': 5, 'boxPrice': 4000},
+            {'type': 'tiles'},
+          ),
+        ),
+        [(Work.carpet, 20.0, 1.0)],
+      );
+      // (10 − 1.5) m × 2.6 m = 22.1 m².
+      expect(
+        works(
+          run(wallpaper, {
+            'width': 10,
+            'height': 2.6,
+            'openings': 1.5,
+            'price': 800,
+          }),
+        ),
+        [(Work.wallpaper, 22.1, 1.0)],
+      );
+    });
+
+    test('doors count sets; windows measure their area', () {
+      expect(works(run(doors, {'quantity': 5, 'price': 3800})), [
+        (Work.doors, 5.0, 1.0),
+      ]);
+      final r = run(windows, {
+        'width': 1.2,
+        'height': 1.2,
+        'quantity': 3,
+        'price': 4850,
+      });
+      expect(works(r), [(Work.windows, 4.32, 1.0)]);
     });
   });
 }
