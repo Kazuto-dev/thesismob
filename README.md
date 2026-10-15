@@ -1,18 +1,23 @@
 # BuildQuantify
 
 BuildQuantify estimates how much of a construction material you need and
-what it costs. It covers 19 materials in four groups, keeps a history of
-calculations, builds a bill of materials with a running total, and can send
-estimates to a Google Sheet.
+what it costs, using the sizes sold in the Philippines. It covers 19
+materials in four groups. Estimates update as you type and list what else the
+job needs (cement, sand, rebar, adhesive, fittings). The app keeps a history,
+builds a bill of materials grouped by category, and can send estimates to a
+Google Sheet. It works offline, in light or dark mode.
 
-| Phone | Desktop |
-| --- | --- |
-| ![Home on a phone](test/golden/goldens/home_phone.png) | ![Calculator on a desktop](test/golden/goldens/calculator_desktop.png) |
+| Phone | Phone, dark | Desktop |
+| --- | --- | --- |
+| ![Home on a phone](test/golden/goldens/home_phone.png) | ![Calculator in dark mode](test/golden/goldens/calculator_phone_dark.png) | ![Calculator on a desktop](test/golden/goldens/calculator_desktop.png) |
+
+- [How each material is calculated, with sources](docs/calculations.md)
+- [Design system](docs/design-system.md) and [design QA](docs/design-qa.md)
 
 - **Structural:** concrete hollow blocks, plywood, foam insulation
 - **Architectural:** paint, tiles, roofing sheets, carpet, wallpaper
-- **Electrical:** light bulbs, switches, junction boxes, outlets, wire,
-  utility boxes
+- **Electrical:** LED bulbs (sized by room), switches, junction boxes,
+  outlets (spaced by the electrical code), wire, utility boxes
 - **Plumbing:** PVC pipe, sinks, toilets, faucets, showers
 
 > [!IMPORTANT]
@@ -53,7 +58,7 @@ The browser never holds Google credentials. Rows are sent to a small Cloud
 Function in [`functions/sheets-proxy`](functions/sheets-proxy/README.md),
 which runs as the service account without a key file and appends them to the
 user's sheet. Users share their spreadsheet with the service account as an
-Editor; the Sheet tab and the Help screen walk them through it.
+Editor; Settings and the Help screen walk them through it.
 
 ## Test
 
@@ -90,8 +95,9 @@ lib/
   state/                   EstimatesController, SheetSettingsController
   materials/               the 19 calculators as data (MaterialSpec)
   features/                screens: home, category, calculator, history,
-                           summary, sheet, help, shell
-assets/                    images and the Poppins font (OFL)
+                           summary, settings, help, shell
+assets/                    images and the Plus Jakarta Sans font (OFL)
+docs/                      calculations, design system, design QA
 functions/sheets-proxy/    Cloud Function for Google Sheets
 tool/smoke/                Playwright smoke test
 test/                      unit, widget and golden tests
@@ -103,10 +109,11 @@ recommends over `package:flutter/material.dart`.
 ### Adding a material
 
 1. Add a `MaterialSpec` to the right file in `lib/materials/` with its
-   fields, dropdowns and `compute` function, and list it in `catalog.dart`.
-2. Add its icon as `assets/images/materials/<id>.png` (192 px).
-3. Add definitions to `definitions.dart` and the formula to `solutions.dart`.
-4. Add expected values to `test/materials/calculators_test.dart`.
+   fields, choices, `compute` function, definitions, solution steps,
+   sources and search keywords, and list it in `catalog.dart`.
+2. Add its icon as `assets/images/materials/<id>.png` (192 px, one colour
+   on transparent; the app tints it).
+3. Add expected values to `test/materials/calculators_test.dart`.
 
 The calculator screen, routing and summary pick it up automatically.
 
@@ -116,23 +123,14 @@ Estimates and sheet details are saved in the browser (SharedPreferences /
 localStorage). On first start the app imports the history, summary and sheet
 details saved by the original version; the old entries are left in place.
 
-## Calculation changes from the original app
+## Calculation changes
 
-These results intentionally differ from the original screens, which had
-bugs:
-
-- **CHB and plywood:** the contingency option now adds 5/10/15% (the labels
-  never matched, so it was always 0%).
-- **Paint:** cost is whole gallons, including coats, × price per gallon
-  (it was litres without coats × price per gallon).
-- **Insulation:** cost is whole rolls × price (it charged fractional rolls).
-- **Tiles, carpet, wallpaper, plywood:** a size must be chosen; the
-  "Default" size divided by zero.
-- **Roofing:** the 1.2 m width and 12 ft length options work, and corrugated
-  sheets subtract the side lap (1.5 or 2.5 corrugations × 76.2 mm) from the
-  sheet width. The original divided the width by a sheet length.
-- **All:** counts round up exactly (30 m² ÷ 0.08 m² is 375 blocks, never 376),
-  and sheet areas use exact dimensions (4' × 8' = 2.973 m²).
+Quantities now follow Philippine estimating practice: 4-litre paint gallons,
+real wallpaper roll and carpet roll sizes, roofing laid on the slope with
+end laps, CHB with openings deducted and a 5% waste allowance by default, and
+more. Saved estimates keep the values they were calculated with. See
+[docs/calculations.md](docs/calculations.md) for every formula, its sources
+and a before-and-after table.
 
 ## Other platforms
 

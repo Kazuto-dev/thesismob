@@ -58,5 +58,5 @@ Estimate sampleEstimate(String id, String label, double total) => Estimate(
   total: total,
   createdAt: DateTime(2026, 10, 9, 9),
   inputs: const {'length': 10, 'height': 3, 'price': 25},
-  choices: const {'size': '4', 'contingency': 'none'},
+  choices: const {'size': '4', 'waste': '5', 'plaster': '2'},
 );

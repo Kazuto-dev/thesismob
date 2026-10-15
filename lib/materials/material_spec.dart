@@ -27,7 +27,11 @@ enum QuantityUnit {
   sheets('sheet', 'sheets'),
   rolls('roll', 'rolls'),
   gallons('gallon', 'gallons'),
-  metres('m', 'm');
+  metres('m', 'm'),
+  boxes('box', 'boxes'),
+  squareMetres('m²', 'm²'),
+  pipes('pipe', 'pipes'),
+  bulbs('bulb', 'bulbs');
 
   const QuantityUnit(this.singular, this.plural);
 
@@ -40,6 +44,9 @@ enum QuantityUnit {
       values.firstWhere((u) => u.name == name, orElse: () => pieces);
 }
 
+/// Shows a field only when this returns true for the selected options.
+typedef VisibleWhen = bool Function(Map<String, String> selected);
+
 /// A numeric input such as a dimension, a count or a price.
 @immutable
 class NumberField {
@@ -48,36 +55,54 @@ class NumberField {
     required this.label,
     this.unit,
     this.hint,
+    this.initial,
     this.max = 100000,
     this.integer = false,
     this.isPrice = false,
+    this.optional = false,
+    this.visibleWhen,
   });
 
   final String id;
   final String label;
 
-  /// Suffix shown in the field, e.g. `m` or `sqm/L`.
+  /// Suffix shown in the field, e.g. `m` or `m²`.
   final String? unit;
+
+  /// Helper text under the field.
   final String? hint;
+
+  /// Value a fresh form starts with, such as the usual number of coats.
+  final String? initial;
   final double max;
   final bool integer;
   final bool isPrice;
 
-  /// Returns the parsed value, or null when [raw] is not a valid entry.
-  double? parse(String raw) =>
-      validate(raw) == null ? double.parse(raw.trim()) : null;
+  /// Optional fields may be left empty or 0, which counts as 0.
+  final bool optional;
+  final VisibleWhen? visibleWhen;
 
-  /// Returns an error message for [raw], or null when it is valid. Every
-  /// field must be a finite number greater than zero and at most [max].
+  bool isVisible(Map<String, String> selected) =>
+      visibleWhen == null || visibleWhen!(selected);
+
+  /// Returns the parsed value, or null when [raw] is not a valid entry.
+  double? parse(String raw) {
+    if (validate(raw) != null) return null;
+    final text = raw.trim();
+    return text.isEmpty ? 0 : double.parse(text);
+  }
+
+  /// Returns an error message for [raw], or null when it is valid. Required
+  /// fields must be a finite number greater than zero and at most [max].
   String? validate(String raw) {
     final text = raw.trim();
-    if (text.isEmpty) return 'Enter ${_article(label)}';
+    if (text.isEmpty) return optional ? null : 'Enter ${_article(label)}';
     final value = double.tryParse(text);
     if (value == null || !value.isFinite) return 'Enter a number, like 2.5';
     if (integer && value != value.roundToDouble()) {
       return 'Enter a whole number';
     }
-    if (value <= 0) return 'Must be more than 0';
+    if (value < 0 || (value == 0 && !optional)) return 'Must be more than 0';
     if (value > max) return 'Must be ${_formatLimit(max)} or less';
     return null;
   }
@@ -101,8 +126,8 @@ class NumberField {
   }
 }
 
-/// One entry of a dropdown. [value] carries the number the calculation needs
-/// (an area in m², a contingency fraction, a length in metres…).
+/// One option of a choice. [value] carries the number the calculation
+/// needs (an area in m², a waste fraction, a length in metres…).
 @immutable
 class ChoiceOption {
   const ChoiceOption(this.id, this.label, [this.value = 0]);
@@ -121,6 +146,7 @@ class ChoiceField {
     this.initial,
     this.helper,
     this.visibleWhen,
+    this.leading = false,
   });
 
   final String id;
@@ -130,9 +156,10 @@ class ChoiceField {
   /// Option preselected for the user. When null the user must pick one.
   final String? initial;
   final String? helper;
+  final VisibleWhen? visibleWhen;
 
-  /// Shows the field only when this returns true for the other selections.
-  final bool Function(Map<String, String> selected)? visibleWhen;
+  /// Shown above the measurements because it changes which ones are asked.
+  final bool leading;
 
   ChoiceOption? option(String? id) {
     for (final o in options) {
@@ -169,14 +196,20 @@ class CalcInput {
     return value;
   }
 
+  /// An optional number, 0 when it was left empty or is not shown.
+  double optional(String id) => numbers[id] ?? 0;
+
   ChoiceOption choice(String id) {
     final option = choices[id];
     if (option == null) throw ArgumentError.value(id, 'id', 'missing choice');
     return option;
   }
+
+  /// Whether the choice [id] is shown and set to [optionId].
+  bool chose(String id, String optionId) => choices[id]?.id == optionId;
 }
 
-/// A labelled line in the result breakdown, e.g. "Contingency (5%)" / "+19".
+/// A labelled line in the result breakdown, e.g. "Waste (5%)" / "+19".
 @immutable
 class ResultDetail {
   const ResultDetail(this.label, this.value);
@@ -195,6 +228,8 @@ class CalcResult {
     required this.unitPrice,
     this.area,
     this.details = const [],
+    this.companions = const [],
+    this.note,
   }) : total = (quantity * unitPrice * 100).roundToDouble() / 100;
 
   /// Short description used in the summary, e.g. `CHB 4"`.
@@ -205,7 +240,15 @@ class CalcResult {
 
   /// Covered area in m², when the material is measured by area.
   final double? area;
+
+  /// How the quantity was worked out, step by step.
   final List<ResultDetail> details;
+
+  /// Other materials the job needs, with quantities but no price.
+  final List<ResultDetail> companions;
+
+  /// A short remark shown under the breakdown.
+  final String? note;
   final double total;
 }
 
@@ -225,6 +268,7 @@ class MaterialSpec {
     this.definitions = const [],
     this.solution = const [],
     this.references = const [],
+    this.keywords = const [],
   });
 
   final String id;
@@ -243,20 +287,43 @@ class MaterialSpec {
   final List<InfoSection> solution;
   final List<String> references;
 
-  /// Dropdown selections a fresh form starts with.
+  /// Other words people search for, including Filipino terms.
+  final List<String> keywords;
+
+  /// Choices a fresh form starts with.
   Map<String, String> get initialChoices => {
     for (final c in choices)
       if (c.initial != null) c.id: c.initial!,
   };
 
-  /// The dropdowns that apply to the current [selected] options.
+  /// The choices that apply to the current [selected] options.
   List<ChoiceField> visibleChoices(Map<String, String> selected) => [
     for (final c in choices)
       if (c.isVisible(selected)) c,
   ];
 
+  /// The number fields that apply to the current [selected] options.
+  List<NumberField> visibleNumbers(Map<String, String> selected) => [
+    for (final f in numbers)
+      if (f.isVisible(selected)) f,
+  ];
+
+  /// Whether [query] matches this material's name, blurb, category or
+  /// keywords, ignoring case.
+  bool matches(String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return true;
+    return [
+      name,
+      blurb,
+      category.label,
+      ...keywords,
+    ].any((text) => text.toLowerCase().contains(q));
+  }
+
   /// Runs [compute] with validated [numbers] and the [selected] option ids.
-  /// Throws an [ArgumentError] when a visible dropdown has no valid choice.
+  /// Throws an [ArgumentError] when a visible choice has no valid option or
+  /// a visible required number is missing.
   CalcResult calculate(
     Map<String, double> numbers,
     Map<String, String> selected,
@@ -273,6 +340,14 @@ class MaterialSpec {
       }
       options[field.id] = option;
     }
-    return compute(CalcInput(numbers, options));
+    final values = <String, double>{};
+    for (final field in visibleNumbers(selected)) {
+      final value = numbers[field.id];
+      if (value == null && !field.optional) {
+        throw ArgumentError.value(null, field.id, 'Enter ${field.label}');
+      }
+      if (value != null) values[field.id] = value;
+    }
+    return compute(CalcInput(values, options));
   }
 }

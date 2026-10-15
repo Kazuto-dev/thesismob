@@ -30,10 +30,26 @@ void main() {
     for (final c in ['Structural', 'Architectural', 'Electrical', 'Plumbing']) {
       expect(find.text(c), findsOneWidget);
     }
+    expect(find.text('Popular calculators'), findsOneWidget);
+  });
+
+  testWidgets('home search finds materials by Filipino names', (tester) async {
+    await pumpApp(tester);
+    await tester.enterText(find.byType(TextField).first, 'yero');
+    await tester.pump();
+    expect(find.text('1 material'), findsOneWidget);
+    expect(find.text('Roofing Sheets'), findsOneWidget);
+    expect(find.text('Categories'), findsNothing);
+
+    await tester.enterText(find.byType(TextField).first, 'zzz');
+    await tester.pump();
+    expect(find.text('No matches'), findsOneWidget);
   });
 
   testWidgets('a category card opens its materials', (tester) async {
     await pumpApp(tester);
+    await tester.ensureVisible(find.text('Electrical'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Electrical'));
     await tester.pumpAndSettle();
     expect(find.text('Electrical materials'), findsOneWidget);
@@ -42,7 +58,7 @@ void main() {
     // Back returns home instead of stacking a new home page.
     await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
-    expect(find.text('Choose a category'), findsOneWidget);
+    expect(find.text('Categories'), findsOneWidget);
   });
 
   group('summary', () {
@@ -54,7 +70,8 @@ void main() {
 
     testWidgets('totals large and decimal amounts correctly', (tester) async {
       await pumpApp(tester, location: '/summary', prefs: summaryPrefs(items));
-      expect(find.text('₱15,002,250.50'), findsOneWidget);
+      // The total and the structural subtotal.
+      expect(find.text('₱15,002,250.50'), findsNWidgets(2));
       expect(find.text('Total, 3 items'), findsOneWidget);
     });
 
@@ -62,13 +79,14 @@ void main() {
       tester,
     ) async {
       await pumpApp(tester, location: '/summary', prefs: summaryPrefs(items));
+      await tester.ensureVisible(find.byTooltip('Remove Paint'));
       await tester.tap(find.byTooltip('Remove Paint'));
       await tester.pumpAndSettle();
-      expect(find.text('₱15,001,000.00'), findsOneWidget);
+      expect(find.text('₱15,001,000.00'), findsNWidgets(2));
 
       await tester.tap(find.text('Undo'));
       await tester.pumpAndSettle();
-      expect(find.text('₱15,002,250.50'), findsOneWidget);
+      expect(find.text('₱15,002,250.50'), findsNWidgets(2));
     });
 
     testWidgets('uses a table on wide screens', (tester) async {
@@ -79,7 +97,7 @@ void main() {
         prefs: summaryPrefs(items),
       );
       expect(find.byType(Table), findsOneWidget);
-      expect(find.text('Unit price'), findsOneWidget);
+      expect(find.text('UNIT PRICE'), findsOneWidget);
     });
 
     testWidgets('explains the empty state', (tester) async {
@@ -87,7 +105,7 @@ void main() {
       expect(find.text('Your summary is empty'), findsOneWidget);
       await tester.tap(find.text('Start an estimate'));
       await tester.pumpAndSettle();
-      expect(find.text('Choose a category'), findsOneWidget);
+      expect(find.text('Categories'), findsOneWidget);
     });
   });
 
@@ -96,9 +114,9 @@ void main() {
     expect(find.text('No calculations yet'), findsOneWidget);
   });
 
-  group('sheet settings', () {
+  group('settings', () {
     testWidgets('accepts a sheet link and rejects other text', (tester) async {
-      await pumpApp(tester, location: '/sheet');
+      await pumpApp(tester, location: '/settings');
       expect(
         find.textContaining("isn't set up for this build"),
         findsOneWidget,
@@ -130,6 +148,21 @@ void main() {
       await tester.tap(find.widgetWithText(FilledButton, 'Save'));
       await tester.pumpAndSettle();
       expect(find.text('Sending to "Sheet1"'), findsOneWidget);
+    });
+
+    testWidgets('switches between light and dark themes', (tester) async {
+      await pumpApp(tester, location: '/settings');
+      expect(
+        Theme.of(tester.element(find.text('Appearance'))).brightness,
+        Brightness.light,
+      );
+      await tester.ensureVisible(find.text('Dark'));
+      await tester.tap(find.text('Dark'));
+      await tester.pumpAndSettle();
+      expect(
+        Theme.of(tester.element(find.text('Appearance'))).brightness,
+        Brightness.dark,
+      );
     });
   });
 }

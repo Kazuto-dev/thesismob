@@ -52,9 +52,20 @@ const nodes = (page) => page.evaluate(() =>
 
 async function tap(page, predicate, description) {
   for (let i = 0; i < 20; i++) {
-    const node = (await nodes(page)).find(predicate);
+    const { width, height } = page.viewportSize();
+    // Phones and tablets pin a result bar and navigation bar at the bottom.
+    const bottom = width >= 1024 ? 20 : 170;
+    const matches = (await nodes(page)).filter(predicate);
+    const node = matches.find((n) => n.y >= 0 && n.y + Math.min(n.h, 56) <= height - bottom) ?? matches[0];
     if (node) {
-      // Text fields' nodes also cover their error message, so aim high.
+      if (node.y < 0 || node.y + Math.min(node.h, 56) > height - bottom) {
+        // Off screen: scroll it into the upper part of the view first.
+        await page.mouse.move(width / 2, height / 2);
+        await page.mouse.wheel(0, node.y - height / 3);
+        await page.waitForTimeout(400);
+        continue;
+      }
+      // Text fields' nodes also cover their helper text, so aim high.
       const y = node.role === 'textbox' ? node.y + Math.min(node.h / 2, 24) : node.y + node.h / 2;
       await page.mouse.click(node.x + node.w / 2, y);
       return true;
@@ -78,7 +89,7 @@ const browser = await chromium.launch();
 try {
   // Every screen loads without errors or horizontal overflow at each size.
   for (const [name, viewport] of Object.entries(viewports)) {
-    for (const hash of ['', '#/category/structural/chb', '#/summary', '#/history', '#/sheet', '#/help']) {
+    for (const hash of ['', '#/category/structural/chb', '#/summary', '#/history', '#/settings', '#/settings/help']) {
       const { context, page, errors } = await open(browser, viewport, hash);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
       check(errors.length === 0 && !overflow, `${name} ${hash || '#/'} loads cleanly${errors.length ? `: ${errors[0]}` : ''}`);
@@ -95,7 +106,17 @@ try {
     await context.close();
   }
 
-  // A full estimate: invalid input is blocked, a valid one is added to the summary.
+  // Search finds materials by their Filipino names.
+  {
+    const { context, page } = await open(browser, viewports.phone);
+    await tap(page, (n) => n.role === 'textbox' && n.label.startsWith('Search'), 'Search');
+    await page.waitForFunction(() => document.activeElement?.tagName === 'INPUT', null, { timeout: 3000 }).catch(() => {});
+    await page.keyboard.type('yero', { delay: 20 });
+    check(await waitForText(page, 'Roofing Sheets'), 'searching "yero" finds roofing sheets');
+    await context.close();
+  }
+
+  // A full estimate: it appears as you type and can be added to the summary.
   {
     const { context, page, errors } = await open(browser, viewports.phone, '#/category/structural/chb');
     const field = (label) => (n) => n.role === 'textbox' && n.label.startsWith(label);
@@ -115,23 +136,21 @@ try {
       throw new Error(`could not type into ${label}`);
     };
 
-    await tap(page, (n) => n.label === 'Calculate', 'Calculate');
-    check(await waitForText(page, 'Enter a wall length'), 'empty form shows a validation message');
+    check(await waitForText(page, 'Enter wall length'), 'an empty form says what is missing');
 
     await fill('Wall length', '10');
     await fill('Wall height', '3');
     await fill('Price per block', '25');
-    await tap(page, (n) => n.label === 'Calculate', 'Calculate');
-    check(await waitForText(page, '₱9,375.00'), 'CHB 10 m × 3 m at ₱25 costs ₱9,375.00');
-    check(await hasText(page, '375 blocks'), 'and needs 375 blocks');
+    check(await waitForText(page, '₱9,850.00'), 'CHB 10 m × 3 m at ₱25 costs ₱9,850.00 with 5% waste');
+    check(await hasText(page, '394 blocks'), 'and needs 394 blocks');
 
-    await tap(page, (n) => n.label.startsWith('Add to summary'), 'Add to summary');
+    await tap(page, (n) => n.label === 'Add to summary', 'Add to summary');
     check(await waitForText(page, 'Added to summary'), 'adding to the summary disables the button');
 
     await page.goto(BASE + '#/summary');
     await page.waitForTimeout(1500);
     check(await waitForText(page, 'Total, 1 item'), 'summary shows one item');
-    check(await hasText(page, '₱9,375.00'), 'summary total is ₱9,375.00');
+    check(await hasText(page, '₱9,850.00'), 'summary total is ₱9,850.00');
     check(errors.length === 0, `no errors during the estimate${errors.length ? `: ${errors[0]}` : ''}`);
     await context.close();
   }

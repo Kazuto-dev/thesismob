@@ -8,8 +8,8 @@ import 'app.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   LicenseRegistry.addLicense(() async* {
-    final license = await rootBundle.loadString('assets/fonts/poppins/OFL.txt');
-    yield LicenseEntryWithLineBreaks(['Poppins font'], license);
+    final license = await rootBundle.loadString('assets/fonts/jakarta/OFL.txt');
+    yield LicenseEntryWithLineBreaks(['Plus Jakarta Sans font'], license);
   });
   // Saved estimates load once here, so screens never show a fake splash.
   final prefs = await SharedPreferences.getInstance();

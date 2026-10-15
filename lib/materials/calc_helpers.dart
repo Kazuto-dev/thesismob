@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../core/format.dart';
 import 'material_spec.dart';
 
@@ -5,33 +7,66 @@ import 'material_spec.dart';
 /// 30 / 0.08 = 375.00000000000006 counts as 375, not 376.
 int ceilCount(double value) => (value - 1e-9).ceil();
 
-/// Pieces needed to cover [area] with units of [unitArea], plus a
-/// [contingency] fraction rounded up separately.
-({int base, int extra, int total}) countByArea(
-  double area,
-  double unitArea,
-  double contingency,
-) {
-  final base = ceilCount(area / unitArea);
-  final extra = contingency == 0 ? 0 : ceilCount(base * contingency);
+/// Rounds [value] up to [decimals] places, ignoring floating-point noise.
+double roundUp(double value, [int decimals = 2]) {
+  final factor = math.pow(10, decimals).toDouble();
+  return ceilCount(value * factor) / factor;
+}
+
+/// A base count plus a waste allowance rounded up separately.
+({int base, int extra, int total}) withWaste(int base, double waste) {
+  final extra = waste == 0 ? 0 : ceilCount(base * waste);
   return (base: base, extra: extra, total: base + extra);
 }
 
-const contingencyField = ChoiceField(
-  id: 'contingency',
-  label: 'Contingency',
-  initial: 'none',
-  helper: 'Extra pieces for cutting and breakage',
+/// Extra pieces for cutting waste and breakage, as a share of the count.
+ChoiceField wasteField({
+  String initial = '5',
+  String helper = 'Extra for cutting waste and breakage',
+  List<int> percents = const [0, 5, 10, 15],
+}) => ChoiceField(
+  id: 'waste',
+  label: 'Waste allowance',
+  initial: initial,
+  helper: helper,
   options: [
-    ChoiceOption('none', 'None', 0),
-    ChoiceOption('5', '5% extra', 0.05),
-    ChoiceOption('10', '10% extra', 0.10),
-    ChoiceOption('15', '15% extra', 0.15),
+    for (final p in percents)
+      ChoiceOption(p == 0 ? 'none' : '$p', p == 0 ? 'None' : '$p%', p / 100),
   ],
 );
 
-/// Option id used by descriptive dropdowns that do not change the quantity.
+/// The breakdown line for a waste allowance, or nothing when there is none.
+List<ResultDetail> wasteDetail(
+  ({int base, int extra, int total}) count,
+  double waste,
+  QuantityUnit unit,
+) => [
+  if (count.extra > 0)
+    ResultDetail(
+      'Waste allowance (${formatPercent(waste)})',
+      '+${formatQuantity(count.extra.toDouble(), unit)}',
+    ),
+];
+
+/// Option id used by descriptive choices that do not change the quantity.
 const notSpecified = 'any';
+
+/// A choice that describes the item without changing the cost.
+ChoiceField descriptor(
+  String id,
+  String label,
+  List<(String, String)> options, {
+  String? helper,
+}) => ChoiceField(
+  id: id,
+  label: label,
+  helper: helper,
+  initial: notSpecified,
+  options: [
+    const ChoiceOption(notSpecified, 'Any'),
+    for (final (oid, olabel) in options) ChoiceOption(oid, olabel),
+  ],
+);
 
 /// Joins the parts of a summary label, skipping options left unspecified.
 String describe(String base, Iterable<ChoiceOption?> parts) {
@@ -42,32 +77,52 @@ String describe(String base, Iterable<ChoiceOption?> parts) {
   return extra.isEmpty ? base : '$base, ${extra.join(', ')}';
 }
 
-/// Breakdown lines shared by the area-based calculators.
-List<ResultDetail> areaDetails({
-  required double area,
-  required double unitArea,
-  required ({int base, int extra, int total}) count,
-  required double contingency,
-  required QuantityUnit unit,
-  required String unitAreaLabel,
-}) => [
-  ResultDetail(unitAreaLabel, formatArea(unitArea)),
-  ResultDetail(
-    'Needed to cover ${formatArea(area)}',
-    formatQuantity(count.base.toDouble(), unit),
-  ),
-  if (count.extra > 0)
-    ResultDetail(
-      'Contingency (${formatPercent(contingency)})',
-      '+${formatQuantity(count.extra.toDouble(), unit)}',
-    ),
-];
+/// Area of doors and windows left out of a wall.
+const openingsField = NumberField(
+  id: 'openings',
+  label: 'Doors and windows',
+  unit: 'm²',
+  hint: 'Optional. Area to leave out, about 2 m² per door',
+  optional: true,
+  max: 100000,
+);
 
-/// Calculation for fixtures bought by the piece: quantity × price.
+/// How a rafter length was measured. The value is the factor that turns
+/// it into the length along the slope: √(1 + (rise ÷ run)²).
+const slopeField = ChoiceField(
+  id: 'measured',
+  label: 'Rafter length measured',
+  initial: 'slope',
+  helper:
+      'Along the roof surface, or on the floor plan with the roof pitch '
+      '(rise per 12 of run)',
+  options: [
+    ChoiceOption('slope', 'Along the slope', 1),
+    ChoiceOption('3', 'Plan, 3:12', 1.0308),
+    ChoiceOption('4', 'Plan, 4:12', 1.0541),
+    ChoiceOption('6', 'Plan, 6:12', 1.1180),
+    ChoiceOption('8', 'Plan, 8:12', 1.2019),
+    ChoiceOption('12', 'Plan, 12:12', 1.4142),
+  ],
+);
+
+/// Number of roof planes: one for a shed roof, two for a gable.
+const sidesField = ChoiceField(
+  id: 'sides',
+  label: 'Roof sides',
+  initial: '2',
+  helper: 'A shed roof has one side, a gable roof two',
+  options: [ChoiceOption('1', '1 side', 1), ChoiceOption('2', '2 sides', 2)],
+);
+
+/// Calculation for fixtures bought by the piece: quantity × price, with
+/// [companions] listing what each piece also needs.
 Calculation perPiece(
   String name, {
   List<String> descriptors = const [],
   QuantityUnit unit = QuantityUnit.pieces,
+  List<(String, int)> companions = const [],
+  String? note,
 }) => (input) {
   final quantity = input['quantity'];
   return CalcResult(
@@ -75,21 +130,32 @@ Calculation perPiece(
     quantity: quantity,
     unit: unit,
     unitPrice: input['price'],
+    companions: [
+      for (final (label, each) in companions)
+        ResultDetail(label, formatCount(quantity * each, 'pc', 'pcs')),
+    ],
+    note: note,
   );
 };
 
-NumberField quantityField(String label) => NumberField(
+NumberField quantityField(String label, {String? hint}) => NumberField(
   id: 'quantity',
   label: label,
   unit: 'pcs',
+  hint: hint,
   integer: true,
   max: 100000,
 );
 
-NumberField priceField(String label) => NumberField(
-  id: 'price',
+NumberField priceField(
+  String label, {
+  String id = 'price',
+  VisibleWhen? visibleWhen,
+}) => NumberField(
+  id: id,
   label: label,
   unit: '₱',
   isPrice: true,
   max: 10000000,
+  visibleWhen: visibleWhen,
 );

@@ -1,15 +1,65 @@
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/format.dart';
 import '../../core/layout.dart';
+import '../../core/theme.dart';
 import '../../core/widgets.dart';
 import '../../data/estimate.dart';
 import '../../data/sheets_export_service.dart';
+import '../../materials/catalog.dart';
+import '../../materials/material_spec.dart';
 import '../../router.dart';
 import '../../state/estimates_controller.dart';
 import '../../state/sheet_settings_controller.dart';
+import '../common/tiles.dart';
+
+/// Summary items of one category, in the order they were added.
+typedef _Group = ({
+  MaterialCategory? category,
+  List<Estimate> items,
+  double subtotal,
+});
+
+List<_Group> _groups(List<Estimate> items) {
+  final groups = <_Group>[];
+  for (final category in [...MaterialCategory.values, null]) {
+    final members = [
+      for (final e in items)
+        if (categoryOf(e) == category) e,
+    ];
+    if (members.isEmpty) continue;
+    final subtotal =
+        (members.fold<double>(0, (sum, e) => sum + e.total) * 100)
+            .roundToDouble() /
+        100;
+    groups.add((category: category, items: members, subtotal: subtotal));
+  }
+  return groups;
+}
+
+String _groupLabel(MaterialCategory? c) => c?.label ?? 'Other';
+
+/// The summary as plain text, for pasting into a message or document.
+String summaryText(List<Estimate> items, double total) {
+  final buffer = StringBuffer('BuildQuantify bill of materials\n');
+  for (final g in _groups(items)) {
+    buffer.writeln('\n${_groupLabel(g.category)}');
+    for (final e in g.items) {
+      buffer.writeln(
+        '• ${e.label}: ${formatQuantity(e.quantity, e.unit)} × '
+        '${formatMoney(e.unitPrice)} = ${formatMoney(e.total)}',
+      );
+    }
+  }
+  buffer.write(
+    '\nTotal (${items.length == 1 ? '1 item' : '${items.length} items'}): '
+    '${formatMoney(total)}',
+  );
+  return buffer.toString();
+}
 
 class SummaryScreen extends StatelessWidget {
   const SummaryScreen({super.key});
@@ -42,6 +92,15 @@ class SummaryScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _copy(
+    BuildContext context,
+    List<Estimate> items,
+    double total,
+  ) async {
+    await Clipboard.setData(ClipboardData(text: summaryText(items, total)));
+    if (context.mounted) showMessage(context, 'Summary copied as text.');
+  }
+
   Future<void> _export(BuildContext context, List<Estimate> items) async {
     final result = await context.read<SheetSettingsController>().export(items);
     if (!context.mounted) return;
@@ -51,7 +110,7 @@ class SummaryScreen extends StatelessWidget {
       action: result.status == SheetsExportStatus.missingSheetInfo
           ? SnackBarAction(
               label: 'Set up',
-              onPressed: () => context.go(Routes.sheet),
+              onPressed: () => context.go(Routes.settings),
             )
           : null,
     );
@@ -63,149 +122,279 @@ class SummaryScreen extends StatelessWidget {
         .select<EstimatesController, (List<Estimate>, double)>(
           (c) => (c.summary, c.summaryTotal),
         );
+    final wide = WindowSize.of(context) == WindowSize.expanded;
+
+    final menu = MenuAnchor(
+      builder: (context, controller, _) => IconButton(
+        tooltip: 'More',
+        icon: const Icon(Icons.more_vert),
+        onPressed: () =>
+            controller.isOpen ? controller.close() : controller.open(),
+      ),
+      menuChildren: [
+        MenuItemButton(
+          leadingIcon: const Icon(Icons.content_copy_outlined),
+          onPressed: () => _copy(context, items, total),
+          child: const Text('Copy as text'),
+        ),
+        MenuItemButton(
+          leadingIcon: const Icon(Icons.delete_sweep_outlined),
+          onPressed: () => _clear(context),
+          child: const Text('Clear summary'),
+        ),
+      ],
+    );
+
+    final header = PageHeader(
+      title: 'Summary',
+      subtitle: 'Your bill of materials',
+      actions: [if (items.isNotEmpty) menu],
+    );
+
+    if (items.isEmpty) {
+      return PageTitle(
+        title: 'Summary',
+        child: Scaffold(
+          body: SafeArea(
+            child: Column(
+              children: [
+                ContentWidth(child: header),
+                Expanded(
+                  child: EmptyState(
+                    icon: Icons.receipt_long_outlined,
+                    title: 'Your summary is empty',
+                    message:
+                        'Work out a material, then choose "Add to summary" to '
+                        'build a bill of materials with a running total.',
+                    action: FilledButton(
+                      onPressed: () => context.go(Routes.home),
+                      child: const Text('Start an estimate'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final groups = _groups(items);
+    final totalCard = _TotalCard(
+      groups: groups,
+      count: items.length,
+      total: total,
+      onExport: () => _export(context, items),
+      onCopy: () => _copy(context, items, total),
+    );
+
     return PageTitle(
       title: 'Summary',
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Summary'),
-          actions: [
-            if (items.isNotEmpty)
-              IconButton(
-                tooltip: 'Clear summary',
-                icon: const Icon(Icons.delete_sweep_outlined),
-                onPressed: () => _clear(context),
-              ),
-          ],
-        ),
-        body: items.isEmpty
-            ? EmptyState(
-                icon: Icons.receipt_long_outlined,
-                title: 'Your summary is empty',
-                message:
-                    'Calculate a material, then choose "Add to summary" to '
-                    'build a bill of materials with a running total.',
-                action: FilledButton.tonal(
-                  onPressed: () => context.go(Routes.home),
-                  child: const Text('Start an estimate'),
-                ),
-              )
-            : Column(
+        body: SafeArea(
+          bottom: false,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(bottom: bottomClearance(context)),
+            child: ContentWidth(
+              maxWidth: wide ? 1200 : 760,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.only(top: 8, bottom: 24),
+                  header,
+                  if (wide)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ContentWidth(
-                          child: LayoutBuilder(
-                            builder: (context, constraints) =>
-                                constraints.maxWidth >= 720
-                                ? _SummaryTable(
-                                    items: items,
-                                    onRemove: (e) => _remove(context, e),
-                                  )
-                                : _SummaryList(
-                                    items: items,
-                                    onRemove: (e) => _remove(context, e),
-                                  ),
+                        Expanded(
+                          child: _SummaryTable(
+                            groups: groups,
+                            onRemove: (e) => _remove(context, e),
+                          ),
+                        ),
+                        const SizedBox(width: Space.xl),
+                        SizedBox(width: 360, child: totalCard),
+                      ],
+                    )
+                  else ...[
+                    totalCard,
+                    for (final g in groups) ...[
+                      SectionHeader(
+                        _groupLabel(g.category),
+                        trailing: Text(
+                          formatMoney(g.subtotal),
+                          style: tabular(
+                            Theme.of(context).textTheme.titleSmall,
+                          ),
+                        ),
+                        padding: const EdgeInsets.fromLTRB(
+                          0,
+                          Space.xl,
+                          0,
+                          Space.sm,
+                        ),
+                      ),
+                      for (final (i, e) in g.items.indexed) ...[
+                        if (i > 0) const SizedBox(height: Space.sm),
+                        EstimateTile(
+                          estimate: e,
+                          onTap: () => _open(context, e),
+                          trailing: IconButton(
+                            tooltip: 'Remove ${e.label}',
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: () => _remove(context, e),
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                  _TotalBar(
-                    total: total,
-                    count: items.length,
-                    onExport: () => _export(context, items),
-                  ),
+                    ],
+                  ],
                 ],
               ),
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
-class _SummaryList extends StatelessWidget {
-  const _SummaryList({required this.items, required this.onRemove});
+void _open(BuildContext context, Estimate e) {
+  final spec = materialById(e.materialId);
+  if (spec != null) context.go(Routes.material(spec, fromEstimate: e.id));
+}
 
-  final List<Estimate> items;
-  final void Function(Estimate) onRemove;
+class _TotalCard extends StatelessWidget {
+  const _TotalCard({
+    required this.groups,
+    required this.count,
+    required this.total,
+    required this.onExport,
+    required this.onCopy,
+  });
+
+  final List<_Group> groups;
+  final int count;
+  final double total;
+  final VoidCallback onExport;
+  final VoidCallback onCopy;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      children: [
-        for (final e in items)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 4, 12),
-                child: Row(
+    final exporting = context.select<SheetSettingsController, bool>(
+      (c) => c.isExporting,
+    );
+    return InkPanel(
+      child: Builder(
+        builder: (context) {
+          final theme = Theme.of(context);
+          final palette = AppPalette.of(context);
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              MergeSemantics(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: MergeSemantics(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(e.label, style: theme.textTheme.titleMedium),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${formatQuantity(e.quantity, e.unit)} × '
-                              '${formatMoney(e.unitPrice)}',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              formatMoney(e.total),
-                              style: theme.textTheme.titleMedium,
-                            ),
-                          ],
-                        ),
+                    Text(
+                      count == 1 ? 'Total, 1 item' : 'Total, $count items',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: palette.onInkMuted,
                       ),
                     ),
-                    IconButton(
-                      tooltip: 'Remove ${e.label}',
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: () => onRemove(e),
+                    const SizedBox(height: Space.xs),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        formatMoney(total),
+                        style: tabular(
+                          theme.textTheme.displaySmall?.copyWith(
+                            color: palette.inkAccent,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ),
-      ],
+              if (groups.length > 1) ...[
+                const SizedBox(height: Space.xl),
+                Semantics(
+                  label: 'Cost by category',
+                  child: ProportionBar(
+                    format: formatMoney,
+                    parts: [
+                      for (final g in groups)
+                        (
+                          label: _groupLabel(g.category),
+                          value: g.subtotal,
+                          color: palette.category(g.category).chart,
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: Space.xl),
+              FilledButton.icon(
+                onPressed: exporting ? null : onExport,
+                icon: exporting
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.table_chart_outlined),
+                label: const Text('Send to Google Sheet'),
+              ),
+              const SizedBox(height: Space.sm),
+              OutlinedButton.icon(
+                onPressed: onCopy,
+                icon: const Icon(Icons.content_copy_outlined),
+                label: const Text('Copy as text'),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
 
 class _SummaryTable extends StatelessWidget {
-  const _SummaryTable({required this.items, required this.onRemove});
+  const _SummaryTable({required this.groups, required this.onRemove});
 
-  final List<Estimate> items;
+  final List<_Group> groups;
   final void Function(Estimate) onRemove;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final heading = theme.textTheme.titleSmall;
-    final body = theme.textTheme.bodyLarge;
+    final scheme = theme.colorScheme;
+    final heading = theme.textTheme.labelMedium?.copyWith(
+      color: scheme.onSurfaceVariant,
+    );
+    final body = tabular(theme.textTheme.bodyMedium);
 
     Widget cell(
-      String text, {
-      TextStyle? style,
+      Widget child, {
       bool numeric = false,
-      bool wrap = false,
+      EdgeInsets padding = const EdgeInsets.symmetric(
+        horizontal: Space.lg,
+        vertical: Space.md,
+      ),
     }) => Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Text(
-        text,
+      padding: padding,
+      child: Align(
+        alignment: numeric ? Alignment.centerRight : Alignment.centerLeft,
+        child: child,
+      ),
+    );
+
+    Widget text(String value, {TextStyle? style, bool numeric = false}) => cell(
+      Text(
+        value,
         style: style ?? body,
-        softWrap: wrap,
         textAlign: numeric ? TextAlign.end : TextAlign.start,
       ),
+      numeric: numeric,
     );
 
     return Card(
@@ -217,116 +406,113 @@ class _SummaryTable extends StatelessWidget {
         defaultVerticalAlignment: TableCellVerticalAlignment.middle,
         children: [
           TableRow(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer,
-            ),
             children: [
-              cell('Material', style: heading),
-              cell('Quantity', style: heading, numeric: true),
-              cell('Area', style: heading, numeric: true),
-              cell('Unit price', style: heading, numeric: true),
-              cell('Total', style: heading, numeric: true),
-              cell('Remove', style: heading),
+              text('MATERIAL', style: heading),
+              text('QUANTITY', style: heading, numeric: true),
+              text('UNIT PRICE', style: heading, numeric: true),
+              text('TOTAL', style: heading, numeric: true),
+              Semantics(label: 'Remove', child: const SizedBox(width: 56)),
             ],
           ),
-          for (final e in items)
+          for (final g in groups) ...[
             TableRow(
               decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: theme.colorScheme.outlineVariant),
-                ),
+                color: scheme.surfaceContainer,
+                border: Border(top: BorderSide(color: scheme.outlineVariant)),
               ),
               children: [
-                cell(e.label, wrap: true),
-                cell(formatQuantity(e.quantity, e.unit), numeric: true),
-                cell(e.area == null ? '—' : formatArea(e.area!), numeric: true),
-                cell(formatMoney(e.unitPrice), numeric: true),
                 cell(
-                  formatMoney(e.total),
-                  numeric: true,
-                  style: body?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: IconButton(
-                    tooltip: 'Remove ${e.label}',
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: () => onRemove(e),
-                  ),
-                ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TotalBar extends StatelessWidget {
-  const _TotalBar({
-    required this.total,
-    required this.count,
-    required this.onExport,
-  });
-
-  final double total;
-  final int count;
-  final VoidCallback onExport;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final exporting = context.select<SheetSettingsController, bool>(
-      (c) => c.isExporting,
-    );
-    return Material(
-      color: Colors.white,
-      elevation: 3,
-      child: SafeArea(
-        top: false,
-        child: ContentWidth(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 16,
-              runSpacing: 8,
-              children: [
-                MergeSemantics(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
+                  Row(
                     children: [
-                      Text(
-                        count == 1 ? 'Total, 1 item' : 'Total, $count items',
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: AppPalette.of(context)
+                              .category(g.category)
+                              .chart,
+                          borderRadius: BorderRadius.circular(3),
                         ),
+                        child: const SizedBox.square(dimension: 10),
                       ),
+                      const SizedBox(width: Space.sm),
                       Text(
-                        formatMoney(total),
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                        _groupLabel(g.category),
+                        style: theme.textTheme.titleSmall,
                       ),
                     ],
                   ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: Space.lg,
+                    vertical: Space.sm,
+                  ),
                 ),
-                FilledButton.icon(
-                  onPressed: exporting ? null : onExport,
-                  icon: exporting
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.table_chart_outlined),
-                  label: const Text('Send to Google Sheet'),
+                const SizedBox.shrink(),
+                const SizedBox.shrink(),
+                text(
+                  formatMoney(g.subtotal),
+                  style: tabular(theme.textTheme.titleSmall),
+                  numeric: true,
                 ),
+                const SizedBox.shrink(),
               ],
             ),
-          ),
-        ),
+            for (final e in g.items)
+              TableRow(
+                decoration: BoxDecoration(
+                  border: Border(top: BorderSide(color: scheme.outlineVariant)),
+                ),
+                children: [
+                  cell(
+                    InkWell(
+                      onTap: () => _open(context, e),
+                      borderRadius: BorderRadius.circular(Radii.sm),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Row(
+                          children: [
+                            if (materialById(e.materialId) case final spec?)
+                              IconTile.material(spec, size: 36)
+                            else
+                              const IconTile(
+                                icon: Icons.inventory_2_outlined,
+                                size: 36,
+                              ),
+                            const SizedBox(width: Space.md),
+                            Flexible(
+                              child: Text(
+                                e.label,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: Space.lg,
+                      vertical: Space.sm,
+                    ),
+                  ),
+                  text(formatQuantity(e.quantity, e.unit), numeric: true),
+                  text(formatMoney(e.unitPrice), numeric: true),
+                  text(
+                    formatMoney(e.total),
+                    numeric: true,
+                    style: body?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: Space.xs),
+                    child: IconButton(
+                      tooltip: 'Remove ${e.label}',
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () => onRemove(e),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ],
       ),
     );
   }

@@ -34,6 +34,17 @@ class EstimatesController extends ChangeNotifier {
           .roundToDouble() /
       100;
 
+  bool _disposed = false;
+
+  /// False once the app has shut down and this controller was disposed.
+  bool get isActive => !_disposed;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
   bool isInSummary(String estimateId) =>
       _summary.any((e) => e.id == estimateId);
 
@@ -50,6 +61,23 @@ class EstimatesController extends ChangeNotifier {
     _persistHistory();
     notifyListeners();
     return estimate;
+  }
+
+  /// Replaces the history entry [id] with [updated], keeping the id, and
+  /// moves it to the top. Used while the user keeps editing one
+  /// calculation, so history holds its latest state rather than every
+  /// keystroke. Returns the stored entry, or null when [id] is not in the
+  /// history.
+  Estimate? replaceInHistory(String id, Estimate updated) {
+    final index = _history.indexWhere((e) => e.id == id);
+    if (index < 0) return null;
+    final stored = updated.withId(id);
+    _history
+      ..removeAt(index)
+      ..insert(0, stored);
+    _persistHistory();
+    notifyListeners();
+    return stored;
   }
 
   /// Adds [estimate] to the summary unless it is already there. Returns

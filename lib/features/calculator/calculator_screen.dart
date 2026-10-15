@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/format.dart';
 import '../../core/layout.dart';
+import '../../core/theme.dart';
 import '../../core/widgets.dart';
 import '../../data/estimate.dart';
 import '../../data/sheets_export_service.dart';
@@ -12,9 +16,33 @@ import '../../router.dart';
 import '../../state/estimates_controller.dart';
 import '../../state/sheet_settings_controller.dart';
 import 'info_sheet.dart';
-import 'result_card.dart';
+import 'result_panel.dart';
 
-/// One screen for every material, built from its [MaterialSpec].
+/// The state of the form: a result when every input is valid, otherwise
+/// what is still missing.
+class _Evaluation {
+  const _Evaluation({
+    this.result,
+    this.error,
+    this.missing = const [],
+    this.numbers = const {},
+    this.choices = const {},
+  });
+
+  final CalcResult? result;
+
+  /// A problem with otherwise valid inputs, such as openings larger than
+  /// the wall.
+  final String? error;
+
+  /// Labels of the inputs that are empty or invalid.
+  final List<String> missing;
+  final Map<String, double> numbers;
+  final Map<String, String> choices;
+}
+
+/// One screen for every material, built from its [MaterialSpec]. The
+/// estimate updates as the user types.
 class CalculatorScreen extends StatefulWidget {
   const CalculatorScreen({super.key, required this.spec, this.fromEstimateId});
 
@@ -28,37 +56,43 @@ class CalculatorScreen extends StatefulWidget {
 }
 
 class _CalculatorScreenState extends State<CalculatorScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _resultKey = GlobalKey();
   late final Map<String, TextEditingController> _text = {
-    for (final f in widget.spec.numbers) f.id: TextEditingController(),
+    for (final f in widget.spec.numbers)
+      f.id: TextEditingController(text: f.initial),
   };
   late final Map<String, FocusNode> _focus = {
     for (final f in widget.spec.numbers) f.id: FocusNode(),
   };
   late Map<String, String> _selected = widget.spec.initialChoices;
-  AutovalidateMode _autovalidate = AutovalidateMode.disabled;
+  late final EstimatesController _estimates;
+  late final AppLifecycleListener _lifecycle;
 
-  Estimate? _estimate;
-  CalcResult? _result;
-  bool _stale = false;
+  /// The history entry that matches the inputs, once recorded.
+  Estimate? _recorded;
+
+  /// The history entry this visit created, updated in place as the user
+  /// keeps editing.
+  String? _visitEntryId;
+  Timer? _recordTimer;
 
   MaterialSpec get spec => widget.spec;
 
   @override
   void initState() {
     super.initState();
+    _estimates = context.read<EstimatesController>();
     _prefill();
     for (final c in _text.values) {
-      c.addListener(_markStale);
+      c.addListener(_changed);
     }
+    _lifecycle = AppLifecycleListener(onHide: _recordNow);
   }
 
   void _prefill() {
     final id = widget.fromEstimateId;
     if (id == null) return;
-    final history = context.read<EstimatesController>().history;
-    final saved = history.where((e) => e.id == id).firstOrNull;
+    final saved = _estimates.history.where((e) => e.id == id).firstOrNull;
     if (saved == null || saved.materialId != spec.id) return;
     for (final MapEntry(:key, :value) in saved.inputs.entries) {
       _text[key]?.text = value == value.roundToDouble()
@@ -66,16 +100,21 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           : value.toString();
     }
     _selected = {..._selected, ...saved.choices};
-    try {
-      _result = spec.calculate(saved.inputs, _selected);
-      _estimate = saved;
-    } on ArgumentError {
-      // Saved by an older version with different options; let the user redo it.
-    }
+    _recorded = saved;
   }
 
   @override
   void dispose() {
+    _recordTimer?.cancel();
+    final pending = _pendingEstimate();
+    if (pending != null) {
+      // Recording notifies listeners, which must not happen while the
+      // tree is being torn down.
+      scheduleMicrotask(() {
+        if (_estimates.isActive) _record(pending);
+      });
+    }
+    _lifecycle.dispose();
     for (final c in _text.values) {
       c.dispose();
     }
@@ -85,65 +124,109 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     super.dispose();
   }
 
-  void _markStale() {
-    if (_estimate != null && !_stale) setState(() => _stale = true);
+  void _changed() {
+    setState(() {});
+    _scheduleRecord();
   }
 
-  void _select(String id, String? value) {
-    if (value == null) return;
+  void _select(String id, String value) {
     setState(() => _selected = {..._selected, id: value});
-    _markStale();
+    _scheduleRecord();
   }
 
-  void _calculate() {
-    setState(() => _autovalidate = AutovalidateMode.onUserInteraction);
-    if (!_formKey.currentState!.validate()) {
-      for (final field in spec.numbers) {
-        if (field.validate(_text[field.id]!.text) != null) {
-          _focus[field.id]!.requestFocus();
-          break;
-        }
+  void _scheduleRecord() {
+    _recordTimer?.cancel();
+    _recordTimer = Timer(const Duration(milliseconds: 1200), _recordNow);
+  }
+
+  _Evaluation _evaluate() {
+    final missing = <String>[];
+    final numbers = <String, double>{};
+    for (final f in spec.visibleNumbers(_selected)) {
+      final value = f.parse(_text[f.id]!.text);
+      if (value == null) {
+        missing.add(f.label.toLowerCase());
+      } else if (!(f.optional && value == 0)) {
+        numbers[f.id] = value;
       }
-      return;
     }
-    final numbers = {
-      for (final f in spec.numbers) f.id: f.parse(_text[f.id]!.text)!,
-    };
-    final visible = {
-      for (final c in spec.visibleChoices(_selected)) c.id: _selected[c.id]!,
-    };
-    final result = spec.calculate(numbers, visible);
-    final recorded = context.read<EstimatesController>().record(
-      Estimate.fromResult(
-        materialId: spec.id,
-        result: result,
-        inputs: numbers,
-        choices: visible,
-      ),
+    final choices = <String, String>{};
+    for (final c in spec.visibleChoices(_selected)) {
+      final option = c.option(_selected[c.id]);
+      if (option == null) {
+        missing.add(c.label.toLowerCase());
+      } else {
+        choices[c.id] = option.id;
+      }
+    }
+    if (missing.isNotEmpty) return _Evaluation(missing: missing);
+    try {
+      return _Evaluation(
+        result: spec.calculate(numbers, choices),
+        numbers: numbers,
+        choices: choices,
+      );
+    } on ArgumentError catch (e) {
+      return _Evaluation(error: '${e.message}');
+    }
+  }
+
+  Estimate? _currentEstimate([_Evaluation? evaluation]) {
+    final e = evaluation ?? _evaluate();
+    final result = e.result;
+    if (result == null) return null;
+    return Estimate.fromResult(
+      materialId: spec.id,
+      result: result,
+      inputs: e.numbers,
+      choices: e.choices,
     );
-    setState(() {
-      _result = result;
-      _estimate = recorded;
-      _stale = false;
-    });
-    if (WindowSize.of(context) != WindowSize.expanded) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final target = _resultKey.currentContext;
-        if (target != null && target.mounted) {
-          Scrollable.ensureVisible(
-            target,
-            duration: const Duration(milliseconds: 300),
-            alignment: 0.05,
-          );
-        }
-      });
+  }
+
+  /// The current estimate when it is not yet in the history.
+  Estimate? _pendingEstimate() {
+    final current = _currentEstimate();
+    if (current == null) return null;
+    final recorded = _recorded;
+    if (recorded != null && recorded.sameCalculationAs(current)) return null;
+    return current;
+  }
+
+  void _recordNow() {
+    _recordTimer?.cancel();
+    final pending = _pendingEstimate();
+    if (pending != null) _record(pending);
+  }
+
+  /// Saves [estimate] to the history, replacing this visit's earlier
+  /// entry unless that one went into the summary.
+  Estimate _record(Estimate estimate) {
+    final visit = _visitEntryId;
+    final replaced = visit != null && !_estimates.isInSummary(visit)
+        ? _estimates.replaceInHistory(visit, estimate)
+        : null;
+    final stored = replaced ?? _estimates.record(estimate);
+    _visitEntryId = stored.id;
+    if (mounted) setState(() => _recorded = stored);
+    return stored;
+  }
+
+  /// The history entry for the current inputs, recording it if needed.
+  Estimate? _ensureRecorded() {
+    final current = _currentEstimate();
+    if (current == null) return null;
+    final recorded = _recorded;
+    if (recorded != null && recorded.sameCalculationAs(current)) {
+      return recorded;
     }
+    _recordTimer?.cancel();
+    return _record(current);
   }
 
   void _addToSummary() {
-    final estimate = _estimate;
+    final estimate = _ensureRecorded();
     if (estimate == null) return;
-    context.read<EstimatesController>().addToSummary(estimate);
+    _estimates.addToSummary(estimate);
     showMessage(
       context,
       'Added ${estimate.label} to the summary.',
@@ -155,7 +238,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   }
 
   Future<void> _export() async {
-    final estimate = _estimate;
+    final estimate = _ensureRecorded();
     if (estimate == null) return;
     final result = await context.read<SheetSettingsController>().export([
       estimate,
@@ -167,7 +250,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       action: result.status == SheetsExportStatus.missingSheetInfo
           ? SnackBarAction(
               label: 'Set up',
-              onPressed: () => context.go(Routes.sheet),
+              onPressed: () => context.go(Routes.settings),
             )
           : null,
     );
@@ -179,18 +262,40 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       isScrollControlled: true,
       useSafeArea: true,
       builder: (_) => MaterialInfoSheet(
+        spec: spec,
         title: solution ? "How it's calculated" : 'Definitions',
         sections: solution ? spec.solution : spec.definitions,
-        references: solution ? const [] : spec.references,
+        references: solution ? spec.references : const [],
       ),
+    );
+  }
+
+  void _showResult() {
+    final target = _resultKey.currentContext;
+    if (target == null) return;
+    FocusScope.of(context).unfocus();
+    Scrollable.ensureVisible(
+      target,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOutCubic,
+      alignment: 0.05,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final expanded = WindowSize.of(context) == WindowSize.expanded;
+    final size = WindowSize.of(context);
+    final twoPane = size == WindowSize.expanded;
+    final evaluation = _evaluate();
+    final result = evaluation.result;
+    final current = _currentEstimate(evaluation);
+    final recorded = _recorded;
     final inSummary = context.select<EstimatesController, bool>(
-      (c) => _estimate != null && c.isInSummary(_estimate!.id),
+      (c) =>
+          current != null &&
+          recorded != null &&
+          recorded.sameCalculationAs(current) &&
+          c.isInSummary(recorded.id),
     );
     final exporting = context.select<SheetSettingsController, bool>(
       (c) => c.isExporting,
@@ -198,63 +303,69 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
     final form = _CalculatorForm(
       spec: spec,
-      formKey: _formKey,
-      autovalidate: _autovalidate,
       text: _text,
       focus: _focus,
       selected: _selected,
       onSelect: _select,
-      onCalculate: _calculate,
       onShowInfo: _showInfo,
+      onDone: twoPane ? null : _showResult,
     );
-    final result = _estimate == null || _result == null
-        ? null
-        : ResultCard(
-            key: _resultKey,
-            estimate: _estimate!,
-            result: _result!,
-            stale: _stale,
-            inSummary: inSummary,
-            exporting: exporting,
-            onAddToSummary: _addToSummary,
-            onExport: _export,
-          );
+    final panel = KeyedSubtree(
+      key: _resultKey,
+      child: result == null
+          ? ResultPending(
+              spec: spec,
+              missing: evaluation.missing,
+              error: evaluation.error,
+            )
+          : ResultPanel(
+              spec: spec,
+              result: result,
+              inSummary: inSummary,
+              exporting: exporting,
+              onAddToSummary: _addToSummary,
+              onExport: _export,
+            ),
+    );
 
     return PageTitle(
       title: spec.name,
       child: Scaffold(
         appBar: AppBar(title: Text(spec.name)),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.only(top: 8, bottom: 32),
-          child: expanded
-              ? ContentWidth(
-                  maxWidth: 1100,
-                  child: Row(
+          padding: EdgeInsets.only(
+            top: Space.sm,
+            bottom: bottomClearance(context),
+          ),
+          child: ContentWidth(
+            maxWidth: twoPane ? 1120 : 680,
+            child: twoPane
+                ? Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(flex: 5, child: form),
-                      const SizedBox(width: 32),
-                      Expanded(
-                        flex: 4,
-                        child: result ?? const ResultPlaceholder(),
-                      ),
+                      Expanded(flex: 11, child: form),
+                      const SizedBox(width: Space.xl),
+                      Expanded(flex: 9, child: panel),
                     ],
-                  ),
-                )
-              : ContentWidth(
-                  maxWidth: 640,
-                  child: Column(
+                  )
+                : Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       form,
-                      if (result != null) ...[
-                        const SizedBox(height: 24),
-                        result,
-                      ],
+                      const SizedBox(height: Space.xl),
+                      panel,
                     ],
                   ),
-                ),
+          ),
         ),
+        bottomNavigationBar: twoPane
+            ? null
+            : _ResultBar(
+                result: result,
+                inSummary: inSummary,
+                onAdd: _addToSummary,
+                onShow: _showResult,
+              ),
       ),
     );
   }
@@ -263,131 +374,424 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 class _CalculatorForm extends StatelessWidget {
   const _CalculatorForm({
     required this.spec,
-    required this.formKey,
-    required this.autovalidate,
     required this.text,
     required this.focus,
     required this.selected,
     required this.onSelect,
-    required this.onCalculate,
     required this.onShowInfo,
+    required this.onDone,
   });
 
   final MaterialSpec spec;
-  final GlobalKey<FormState> formKey;
-  final AutovalidateMode autovalidate;
   final Map<String, TextEditingController> text;
   final Map<String, FocusNode> focus;
   final Map<String, String> selected;
-  final void Function(String id, String? value) onSelect;
-  final VoidCallback onCalculate;
+  final void Function(String id, String value) onSelect;
   final void Function({required bool solution}) onShowInfo;
+  final VoidCallback? onDone;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final numbers = spec.visibleNumbers(selected);
     final measurements = [
-      for (final f in spec.numbers)
+      for (final f in numbers)
         if (!f.isPrice) f,
     ];
-    final price = spec.numbers.firstWhere((f) => f.isPrice);
+    final prices = [
+      for (final f in numbers)
+        if (f.isPrice) f,
+    ];
     final choices = spec.visibleChoices(selected);
+    final leading = [
+      for (final c in choices)
+        if (c.leading) c,
+    ];
+    final options = [
+      for (final c in choices)
+        if (!c.leading) c,
+    ];
+    final last = numbers.isEmpty ? null : numbers.last;
 
-    Widget numberField(NumberField f) {
-      final isLast = f == price;
-      return TextFormField(
-        controller: text[f.id],
-        focusNode: focus[f.id],
-        decoration: InputDecoration(
-          labelText: f.label,
-          helperText: f.hint,
-          prefixText: f.isPrice ? '₱ ' : null,
-          suffixText: f.isPrice ? null : f.unit,
+    Widget numberField(NumberField f) => _NumberInput(
+      key: ValueKey('number-${f.id}'),
+      field: f,
+      controller: text[f.id]!,
+      focusNode: focus[f.id]!,
+      isLast: f == last,
+      onDone: onDone,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            IconTile.material(spec, size: 56),
+            const SizedBox(width: Space.lg),
+            Expanded(
+              child: Text(
+                spec.blurb,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
         ),
-        keyboardType: TextInputType.numberWithOptions(decimal: !f.integer),
-        inputFormatters: [
-          DecimalInputFormatter(allowDecimal: !f.integer),
-          LengthLimitingTextInputFormatter(12),
+        const SizedBox(height: Space.md),
+        Wrap(
+          spacing: Space.sm,
+          runSpacing: Space.sm,
+          children: [
+            OutlinedButton.icon(
+              onPressed: () => onShowInfo(solution: false),
+              icon: const Icon(Icons.menu_book_outlined, size: 18),
+              label: const Text('Definitions'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => onShowInfo(solution: true),
+              icon: const Icon(Icons.functions, size: 18),
+              label: const Text("How it's calculated"),
+            ),
+          ],
+        ),
+        const SizedBox(height: Space.xl),
+        _FormSection(
+          title: 'Measurements',
+          children: [
+            for (final c in leading)
+              _ChoiceInput(field: c, selected: selected, onSelect: onSelect),
+            _FieldGrid(
+              children: [for (final f in measurements) numberField(f)],
+            ),
+          ],
+        ),
+        if (options.isNotEmpty) ...[
+          const SizedBox(height: Space.lg),
+          _FormSection(
+            title: 'Options',
+            children: [
+              for (final c in options)
+                _ChoiceInput(field: c, selected: selected, onSelect: onSelect),
+            ],
+          ),
         ],
-        textInputAction: isLast ? TextInputAction.done : TextInputAction.next,
-        onFieldSubmitted: isLast ? (_) => onCalculate() : null,
-        validator: (value) => f.validate(value ?? ''),
+        if (prices.isNotEmpty) ...[
+          const SizedBox(height: Space.lg),
+          _FormSection(
+            title: 'Price',
+            children: [
+              _FieldGrid(children: [for (final f in prices) numberField(f)]),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// A titled card grouping related inputs.
+class _FormSection extends StatelessWidget {
+  const _FormSection({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          Space.lg,
+          Space.lg,
+          Space.lg,
+          Space.xl,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Semantics(
+              header: true,
+              child: Text(title, style: theme.textTheme.titleMedium),
+            ),
+            for (final child in children) ...[
+              const SizedBox(height: Space.lg),
+              child,
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Number fields in two columns when there is room, one otherwise.
+class _FieldGrid extends StatelessWidget {
+  const _FieldGrid({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      const gap = Space.lg;
+      final twoColumns = constraints.maxWidth >= 440 && children.length > 1;
+      final width = twoColumns
+          ? (constraints.maxWidth - gap) / 2
+          : constraints.maxWidth;
+      return Wrap(
+        spacing: gap,
+        runSpacing: Space.lg,
+        children: [for (final f in children) SizedBox(width: width, child: f)],
+      );
+    },
+  );
+}
+
+class _NumberInput extends StatelessWidget {
+  const _NumberInput({
+    super.key,
+    required this.field,
+    required this.controller,
+    required this.focusNode,
+    required this.isLast,
+    required this.onDone,
+  });
+
+  final NumberField field;
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final bool isLast;
+  final VoidCallback? onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    final f = field;
+    return TextFormField(
+      controller: controller,
+      focusNode: focusNode,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      decoration: InputDecoration(
+        labelText: f.label,
+        helperText: f.hint,
+        prefixText: f.isPrice ? '₱ ' : null,
+        suffixText: f.isPrice ? null : f.unit,
+      ),
+      style: tabular(Theme.of(context).textTheme.bodyLarge),
+      keyboardType: TextInputType.numberWithOptions(decimal: !f.integer),
+      inputFormatters: [
+        DecimalInputFormatter(allowDecimal: !f.integer),
+        LengthLimitingTextInputFormatter(12),
+      ],
+      textInputAction: isLast ? TextInputAction.done : TextInputAction.next,
+      onFieldSubmitted: isLast && onDone != null ? (_) => onDone!() : null,
+      validator: (value) => f.validate(value ?? ''),
+    );
+  }
+}
+
+/// A choice shown as a segmented button, a set of chips or a menu,
+/// depending on how many options it has.
+class _ChoiceInput extends StatelessWidget {
+  const _ChoiceInput({
+    required this.field,
+    required this.selected,
+    required this.onSelect,
+  });
+
+  final ChoiceField field;
+  final Map<String, String> selected;
+  final void Function(String id, String value) onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final c = field;
+    final value = c.option(selected[c.id])?.id;
+    final labelLength = c.options.fold<int>(0, (n, o) => n + o.label.length);
+    final segmented = c.options.length <= 4 && labelLength <= 34;
+
+    final Widget input;
+    if (segmented) {
+      input = SizedBox(
+        width: double.infinity,
+        child: SegmentedButton<String>(
+          segments: [
+            for (final o in c.options)
+              ButtonSegment(
+                value: o.id,
+                label: Text(o.label, textAlign: TextAlign.center),
+              ),
+          ],
+          selected: {?value},
+          emptySelectionAllowed: value == null,
+          showSelectedIcon: false,
+          onSelectionChanged: (s) {
+            if (s.isNotEmpty) onSelect(c.id, s.first);
+          },
+        ),
+      );
+    } else if (c.options.length <= 8) {
+      input = Wrap(
+        spacing: Space.sm,
+        runSpacing: Space.sm,
+        children: [
+          for (final o in c.options)
+            ChoiceChip(
+              label: Text(o.label),
+              selected: o.id == value,
+              showCheckmark: false,
+              onSelected: (_) => onSelect(c.id, o.id),
+            ),
+        ],
+      );
+    } else {
+      input = DropdownButtonFormField<String>(
+        key: ValueKey('choice-${c.id}'),
+        initialValue: value,
+        isExpanded: true,
+        decoration: const InputDecoration(),
+        hint: const Text('Choose one'),
+        items: [
+          for (final o in c.options)
+            DropdownMenuItem(
+              value: o.id,
+              child: Text(o.label, overflow: TextOverflow.ellipsis),
+            ),
+        ],
+        onChanged: (v) {
+          if (v != null) onSelect(c.id, v);
+        },
       );
     }
 
-    Widget choiceField(ChoiceField c) => DropdownButtonFormField<String>(
-      key: ValueKey('choice-${c.id}'),
-      initialValue: selected[c.id],
-      isExpanded: true,
-      decoration: InputDecoration(labelText: c.label, helperText: c.helper),
-      hint: const Text('Choose one'),
-      items: [
-        for (final o in c.options)
-          DropdownMenuItem(
-            value: o.id,
-            child: Text(o.label, overflow: TextOverflow.ellipsis),
-          ),
-      ],
-      onChanged: (value) => onSelect(c.id, value),
-      validator: (value) =>
-          c.option(value) == null ? 'Choose a ${c.label.toLowerCase()}' : null,
-    );
-
-    final fields = <Widget>[
-      for (final f in measurements) numberField(f),
-      for (final c in choices) choiceField(c),
-      numberField(price),
-    ];
-
-    return Form(
-      key: formKey,
-      autovalidateMode: autovalidate,
+    return Semantics(
+      container: true,
+      label: c.label,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(spec.blurb, style: theme.textTheme.bodyLarge),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              OutlinedButton.icon(
-                onPressed: () => onShowInfo(solution: false),
-                icon: const Icon(Icons.menu_book_outlined),
-                label: const Text('Definitions'),
+          Text(c.label, style: theme.textTheme.labelLarge),
+          if (c.helper != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              c.helper!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
-              OutlinedButton.icon(
-                onPressed: () => onShowInfo(solution: true),
-                icon: const Icon(Icons.functions),
-                label: const Text("How it's calculated"),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              const gap = 16.0;
-              final twoColumns = constraints.maxWidth >= 480;
-              final width = twoColumns
-                  ? (constraints.maxWidth - gap) / 2
-                  : constraints.maxWidth;
-              return Wrap(
-                spacing: gap,
-                runSpacing: 20,
-                children: [
-                  for (final f in fields) SizedBox(width: width, child: f),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 28),
-          FilledButton.icon(
-            onPressed: onCalculate,
-            icon: const Icon(Icons.calculate),
-            label: const Text('Calculate'),
-          ),
+            ),
+          ],
+          const SizedBox(height: Space.sm),
+          input,
         ],
       ),
+    );
+  }
+}
+
+/// The live total pinned above the navigation bar on phones and tablets.
+class _ResultBar extends StatelessWidget {
+  const _ResultBar({
+    required this.result,
+    required this.inSummary,
+    required this.onAdd,
+    required this.onShow,
+  });
+
+  final CalcResult? result;
+  final bool inSummary;
+  final VoidCallback onAdd;
+  final VoidCallback onShow;
+
+  @override
+  Widget build(BuildContext context) {
+    final r = result;
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.bottomCenter,
+      child: r == null
+          ? const SizedBox(width: double.infinity)
+          : InkPanel(
+              grid: false,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(Radii.lg),
+              ),
+              padding: const EdgeInsets.fromLTRB(
+                Space.lg,
+                Space.md,
+                Space.md,
+                Space.md,
+              ),
+              child: SafeArea(
+                top: false,
+                child: Builder(
+                  builder: (context) {
+                    final theme = Theme.of(context);
+                    final palette = AppPalette.of(context);
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: Semantics(
+                            button: true,
+                            liveRegion: true,
+                            label:
+                                'Estimate ${formatMoney(r.total)} for '
+                                '${formatQuantity(r.quantity, r.unit)}. '
+                                'Show details',
+                            excludeSemantics: true,
+                            child: InkWell(
+                              onTap: onShow,
+                              borderRadius: BorderRadius.circular(Radii.md),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: Space.xs,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      formatQuantity(r.quantity, r.unit),
+                                      style: tabular(
+                                        theme.textTheme.labelLarge?.copyWith(
+                                          color: palette.onInkMuted,
+                                        ),
+                                      ),
+                                    ),
+                                    FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        formatMoney(r.total),
+                                        style: tabular(
+                                          theme.textTheme.titleLarge?.copyWith(
+                                            color: palette.inkAccent,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: Space.md),
+                        FilledButton.icon(
+                          onPressed: inSummary ? null : onAdd,
+                          icon: Icon(inSummary ? Icons.check : Icons.add),
+                          label: Text(inSummary ? 'Added' : 'Add'),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
     );
   }
 }

@@ -29,6 +29,16 @@ void main() {
     expect(appBarTitle(tester), 'Roofing Sheets');
   });
 
+  testWidgets('the old Sheet link opens Settings', (tester) async {
+    await pumpAt(tester, '/sheet');
+    expect(find.text('Google Sheets'), findsOneWidget);
+  });
+
+  testWidgets('the old Help link opens the guide', (tester) async {
+    await pumpAt(tester, '/help');
+    expect(appBarTitle(tester), 'How to use BuildQuantify');
+  });
+
   testWidgets('a material under the wrong category is not found', (
     tester,
   ) async {

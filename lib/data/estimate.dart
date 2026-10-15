@@ -112,6 +112,21 @@ class Estimate {
       '${at.microsecondsSinceEpoch.toRadixString(36)}-'
       '${_random.nextInt(0x3fffffff).toRadixString(36)}';
 
+  /// A copy of this estimate stored under [newId].
+  Estimate withId(String newId) => Estimate(
+    id: newId,
+    materialId: materialId,
+    label: label,
+    area: area,
+    quantity: quantity,
+    unit: unit,
+    unitPrice: unitPrice,
+    total: total,
+    createdAt: createdAt,
+    inputs: inputs,
+    choices: choices,
+  );
+
   /// True when [other] came from the same calculator with the same inputs.
   bool sameCalculationAs(Estimate other) =>
       materialId == other.materialId &&

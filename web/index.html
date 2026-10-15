@@ -6,7 +6,8 @@
 
   <meta charset="UTF-8">
   <meta name="description" content="BuildQuantify estimates the quantity and cost of construction materials: blocks, plywood, paint, tiles, roofing, electrical and plumbing fixtures.">
-  <meta name="theme-color" content="#F59E0B">
+  <meta name="theme-color" content="#F6F4F0" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#12100E" media="(prefers-color-scheme: dark)">
 
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -18,29 +19,35 @@
   <title>BuildQuantify</title>
 
   <style>
-    html, body { margin: 0; height: 100%; background: #FFFBF5; }
+    :root { color-scheme: light dark; --bg: #F6F4F0; --ink: #1C1917; --muted: #57534E; --track: #E4DED6; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #12100E; --ink: #F5F5F4; --muted: #C8C2BA; --track: #34302C; }
+    }
+    html, body { margin: 0; height: 100%; background: var(--bg); }
     #loader {
       position: fixed; inset: 0;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
-      font: 600 18px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      color: #3B2A0E;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+      font: 600 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: var(--muted);
       transition: opacity 200ms ease-out;
     }
-    #loader .spinner {
-      width: 44px; height: 44px; border-radius: 50%;
-      border: 4px solid #FDE7B5; border-top-color: #B45309;
-      animation: spin 900ms linear infinite;
+    #loader .mark { width: 64px; height: 64px; border-radius: 14px; box-shadow: 0 10px 30px rgba(245, 158, 11, 0.35); }
+    #loader .bar { width: 140px; height: 4px; border-radius: 4px; background: var(--track); overflow: hidden; }
+    #loader .bar::after {
+      content: ""; display: block; width: 40%; height: 100%; border-radius: 4px; background: #F59E0B;
+      animation: slide 1100ms ease-in-out infinite;
     }
     #loader.done { opacity: 0; pointer-events: none; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
     @media (prefers-reduced-motion: reduce) {
-      #loader .spinner { animation-duration: 2400ms; }
+      #loader .bar::after { animation-duration: 3000ms; }
     }
   </style>
 </head>
 <body>
   <div id="loader" role="status" aria-live="polite">
-    <div class="spinner" aria-hidden="true"></div>
+    <img class="mark" src="icons/mark-64.png" alt="" aria-hidden="true">
+    <div class="bar" aria-hidden="true"></div>
     <span>Loading BuildQuantify…</span>
   </div>
   <noscript>BuildQuantify needs JavaScript enabled to run.</noscript>

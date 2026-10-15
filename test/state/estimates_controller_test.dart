@@ -44,6 +44,19 @@ void main() {
     },
   );
 
+  test('an entry can be replaced in place and moved to the top', () async {
+    final (c, repo) = await setup();
+    final a = c.record(estimate(inputs: {'length': 1}));
+    c.record(estimate(inputs: {'length': 2}));
+    final updated = c.replaceInHistory(a.id, estimate(total: 300));
+    expect(updated!.id, a.id);
+    expect(c.history.first.id, a.id);
+    expect(c.history.first.total, 300);
+    expect(c.history, hasLength(2));
+    expect(repo.loadHistory().first.total, 300);
+    expect(c.replaceInHistory('missing', estimate()), isNull);
+  });
+
   test('history is capped', () async {
     final (c, _) = await setup();
     for (var i = 0; i < EstimatesController.historyLimit + 5; i++) {

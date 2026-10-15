@@ -7,7 +7,7 @@ import 'features/help/help_screen.dart';
 import 'features/history/history_screen.dart';
 import 'features/not_found_screen.dart';
 import 'features/shell/app_shell.dart';
-import 'features/sheet/sheet_screen.dart';
+import 'features/settings/settings_screen.dart';
 import 'features/summary/summary_screen.dart';
 import 'features/home/home_screen.dart';
 import 'materials/catalog.dart';
@@ -17,8 +17,10 @@ import 'materials/material_spec.dart';
 /// sensible.
 const _legacyRedirects = {
   '/mainpage': '/',
-  '/instructions': '/help',
-  '/sheetform': '/sheet',
+  '/instructions': '/settings/help',
+  '/help': '/settings/help',
+  '/sheetform': '/settings',
+  '/sheet': '/settings',
   '/history': '/history',
   '/summary': '/summary',
   '/strucPages': '/category/structural',
@@ -74,8 +76,8 @@ abstract final class Routes {
   static const home = '/';
   static const history = '/history';
   static const summary = '/summary';
-  static const sheet = '/sheet';
-  static const help = '/help';
+  static const settings = '/settings';
+  static const help = '/settings/help';
 
   static String category(MaterialCategory c) => '/category/${c.name}';
 
@@ -108,10 +110,6 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
               path: Routes.home,
               builder: (context, state) => const HomeScreen(),
               routes: [
-                GoRoute(
-                  path: 'help',
-                  builder: (context, state) => const HelpScreen(),
-                ),
                 GoRoute(
                   path: 'category/:category',
                   builder: (context, state) {
@@ -166,8 +164,14 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: Routes.sheet,
-              builder: (context, state) => const SheetScreen(),
+              path: Routes.settings,
+              builder: (context, state) => const SettingsScreen(),
+              routes: [
+                GoRoute(
+                  path: 'help',
+                  builder: (context, state) => const HelpScreen(),
+                ),
+              ],
             ),
           ],
         ),

@@ -8,6 +8,7 @@ import 'data/estimate_repository.dart';
 import 'data/sheet_settings.dart';
 import 'data/sheets_export_service.dart';
 import 'router.dart';
+import 'state/appearance_controller.dart';
 import 'state/estimates_controller.dart';
 import 'state/sheet_settings_controller.dart';
 
@@ -33,6 +34,8 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
   late final GoRouter _router = createRouter(
     initialLocation: widget.initialLocation,
   );
+  final _light = buildTheme();
+  final _dark = buildTheme(Brightness.dark);
 
   @override
   void dispose() {
@@ -48,17 +51,24 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
           create: (_) => EstimatesController(EstimateRepository(widget.prefs)),
         ),
         ChangeNotifierProvider(
+          create: (_) => AppearanceController(widget.prefs),
+        ),
+        ChangeNotifierProvider(
           create: (_) => SheetSettingsController(
             SheetSettingsRepository(widget.prefs),
             widget.exporter ?? SheetsExportService(),
           ),
         ),
       ],
-      child: MaterialApp.router(
-        title: 'BuildQuantify',
-        debugShowCheckedModeBanner: false,
-        theme: buildTheme(),
-        routerConfig: _router,
+      child: Builder(
+        builder: (context) => MaterialApp.router(
+          title: 'BuildQuantify',
+          debugShowCheckedModeBanner: false,
+          theme: _light,
+          darkTheme: _dark,
+          themeMode: context.watch<AppearanceController>().mode,
+          routerConfig: _router,
+        ),
       ),
     );
   }

@@ -43,4 +43,26 @@ void main() {
     expect(length.parse('abc'), isNull);
     expect(length.parse('-1'), isNull);
   });
+
+  test('optional fields accept empty and zero', () {
+    const openings = NumberField(
+      id: 'openings',
+      label: 'Doors and windows',
+      optional: true,
+    );
+    expect(openings.validate(''), isNull);
+    expect(openings.parse(''), 0);
+    expect(openings.validate('0'), isNull);
+    expect(openings.validate('abc'), 'Enter a number, like 2.5');
+  });
+
+  test('fields can depend on a choice', () {
+    final byRoom = NumberField(
+      id: 'length',
+      label: 'Room length',
+      visibleWhen: (s) => s['mode'] != 'count',
+    );
+    expect(byRoom.isVisible(const {'mode': 'room'}), isTrue);
+    expect(byRoom.isVisible(const {'mode': 'count'}), isFalse);
+  });
 }

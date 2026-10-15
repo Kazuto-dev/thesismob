@@ -29,8 +29,10 @@ void main() {
       inputs: const {'length': 10, 'height': 3, 'price': 25},
       choices: spec.initialChoices,
     );
-    expect(e.total, 9375);
-    expect(e.toSheetRow(), ['CHB 4"', 30.0, 375.0, 9375.0]);
+    // 375 blocks plus the default 5% waste.
+    expect(e.total, 9850);
+    expect(e.toSheetRow(), ['CHB 4"', 30.0, 394.0, 9850.0]);
+    expect(e.withId('x').sameCalculationAs(e), isTrue);
     expect(Estimate.fromJson(e.toJson()).sameCalculationAs(e), isTrue);
   });
 }

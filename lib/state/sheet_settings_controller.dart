@@ -55,7 +55,7 @@ class SheetSettingsController extends ChangeNotifier {
     if (settings == null) {
       return const SheetsExportResult(
         SheetsExportStatus.missingSheetInfo,
-        'Add your spreadsheet in the Sheet tab first.',
+        'Add your spreadsheet in Settings first.',
       );
     }
     _exporting = true;

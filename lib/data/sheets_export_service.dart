@@ -82,7 +82,7 @@ class SheetsExportService {
     if (id == null || sheetName.trim().isEmpty) {
       return const SheetsExportResult(
         SheetsExportStatus.missingSheetInfo,
-        'Add your spreadsheet ID and sheet name in the Sheet tab first.',
+        'Add your spreadsheet ID and sheet name in Settings first.',
       );
     }
     if (rows.isEmpty) {

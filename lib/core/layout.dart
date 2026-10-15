@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 
 /// Material 3 window size classes.
@@ -19,17 +21,29 @@ enum WindowSize {
   }
 }
 
+/// Side gutter: 16 px on phones, 32 px elsewhere.
+double gutterOf(BuildContext context) =>
+    WindowSize.of(context) == WindowSize.compact ? 16 : 32;
+
+/// Horizontal padding that centres content of at most [maxWidth] inside
+/// [available] width, never less than the gutter.
+double contentInset(
+  BuildContext context,
+  double available, {
+  double maxWidth = 1040,
+}) => math.max(gutterOf(context), (available - maxWidth) / 2);
+
 /// Centres [child] and caps its width so lines and forms stay readable on
-/// wide screens, with a 16 px gutter on phones and 24 px elsewhere.
+/// wide screens, with the standard gutter on each side.
 class ContentWidth extends StatelessWidget {
-  const ContentWidth({super.key, required this.child, this.maxWidth = 960});
+  const ContentWidth({super.key, required this.child, this.maxWidth = 1040});
 
   final Widget child;
   final double maxWidth;
 
   @override
   Widget build(BuildContext context) {
-    final gutter = WindowSize.of(context) == WindowSize.compact ? 16.0 : 24.0;
+    final gutter = gutterOf(context);
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(

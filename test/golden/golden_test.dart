@@ -9,36 +9,28 @@ library;
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:thesismob/state/appearance_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
+
+import 'package:thesismob/data/estimate.dart';
+import 'package:thesismob/materials/material_spec.dart';
 
 import '../helpers.dart';
 
 final _skip = Platform.isLinux ? null : 'Goldens are compared on Linux only';
 
 Future<void> _loadFonts() async {
-  final poppins = FontLoader('Poppins');
-  for (final weight in ['Regular', 'Medium', 'SemiBold', 'Bold']) {
-    poppins.addFont(
-      rootBundle.load('assets/fonts/poppins/Poppins-$weight.ttf'),
+  final jakarta = FontLoader('PlusJakartaSans');
+  for (final weight in ['Regular', 'Medium', 'SemiBold', 'Bold', 'ExtraBold']) {
+    jakarta.addFont(
+      rootBundle.load('assets/fonts/jakarta/PlusJakartaSans-$weight.ttf'),
     );
   }
-  await poppins.load();
+  await jakarta.load();
   await (FontLoader(
     'MaterialIcons',
   )..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
-
-  // The peso sign is not in Poppins; use Roboto as the web build does.
-  final root = Platform.environment['FLUTTER_ROOT'];
-  final roboto = File(
-    '$root/bin/cache/artifacts/material_fonts/Roboto-Regular.ttf',
-  );
-  if (root != null && roboto.existsSync()) {
-    final bytes = roboto.readAsBytesSync();
-    await (FontLoader(
-      'Roboto',
-    )..addFont(Future.value(ByteData.sublistView(bytes)))).load();
-  }
 }
 
 /// Decodes every image on screen; widget tests otherwise draw them blank.
@@ -62,11 +54,48 @@ Future<void> _snapshot(WidgetTester tester, String name) async {
 void main() {
   setUpAll(_loadFonts);
 
+  Estimate item(
+    String id,
+    String material,
+    String label,
+    double quantity,
+    QuantityUnit unit,
+    double price,
+  ) => Estimate(
+    id: id,
+    materialId: material,
+    label: label,
+    quantity: quantity,
+    unit: unit,
+    unitPrice: price,
+    total: quantity * price,
+    createdAt: DateTime(2026, 10, 9, 9),
+  );
+
   final items = [
-    sampleEstimate('a', 'CHB 4"', 9375),
-    sampleEstimate('b', 'Tiles 30 × 30 cm floor', 11070),
-    sampleEstimate('c', 'Paint, 2 coats', 1700),
+    item('a', 'chb', 'CHB 4"', 394, QuantityUnit.blocks, 25),
+    item('b', 'tiles', 'Tiles 60 × 60 cm', 70, QuantityUnit.pieces, 185),
+    item('c', 'paint', 'Paint, latex, 2 coats', 3, QuantityUnit.gallons, 980),
+    item(
+      'd',
+      'roof',
+      'Corrugated GI, 8 ft (2.44 m)',
+      60,
+      QuantityUnit.sheets,
+      520,
+    ),
+    item('e', 'bulb', 'LED bulb 9 W', 7, QuantityUnit.bulbs, 120),
+    item('f', 'pvc', 'PVC pipe ½" (20 mm)', 9, QuantityUnit.pipes, 165),
   ];
+
+  Future<void> fillWall(WidgetTester tester) async {
+    await tester.enterText(field('Wall length'), '10');
+    await tester.enterText(field('Wall height'), '3');
+    await tester.enterText(field('Price per block'), '25');
+    await tester.pumpAndSettle();
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+  }
 
   for (final (label, size) in [('phone', phone), ('desktop', desktop)]) {
     testWidgets('home on $label', skip: _skip != null, (tester) async {
@@ -78,12 +107,11 @@ void main() {
       tester,
     ) async {
       await pumpApp(tester, size: size, location: '/category/structural/chb');
-      await tester.enterText(field('Wall length'), '10');
-      await tester.enterText(field('Wall height'), '3');
-      await tester.enterText(field('Price per block'), '25');
-      await tester.ensureVisible(find.text('Calculate'));
-      await tester.tap(find.text('Calculate'));
-      await tester.pumpAndSettle();
+      await fillWall(tester);
+      if (label == 'phone') {
+        await tester.ensureVisible(find.text('How it\'s worked out'));
+        await tester.pumpAndSettle();
+      }
       await _snapshot(tester, 'calculator_$label');
     });
 
@@ -97,4 +125,16 @@ void main() {
       await _snapshot(tester, 'summary_$label');
     });
   }
+
+  testWidgets('calculator in dark mode', skip: _skip != null, (tester) async {
+    await pumpApp(
+      tester,
+      location: '/category/structural/chb',
+      prefs: {AppearanceController.key: 'dark'},
+    );
+    await fillWall(tester);
+    await tester.ensureVisible(find.text('How it\'s worked out'));
+    await tester.pumpAndSettle();
+    await _snapshot(tester, 'calculator_phone_dark');
+  });
 }
