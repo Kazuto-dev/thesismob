@@ -15,6 +15,12 @@ CalcResult run(
 double? qty(CalcResult r, String itemKey) =>
     r.companions.where((c) => c.itemKey == itemKey).firstOrNull?.quantity;
 
+/// Every line of [itemKey] among [r]'s companions, in order.
+List<double> lines(CalcResult r, String itemKey) => [
+  for (final c in r.companions)
+    if (c.itemKey == itemKey) c.quantity,
+];
+
 /// The bill of quantities works of [r], main work first.
 List<(String, double)> works(CalcResult r) => [
   for (final w in r.works) (w.key, w.quantity),
@@ -58,10 +64,12 @@ void main() {
       final r = run(chb, {'length': 10, 'height': 3, 'price': 24});
       expect(r.quantity, 394);
       expect(r.itemKey, 'chb_4');
-      // 30 × (0.522 + 2 × 0.192) = 27.18 bags.
-      expect(qty(r, 'cement_40kg'), 28);
-      // 30 × (0.0435 + 2 × 0.016) = 2.265 m³, sold by the half m³.
-      expect(qty(r, 'sand'), 2.5);
+      // Laying 30 × 0.522 = 15.66 bags, then plaster 30 × 2 × 0.192 =
+      // 11.52 bags, each rounded up on its own.
+      expect(lines(r, 'cement_40kg'), [16, 12]);
+      // Laying 30 × 0.0435 = 1.305 m³, plaster 30 × 2 × 0.016 = 0.96 m³,
+      // each sold by the half m³.
+      expect(lines(r, 'sand'), [1.5, 1]);
       // 30 × (2.13 + 2.15) = 128.4 m of 10 mm bar.
       expect(qty(r, 'rebar_10'), 22);
       expect(qty(r, 'tie_wire'), 1);
@@ -155,7 +163,11 @@ void main() {
       // 13 runs of 9.92 m (spliced) + 25 runs of 4.92 m.
       expect(qty(r, 'rebar_10'), 48);
       expect(qty(r, 'tie_wire'), 2);
-      expect(qty(r, 'marine_plywood_12'), isNull);
+      // Edge forms: 30 m × 0.10 = 3 m² ÷ 2.88 ÷ 3 uses = 0.35 → 1 sheet,
+      // with 20.33 bd ft of lumber and 3 × 0.20 = 0.6 kg of nails.
+      expect(qty(r, 'marine_plywood_12'), 1);
+      expect(qty(r, 'coco_lumber'), 21);
+      expect(qty(r, 'nails'), 1);
     });
 
     test('a suspended slab needs forms and Class A', () {
@@ -167,9 +179,9 @@ void main() {
       // 2.88 m³ × 1.05 × 9 = 27.2 bags.
       expect(r.quantity, 28);
       expect(r.label, contains('Class A'));
-      // 24 m² ÷ 2.88 = 8.3 sheets.
-      expect(qty(r, 'marine_plywood_12'), 9);
-      expect(qty(r, 'coco_lumber'), 260); // 9 × 28.8 = 259.2
+      // 24 m² ÷ 2.88 = 8.3 sheets, shared by 3 uses: 2.8 → 3.
+      expect(qty(r, 'marine_plywood_12'), 3);
+      expect(qty(r, 'coco_lumber'), 87); // 3 × 28.8 = 86.4
       expect(qty(r, 'nails'), 5); // 24 × 0.20 = 4.8
       expect(qty(r, 'gravel_bedding'), isNull);
     });
@@ -233,7 +245,7 @@ void main() {
     expect(qty(r, 'rebar_16'), 8);
     // 27 stirrups per beam of 1.19 m, 5 per bar.
     expect(qty(r, 'rebar_10'), 11);
-    expect(qty(r, 'marine_plywood_12'), 2); // 9.2 m² ÷ 2.88 ÷ 2 uses
+    expect(qty(r, 'marine_plywood_12'), 2); // 7.6 m² ÷ 2.88 ÷ 2 uses
   });
 
   test('companion names come from the price book', () {
@@ -293,10 +305,12 @@ void main() {
         'price': 240,
       });
       // 13 runs of 9.92 m with a 0.40 m lap each + 25 runs of 4.92 m =
-      // 257.16 m × 0.6165 kg = 158.55 kg. Bed: 50 m² × 0.10 m.
+      // 257.16 m × 0.6165 kg = 158.55 kg. Edge forms 2 × (10 + 5) × 0.10.
+      // Bed: 50 m² × 0.10 m.
       expect(works(r), [
         (Work.concreteSlabOnFill, 5.0),
         (Work.rebar, 158.55),
+        (Work.formwork, 3.0),
         (Work.gravelBedding, 5.0),
       ]);
     });
@@ -321,8 +335,10 @@ void main() {
         {'length': 3, 'width': 3, 'thickness': 0.1, 'price': 240},
         {'spacing': 'none'},
       );
+      // Edge forms 2 × (3 + 3) × 0.10 = 1.2 m².
       expect(works(r), [
         (Work.concreteSlabOnFill, 0.9),
+        (Work.formwork, 1.2),
         (Work.gravelBedding, 0.9),
       ]);
     });
@@ -385,11 +401,12 @@ void main() {
         'price': 240,
       });
       // 8 bars of 4.384 m × 1.5783 kg = 55.35 kg, plus 54 stirrups of
-      // 1.19 m × 0.6165 kg = 39.62 kg. Forms: 2 × (0.8 + 0.25 + 0.1) × 4.
+      // 1.19 m × 0.6165 kg = 39.62 kg. Forms: a 100 mm slab on both
+      // sides leaves 0.30 m sides: 2 × (2 × 0.3 + 0.25 + 0.1) × 4.
       expect(works(r), [
         (Work.concreteBeam, 0.8),
         (Work.rebar, 94.97),
-        (Work.formwork, 9.2),
+        (Work.formwork, 7.6),
       ]);
     });
 

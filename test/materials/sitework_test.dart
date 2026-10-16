@@ -148,9 +148,10 @@ void main() {
       // 21 distribution bars of 0.96 m, 6 per 6 m bar.
       expect(qty(r, 'rebar_10'), 4);
       expect(qty(r, 'tie_wire'), 1); // 147 × 0.30 ÷ 53 = 0.83 kg
-      // Forms: soffit 5.202 + risers 3 + sides 2 × 1.134 = 10.47 m².
-      expect(qty(r, 'marine_plywood_12'), 4);
-      expect(qty(r, 'coco_lumber'), 116); // 4 × 28.8 = 115.2
+      // Forms: soffit 5.202 + risers 3 + sides 2 × 1.134 = 10.47 m²,
+      // ÷ 2.88 ÷ 2 uses = 1.8 → 2 sheets.
+      expect(qty(r, 'marine_plywood_12'), 2);
+      expect(qty(r, 'coco_lumber'), 58); // 2 × 28.8 = 57.6
       expect(qty(r, 'nails'), 3); // 10.47 × 0.20 = 2.09
       // 7 × 6.642 m × 0.8878 + 21 × 0.96 m × 0.6165 = 53.71 kg.
       expect(works(r), [
@@ -190,8 +191,9 @@ void main() {
       expect(qty(r, 'rebar_10'), 17);
       expect(qty(r, 'rebar_12'), isNull);
       expect(qty(r, 'tie_wire'), 2); // 240 × 0.30 ÷ 53 = 1.36 kg
-      // (5.961 × 1.2) + 2.8 × 1.2 + 2 × 1.298 ÷ 1.2 = 12.68 m².
-      expect(qty(r, 'marine_plywood_12'), 5);
+      // (5.961 × 1.2) + 2.8 × 1.2 + 2 × 1.298 ÷ 1.2 = 12.68 m², ÷ 2.88 ÷
+      // 2 uses = 2.2 → 3 sheets.
+      expect(qty(r, 'marine_plywood_12'), 3);
       expect(works(r), [
         (SiteWork.stairsConcrete, 1.298),
         (Work.rebar, 61.31),

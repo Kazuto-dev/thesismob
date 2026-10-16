@@ -51,7 +51,9 @@ void main() {
     // 375 blocks plus the default 5% waste.
     expect(find.text('₱9,850.00'), findsWidgets);
     expect(find.text('394 blocks'), findsWidgets);
-    expect(find.textContaining('28 bags'), findsOneWidget);
+    // Cement for laying (16 bags) and for plaster (12 bags) separately.
+    expect(find.textContaining('16 bags'), findsOneWidget);
+    expect(find.textContaining('12 bags'), findsOneWidget);
 
     await tester.ensureVisible(find.text('None').first);
     await tester.tap(find.text('None').first);
@@ -136,7 +138,7 @@ void main() {
     final estimates = estimatesOf(tester);
     final projects = projectsOf(tester);
     expect(projects.active.items, hasLength(1));
-    expect(projects.active.items.single.companions, hasLength(4));
+    expect(projects.active.items.single.companions, hasLength(6));
     expect(estimates.history, hasLength(1));
 
     await tester.enterText(field('Wall height'), '4');

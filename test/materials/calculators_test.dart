@@ -19,9 +19,9 @@ String? detail(CalcResult r, String label) =>
 
 void main() {
   group('catalog', () {
-    test('has 40 materials with unique ids in every category', () {
-      expect(allMaterials, hasLength(40));
-      expect(allMaterials.map((m) => m.id).toSet(), hasLength(40));
+    test('has 43 materials with unique ids in every category', () {
+      expect(allMaterials, hasLength(43));
+      expect(allMaterials.map((m) => m.id).toSet(), hasLength(43));
       for (final category in MaterialCategory.values) {
         expect(materialsIn(category), isNotEmpty, reason: category.name);
       }
@@ -137,10 +137,10 @@ void main() {
 
     test('lists Class B mortar, plaster and rebar', () {
       final r = run(chb, wall);
-      // 30 × (0.522 + 2 × 0.192) = 27.18 → 28 bags.
-      expect(companion(r, 'cement_40kg'), 28);
-      // 30 × (0.0435 + 2 × 0.016) = 2.265 m³, bought by the half m³.
-      expect(companion(r, 'sand'), 2.5);
+      // Laying first: 30 × 0.522 = 15.66 → 16 bags; plaster follows.
+      expect(companion(r, 'cement_40kg'), 16);
+      // 30 × 0.0435 = 1.305 m³, bought by the half m³.
+      expect(companion(r, 'sand'), 1.5);
       // 30 × 4.28 = 128.4 m of bar → 22 bars of 6 m.
       expect(companion(r, 'rebar_10'), 22);
 

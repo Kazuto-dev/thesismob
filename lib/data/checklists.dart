@@ -15,10 +15,12 @@ const houseChecklist = (
   description: 'From the footings to the fixtures, in building order',
   materials: [
     'footing',
+    'wall_footing',
     'column',
     'beam',
     'slab',
     'chb',
+    'lintel',
     'roof',
     'insulation',
     'ceiling',
@@ -37,6 +39,7 @@ const houseChecklist = (
     'shower',
     'water_tank',
     'septic_tank',
+    'pavement',
   ],
 );
 

@@ -12,7 +12,10 @@ import 'work_items.dart';
 // Reinforced concrete: slabs, footings, columns and beams. Each works out
 // the cement, sand and gravel for its volume, the reinforcing bars cut from
 // 6 m stock, tie wire and, where needed, plywood forms with their lumber
-// frames and nails.
+// frames and nails. Wall footings, lintels and pavements share these
+// helpers from structure_extras.dart.
+
+part 'structure_extras.dart';
 
 /// Concrete cover to the bars: against earth, formed members, slabs.
 const coverEarth = 0.075;
@@ -127,17 +130,27 @@ const _formPlywood = ChoiceField(
   ],
 );
 
-ChoiceField _reuse(String initial) => ChoiceField(
-  id: 'reuse',
-  label: 'Forms used',
-  initial: initial,
-  helper: 'Plywood forms are stripped and reused for the next pour',
-  options: const [
-    ChoiceOption('1', 'Once', 1),
-    ChoiceOption('2', '2 times', 2),
-    ChoiceOption('3', '3 times', 3),
-  ],
-);
+/// Why 3 uses is the usual default: a house's plywood and frame lumber go
+/// from the columns to the beams and slabs, so each pour pays a share.
+const _reuseUsual =
+    'Plywood and lumber are reused from pour to pour, about 3 times on a '
+    'house';
+
+/// How many pours the forms serve. Each use pays 1 ÷ uses of the plywood
+/// and lumber. [helper] explains the [initial] number of uses.
+ChoiceField _reuse(String initial, [String helper = _reuseUsual]) =>
+    ChoiceField(
+      id: 'reuse',
+      label: 'Forms used',
+      initial: initial,
+      helper: helper,
+      options: const [
+        ChoiceOption('1', 'Once', 1),
+        ChoiceOption('2', '2 times', 2),
+        ChoiceOption('3', '3 times', 3),
+        ChoiceOption('4', '4 times', 4),
+      ],
+    );
 
 ChoiceField _barSize(
   String id,
@@ -236,6 +249,15 @@ List<ResultDetail> _formDetails(double area, double uses) => [
 Companion _tieWire(int ties, int barMm) =>
     buy('tie_wire', ties * tieWirePerTie(barMm) / tieWireMetresPerKg);
 
+/// Whether a slab on fill is formed at its edges.
+bool _formedEdges(Map<String, String> s) =>
+    s['type'] != 'suspended' && s['edges'] != 'none';
+
+/// Whether a slab needs forms: underneath when suspended, at the edges
+/// when on fill.
+bool _slabForms(Map<String, String> s) =>
+    s['type'] == 'suspended' || s['edges'] != 'none';
+
 final slab = MaterialSpec(
   id: 'slab',
   name: 'Concrete Slab',
@@ -276,6 +298,16 @@ final slab = MaterialSpec(
       initial: '0.10',
       max: 2,
     ),
+    NumberField(
+      id: 'edge',
+      label: 'Edge to form',
+      unit: 'm',
+      hint: 'Optional. Leave empty to form the whole perimeter',
+      typical: (min: 0.5, max: 300),
+      optional: true,
+      max: 10000,
+      visibleWhen: _formedEdges,
+    ),
     _cementPrice,
   ],
   choices: [
@@ -287,6 +319,17 @@ final slab = MaterialSpec(
       options: [
         ChoiceOption('ground', 'On fill (ground floor)'),
         ChoiceOption('suspended', 'Suspended (upper floor)'),
+      ],
+    ),
+    ChoiceField(
+      id: 'edges',
+      label: 'Edge forms',
+      initial: 'perimeter',
+      helper: 'Edges not poured against a beam or wall need forms',
+      visibleWhen: (s) => s['type'] != 'suspended',
+      options: const [
+        ChoiceOption('perimeter', 'Around the slab'),
+        ChoiceOption('none', 'None, poured against beams or walls'),
       ],
     ),
     ChoiceField(
@@ -325,8 +368,8 @@ final slab = MaterialSpec(
         ChoiceOption('0.15', '15 cm', 0.15),
       ],
     ),
-    _formPlywood.copyWithVisibility((s) => s['type'] == 'suspended'),
-    _reuse('1').copyWithVisibility((s) => s['type'] == 'suspended'),
+    _formPlywood.copyWithVisibility(_slabForms),
+    _reuse('3').copyWithVisibility(_slabForms),
     _lapChoice,
     _concreteWaste,
   ],
@@ -336,6 +379,11 @@ final slab = MaterialSpec(
     final width = input['width'];
     final thickness = input['thickness'];
     final suspended = input.chose('type', 'suspended');
+    final edgeForms = !suspended && !input.chose('edges', 'none');
+    final entered = input.optional('edge');
+    final edge = edgeForms
+        ? (entered > 0 ? entered : 2 * (length + width))
+        : 0.0;
     final classId = input.choice('class').id == 'auto'
         ? (suspended ? 'A' : 'B')
         : input.choice('class').id;
@@ -369,13 +417,19 @@ final slab = MaterialSpec(
           _barMetres(alongWidth, width - 2 * cover, lap);
     }
     final bedding = suspended ? 0.0 : input.choice('bedding').value;
-    final uses = suspended ? input.choice('reuse').value : 1.0;
-    final forms = suspended
+    // A suspended slab is formed underneath; a slab on fill only at its
+    // edges, staked like footing sides.
+    final formArea = suspended ? area : edge * thickness;
+    final formed = formArea > 0;
+    final uses = formed ? input.choice('reuse').value : 1.0;
+    final forms = formed
         ? _forms(
-            area,
+            formArea,
             plywood: input.choice('plywood').id,
             uses: uses,
-            lumberPerSheet: slabFrameLumber,
+            lumberPerSheet: suspended
+                ? slabFrameLumber
+                : columnFrameLumber[input.choice('plywood').id]!,
           )
         : const <Companion>[];
 
@@ -399,7 +453,8 @@ final slab = MaterialSpec(
           ),
           ResultDetail('6 m bars to buy', formatCount(bars, 'bar')),
         ],
-        if (suspended) ..._formDetails(area, uses),
+        if (edge > 0) ResultDetail('Edge to form', formatLength(roundUp(edge))),
+        if (formed) ..._formDetails(formArea, uses),
       ],
       companions: [
         buy('sand', concrete.sand),
@@ -413,12 +468,13 @@ final slab = MaterialSpec(
           'Quantities follow the dimensions entered. Bar sizes and spacing '
           'must follow the structural plans.',
       // Concrete is the net volume, before the waste allowance; forms are
-      // the soffit of a suspended slab, the area its plywood is sized for.
+      // the soffit of a suspended slab or the edges of a slab on fill, the
+      // area their plywood is sized for.
       works: _concreteWorks(
         suspended ? Work.concreteSlabSuspended : Work.concreteSlabOnFill,
         volume,
         rebarKg: barMetres * rebarKgPerMetre(barMm),
-        formArea: suspended ? area : 0,
+        formArea: formArea,
         bedding: area * bedding,
       ),
     );
@@ -450,9 +506,17 @@ final slab = MaterialSpec(
           'bars need about 60.',
     ),
     InfoSection(
+      'Edge forms',
+      'A slab on fill is formed along its edges, as high as the slab is '
+          'thick. Edges poured against a tie beam, a wall footing or a wall '
+          'need none: enter only the free edges, or choose none.',
+    ),
+    InfoSection(
       'Forms used',
-      'Plywood and lumber forms are reused for later pours. A whole slab '
-          'poured at once uses its forms once.',
+      'Contractors reuse the same plywood and lumber 3 or 4 times on a '
+          'house: the column forms become beam sides, the beam sides slab '
+          'soffits. Each pour pays its share, so 3 uses is the default. '
+          'Choose once only for forms that are thrown away after the pour.',
     ),
   ],
   solution: const [
@@ -487,13 +551,18 @@ final slab = MaterialSpec(
     ),
     InfoSection(
       'Gravel bed and forms',
-      'A slab on fill sits on a gravel bed of the chosen thickness. A '
-          'suspended slab needs plywood for its whole underside, about 10 '
-          'board feet of lumber per m² for joists and shores, and 0.20 kg of '
-          'nails per m².',
+      'A slab on fill sits on a gravel bed of the chosen thickness and is '
+          'formed along its edges, with the column table\'s frame lumber per '
+          'sheet for stakes and braces. A suspended slab needs plywood for '
+          'its whole underside, about 10 board feet of lumber per m² for '
+          'joists and shores. Nails are 0.20 kg per m² of form. Plywood and '
+          'lumber are shared among the uses chosen, 3 by default.',
       formula:
-          'plywood = round up(area ÷ 2.88 ÷ uses)\n'
-          'lumber = plywood × 28.8 bd ft;  nails = area × 0.20 kg',
+          'on fill: form area = edge (2 × (length + width)) × thickness\n'
+          'suspended: form area = length × width\n'
+          'plywood = round up(form area ÷ 2.88 ÷ uses)\n'
+          'lumber = plywood × 20.33 (edges) or 28.8 bd ft (soffit)\n'
+          'nails = form area × 0.20 kg',
     ),
   ],
   references: const [
@@ -563,7 +632,10 @@ final footing = MaterialSpec(
       ],
     ),
     _formPlywood.copyWithVisibility((s) => s['sides'] == 'plywood'),
-    _reuse('3').copyWithVisibility((s) => s['sides'] == 'plywood'),
+    _reuse(
+      '3',
+      'Plywood forms are stripped and reused for the next pour',
+    ).copyWithVisibility((s) => s['sides'] == 'plywood'),
     _concreteWaste,
   ],
   priceRef: _cementRef,
@@ -866,8 +938,8 @@ final column = MaterialSpec(
     ),
     InfoSection(
       'Forms used',
-      'Column forms are usually made once and reused for two or three sets '
-          'of columns.',
+      'Column forms are made once and reused for the next sets of columns, '
+          'then for beams and slabs: about 3 times on a house, the default.',
     ),
   ],
   solution: const [
@@ -922,7 +994,15 @@ final beam = MaterialSpec(
   category: MaterialCategory.structural,
   icon: Icons.table_rows_outlined,
   blurb: 'Reinforced concrete beams with stirrups and forms',
-  keywords: const ['beam', 'biga', 'girder', 'tie beam', 'concrete', 'rebar'],
+  keywords: const [
+    'beam',
+    'biga',
+    'girder',
+    'tie beam',
+    'grade beam',
+    'concrete',
+    'rebar',
+  ],
   numbers: const [
     NumberField(
       id: 'count',
@@ -956,6 +1036,16 @@ final beam = MaterialSpec(
     _cementPrice,
   ],
   choices: [
+    const ChoiceField(
+      id: 'type',
+      label: 'Beam',
+      initial: 'floor',
+      leading: true,
+      options: [
+        ChoiceOption('floor', 'Floor or roof beam'),
+        ChoiceOption('tie', 'Tie beam at ground level'),
+      ],
+    ),
     _classChoice,
     const ChoiceField(
       id: 'bars',
@@ -977,8 +1067,52 @@ final beam = MaterialSpec(
       helper: 'Closer near the supports in earthquake zones',
     ),
     _lapChoice,
+    ChoiceField(
+      id: 'slab',
+      label: 'Slab on the beam',
+      initial: 'both',
+      helper:
+          'Side forms stop under the slab: outer beams carry it on one '
+          'side, inner beams on both, roof beams on none',
+      visibleWhen: (s) => s['type'] != 'tie',
+      options: const [
+        ChoiceOption('none', 'None', 0),
+        ChoiceOption('one', 'One side', 1),
+        ChoiceOption('both', 'Both sides', 2),
+      ],
+    ),
+    ChoiceField(
+      id: 'slabThickness',
+      label: 'Slab thickness',
+      initial: '0.1',
+      visibleWhen: (s) => s['type'] != 'tie' && s['slab'] != 'none',
+      options: const [
+        ChoiceOption('0.1', '100 mm', 0.10),
+        ChoiceOption('0.125', '125 mm', 0.125),
+        ChoiceOption('0.15', '150 mm', 0.15),
+      ],
+    ),
+    ChoiceField(
+      id: 'bedding',
+      label: 'Gravel bed',
+      initial: '0.05',
+      helper: 'Compacted gravel under the tie beam',
+      visibleWhen: _tieBeam,
+      options: _bedOptions,
+    ),
+    ChoiceField(
+      id: 'space',
+      label: 'Working space',
+      initial: '0.3',
+      helper: 'Room beside the beam to set the forms',
+      visibleWhen: _tieBeam,
+      options: _spaceOptions,
+    ),
     _formPlywood,
-    _reuse('2'),
+    _reuse(
+      '2',
+      'Floor beam forms stay up while the slab cures, so 2 uses is usual',
+    ),
     _concreteWaste,
   ],
   priceRef: _cementRef,
@@ -987,6 +1121,7 @@ final beam = MaterialSpec(
     final width = input['width'];
     final depth = input['depth'];
     final length = input['length'];
+    final tie = input.chose('type', 'tie');
     final mix = concreteMix(input.choice('class').id);
     final waste = input.choice('waste').value;
     final volume = count * width * depth * length;
@@ -1016,13 +1151,28 @@ final beam = MaterialSpec(
       crossings * tieWirePerTie(barMm) / tieWireMetresPerKg,
     );
 
-    final formArea = count * (2 * depth + width + 0.10) * length;
+    // A side under a slab is formed only up to the slab's underside; a
+    // tie beam lies on its gravel bed, so it has sides but no bottom.
+    final slabSides = tie ? 0 : input.choice('slab').value.round();
+    final slab = slabSides > 0 ? input.choice('slabThickness').value : 0.0;
+    final underSlab = math.max(0.0, depth - slab);
+    final sides = slabSides * underSlab + (2 - slabSides) * depth;
+    final formArea = count * (sides + (tie ? 0 : width) + 0.10) * length;
     final uses = input.choice('reuse').value;
     final plywood = input.choice('plywood').id;
 
+    // A tie beam is cast in a trench as deep as the beam and its bed, with
+    // working space on each side; the space is backfilled.
+    final bed = tie ? input.choice('bedding').value : 0.0;
+    final space = tie ? input.choice('space').value : 0.0;
+    final trenchWidth = width + 2 * space;
+    final excavation = tie ? count * length * trenchWidth * (depth + bed) : 0.0;
+    final bedding = count * length * width * bed;
+    final backfill = math.max(0.0, excavation - volume - bedding);
+
     return CalcResult(
       label:
-          '${formatCount(count, 'beam')} '
+          '${formatCount(count, tie ? 'tie beam' : 'beam')} '
           '${formatNumber(width)} × ${formatNumber(depth)} m × '
           '${formatNumber(length)} m, ${mix.label}',
       quantity: concrete.cement.toDouble(),
@@ -1041,11 +1191,28 @@ final beam = MaterialSpec(
           '${formatLength(roundUp(stirrupLength))} each',
           formatCount(stirrupBars, 'bar'),
         ),
+        if (slabSides > 0)
+          ResultDetail(
+            'Sides under the slab, $slabSides × '
+            '${formatNumber(slab * 1000)} mm less',
+            formatLength(_rounded(underSlab, 3)),
+          ),
         ..._formDetails(formArea, uses),
+        if (tie) ...[
+          ResultDetail(
+            'Trench, ${formatNumber(_rounded(trenchWidth, 2))} × '
+            '${formatNumber(_rounded(depth + bed, 3))} m',
+            formatVolume(roundUp(excavation, 3)),
+          ),
+          if (bedding > 0)
+            ResultDetail('Gravel bed', formatVolume(roundUp(bedding, 3))),
+          ResultDetail('Backfill', formatVolume(_rounded(backfill, 3))),
+        ],
       ],
       companions: [
         buy('sand', concrete.sand),
         buy('gravel', concrete.gravel),
+        if (bedding > 0) buy('gravel_bedding', bedding),
         buy(rebarKey(barMm), mainBars.toDouble()),
         buy(rebarKey(tieMm), stirrupBars.toDouble()),
         tieWire,
@@ -1056,19 +1223,28 @@ final beam = MaterialSpec(
           lumberPerSheet: beamFrameLumber[plywood]!,
         ),
       ],
-      note:
-          'Extra bars over the supports and shoring posts are not counted. '
-          'Bars and stirrups must follow the structural plans.',
-      works: _concreteWorks(
-        Work.concreteBeam,
-        volume,
-        rebarKg:
-            _barMetres(count * perBeam, mainLength, lap) *
-                rebarKgPerMetre(barMm) +
-            _barMetres(count * stirrupsEach, stirrupLength, 0) *
-                rebarKgPerMetre(tieMm),
-        formArea: formArea,
-      ),
+      note: tie
+          ? 'Excavation and backfill of the trench are counted here; leave '
+                'them out of Earthworks. Bars and stirrups must follow the '
+                'structural plans.'
+          : 'Extra bars over the supports and shoring posts are not counted. '
+                'Bars and stirrups must follow the structural plans.',
+      works: [
+        ..._concreteWorks(
+          tie ? StructureWork.concreteTieBeam : Work.concreteBeam,
+          volume,
+          rebarKg:
+              _barMetres(count * perBeam, mainLength, lap) *
+                  rebarKgPerMetre(barMm) +
+              _barMetres(count * stirrupsEach, stirrupLength, 0) *
+                  rebarKgPerMetre(tieMm),
+          formArea: formArea,
+          bedding: bedding,
+        ),
+        if (tie) WorkQuantity(Work.excavation, _rounded(excavation, 3)),
+        if (_rounded(backfill, 3) > 0)
+          WorkQuantity(Work.backfill, _rounded(backfill, 3)),
+      ],
     );
   },
   definitions: const [
@@ -1078,14 +1254,30 @@ final beam = MaterialSpec(
           'between columns. Enter beams of the same size together.',
     ),
     InfoSection(
+      'Tie beam',
+      'A beam at ground level that links the footings or column bases and '
+          'carries the ground floor walls. It is cast in a trench on a '
+          'gravel bed, formed on both sides but not underneath, and the '
+          'working space around it is backfilled.',
+    ),
+    InfoSection(
       'Main bars and stirrups',
       'Top and bottom bars run the length of the beam and hook into the '
           'columns. 10 mm stirrups wrap around them at regular spacing.',
     ),
     InfoSection(
+      'Slab on the beam',
+      'Where a slab rests on a beam, the slab\'s soffit forms close the '
+          'top of the beam\'s side, so the side form only reaches the '
+          'underside of the slab. Outer beams usually carry the slab on '
+          'one side, inner beams on both; roof beams carry none.',
+    ),
+    InfoSection(
       'Forms used',
-      'Beam forms cover both sides and the bottom. They are usually reused '
-          'once or twice.',
+      'Floor beam forms cover both sides and the bottom and stay up until '
+          'the slab above has cured, so they are usually reused about '
+          'twice. Tie beam side forms come off sooner and can serve 3 '
+          'pours.',
     ),
   ],
   solution: const [
@@ -1119,19 +1311,52 @@ final beam = MaterialSpec(
     ),
     InfoSection(
       'Forms',
-      'Form area covers two sides and the bottom plus 0.10 m for laps. '
-          'Fajardo\'s table gives 25.06 bd ft of 2"×2" frame lumber per '
-          'sheet with ¼" plywood, 18.66 with ½".',
+      'Form area covers two sides and the bottom plus 0.10 m for laps. A '
+          'side under a slab stops at the slab\'s underside; a tie beam has '
+          'no bottom form. Fajardo\'s table gives 25.06 bd ft of 2"×2" '
+          'frame lumber per sheet with ¼" plywood, 18.66 with ½".',
       formula:
-          'form area = count × (2 × depth + width + 0.10) × length\n'
+          'side = depth, or depth − slab thickness under a slab\n'
+          'form area = count × (two sides + width + 0.10) × length\n'
+          'tie beam: form area = count × (2 × depth + 0.10) × length\n'
           'plywood = round up(form area ÷ 2.88 ÷ uses)',
+    ),
+    InfoSection(
+      'Tie beam excavation',
+      'The trench is the beam\'s width plus the working space on each '
+          'side, as deep as the beam and its gravel bed. Whatever the beam '
+          'and the bed do not fill is backfilled.',
+      formula:
+          'excavation = count × length × (width + 2 × space) × '
+          '(depth + bed)\n'
+          'gravel bed = count × length × width × bed\n'
+          'backfill = excavation − concrete − gravel bed',
     ),
   ],
   references: const [
     'Max B. Fajardo Jr., Simplified Construction Estimate, forms tables',
     'NSCP 2015, Sections 425.3 (hooks) and 420.6.1.3.1 (cover)',
+    'DPWH Standard Specifications, Item 103 (Structure Excavation)',
   ],
 );
+
+bool _tieBeam(Map<String, String> s) => s['type'] == 'tie';
+
+/// Gravel bed thicknesses under a footing or tie beam.
+const _bedOptions = [
+  ChoiceOption('0', 'None', 0),
+  ChoiceOption('0.05', '5 cm', 0.05),
+  ChoiceOption('0.1', '10 cm', 0.10),
+  ChoiceOption('0.15', '15 cm', 0.15),
+];
+
+/// Working space dug on each side of a footing or tie beam, as in
+/// Earthworks.
+const _spaceOptions = [
+  ChoiceOption('0', 'None', 0),
+  ChoiceOption('0.3', '0.30 m each side', 0.30),
+  ChoiceOption('0.5', '0.50 m each side', 0.50),
+];
 
 extension on ChoiceField {
   ChoiceField copyWithVisibility(VisibleWhen visibleWhen) => ChoiceField(
