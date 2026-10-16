@@ -5,6 +5,7 @@ import 'package:pdf/widgets.dart' as pw;
 import '../core/format.dart';
 import '../data/boq.dart';
 import '../data/contract_math.dart';
+import '../data/job_plan.dart';
 import '../data/project.dart';
 import '../state/profile_controller.dart';
 
@@ -368,6 +369,14 @@ Future<Uint8List> quotationPdf(
           if (t.warrantyMonths > 0)
             'Workmanship warranty of ${formatNumber(t.warrantyMonths)} months '
                 'from turnover.',
+          'Payment within ${formatNumber(t.paymentDays)} days of each '
+              'billing.',
+          if (withholding(project) case final r when r.incomeTax > 0)
+            'The client withholds ${formatNumber(r.incomeTax)}% creditable '
+                'income tax'
+                '${r.businessTax > 0 ? ' and ${formatNumber(r.businessTax)}% ${businessTaxName(project)}' : ''}'
+                ' from each payment, on the amount before VAT, and issues '
+                'BIR Form 2307 for it.',
         ])
           pw.Bullet(
             text: _pdfText(term),
@@ -378,15 +387,19 @@ Future<Uint8List> quotationPdf(
           _small(
             'About ${schedule.weeks.ceil()} weeks '
             '(${formatNumber(schedule.days)} working days, Monday to Saturday)'
-            '${start == null ? ' from the start of work' : ', from ${formatDate(start)} to about ${formatDate(Schedule.addWorkingDays(start, schedule.days))}'}.',
+            '${start == null ? ' from the start of work' : ', from ${formatDate(start)} to about ${formatDate(Schedule.addWorkingDays(start, schedule.days))}'}. '
+            'This allows ${formatNumber(schedule.allowanceDays)} working days '
+            'for rain and unworkable days and skips Sundays and regular '
+            'holidays.',
           ),
           pw.SizedBox(height: 4),
           pw.Table(
             columnWidths: const {
               0: pw.FlexColumnWidth(),
-              1: pw.FixedColumnWidth(90),
-              2: pw.FixedColumnWidth(60),
-              3: pw.FixedColumnWidth(60),
+              1: pw.FixedColumnWidth(80),
+              2: pw.FixedColumnWidth(40),
+              3: pw.FixedColumnWidth(50),
+              4: pw.FixedColumnWidth(40),
             },
             border: const pw.TableBorder(
               horizontalInside: pw.BorderSide(color: _line, width: 0.5),
@@ -397,6 +410,7 @@ Future<Uint8List> quotationPdf(
                 children: [
                   _head('Phase'),
                   _head('Trade'),
+                  _head('Crews', right: true),
                   _head('From day', right: true),
                   _head('Days', right: true),
                 ],
@@ -404,13 +418,24 @@ Future<Uint8List> quotationPdf(
               for (final task in schedule.tasks)
                 pw.TableRow(
                   children: [
-                    _cell(task.label),
-                    _cell(task.trade?.label ?? 'Other'),
+                    _cell(task.label, strong: task.critical),
+                    _cell(
+                      task.crewDays > 0 ? task.trade?.label ?? 'Other' : '',
+                    ),
+                    _cell(
+                      task.crewDays > 0 ? formatNumber(task.crews) : '',
+                      right: true,
+                    ),
                     _cell(formatNumber(task.start + 1), right: true),
                     _cell(formatNumber(task.days), right: true),
                   ],
                 ),
             ],
+          ),
+          pw.SizedBox(height: 2),
+          pw.Text(
+            'Phases in bold set the finish date.',
+            style: const pw.TextStyle(fontSize: 8, color: _muted),
           ),
         ],
         if (inclusions.isNotEmpty) ...[
@@ -524,6 +549,7 @@ Future<Uint8List> billingPdf(
   final t = project.contract.terms;
   final original = project.breakdown.total;
   final variations = project.contract.variationsTotal;
+  final rates = withholding(project);
 
   pw.TableRow money(String label, double amount, {bool strong = false}) =>
       pw.TableRow(
@@ -585,6 +611,20 @@ Future<Uint8List> billingPdf(
                 -s.retention,
               ),
             money('Amount due', s.netDue, strong: true),
+            if (s.incomeTax > 0)
+              money(
+                'Less creditable income tax withheld, '
+                '${formatNumber(rates.incomeTax)}%',
+                -s.incomeTax,
+              ),
+            if (s.businessTax > 0)
+              money(
+                'Less ${businessTaxName(project)} withheld, '
+                '${formatNumber(rates.businessTax)}%',
+                -s.businessTax,
+              ),
+            if (s.withholding > 0)
+              money('Net amount received', s.received, strong: true),
           ],
         ),
         pw.SizedBox(height: 4),
@@ -592,6 +632,15 @@ Future<Uint8List> billingPdf(
           _pdfText(pesosInWords(s.netDue)),
           style: pw.TextStyle(fontSize: 9, fontStyle: pw.FontStyle.italic),
         ),
+        if (s.withholding > 0) ...[
+          pw.SizedBox(height: 4),
+          _small(
+            'Taxes are withheld on this billing before '
+            '${project.costs.vatPct > 0 ? 'VAT' : 'tax'} '
+            '(${formatMoney(s.thisPeriod / (1 + project.costs.vatPct / 100))}). '
+            'Please issue BIR Form 2307 for the amounts withheld.',
+          ),
+        ],
         _heading('Accomplishment'),
         pw.Table(
           columnWidths: const {
@@ -641,6 +690,229 @@ Future<Uint8List> billingPdf(
             pw.SizedBox(width: 36),
             _signature('Received by', project.client),
           ],
+        ),
+      ],
+    ),
+  );
+  return doc.save();
+}
+
+/// A table of [rows] under [headings]: the first column as wide as it can
+/// be, the others [width] wide and right-aligned, rows in [strong] bold.
+pw.Widget _grid(
+  List<String> headings,
+  List<List<String>> rows, {
+  double width = 66,
+  Set<int> strong = const {},
+}) => pw.Table(
+  columnWidths: {
+    0: const pw.FlexColumnWidth(),
+    for (var i = 1; i < headings.length; i++) i: pw.FixedColumnWidth(width),
+  },
+  border: const pw.TableBorder(
+    horizontalInside: pw.BorderSide(color: _line, width: 0.5),
+  ),
+  children: [
+    pw.TableRow(
+      decoration: const pw.BoxDecoration(color: _band),
+      children: [for (final (i, h) in headings.indexed) _head(h, right: i > 0)],
+    ),
+    for (final (r, row) in rows.indexed)
+      pw.TableRow(
+        children: [
+          for (final (i, c) in row.indexed)
+            _cell(c, right: i > 0, strong: strong.contains(r)),
+        ],
+      ),
+  ],
+);
+
+/// `Nov 2, 2026`, for narrow tables.
+String _shortDate(DateTime d) => formatDate(d).split(', ').skip(1).join(', ');
+
+/// The month-by-month cash flow of a job, before VAT, with the peak cash
+/// need and the assumptions behind it.
+Future<Uint8List> cashFlowPdf(
+  Project project,
+  BusinessProfile profile, {
+  DateTime? date,
+}) async {
+  final doc = await _document('${project.name} cash flow');
+  final flow = cashFlow(project);
+  final b = project.breakdown;
+  final t = project.contract.terms;
+  final rates = withholding(project);
+  final today = date ?? DateTime.now();
+  final peak = flow.peakMonth;
+  doc.addPage(
+    pw.MultiPage(
+      pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.fromLTRB(36, 36, 36, 40),
+      footer: _footer,
+      build: (context) => [
+        _letterhead(profile, 'CASH FLOW', formatDate(today)),
+        pw.Text(
+          _pdfText(project.name),
+          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+        ),
+        if (project.client.isNotEmpty) _small('Client: ${project.client}'),
+        _heading('Summary'),
+        _grid(
+          ['', 'Amount'],
+          [
+            ['Contract price before VAT', formatMoney(b.subtotal)],
+            [
+              'Cost: direct cost, escalation and contingency',
+              formatMoney(b.direct + b.escalation + b.contingency),
+            ],
+            [
+              'Downpayment on signing, ${formatNumber(t.downpaymentPct)}%',
+              formatMoney(b.subtotal * t.downpaymentPct / 100),
+            ],
+            [
+              peak == null
+                  ? 'Peak cash need: none'
+                  : 'Peak cash need (working capital), month $peak',
+              formatMoney(flow.peakNeed),
+            ],
+          ],
+          width: 110,
+          strong: {3},
+        ),
+        _heading('By month'),
+        _grid(
+          ['Month', 'From', 'Money out', 'Billed', 'Money in', 'Running total'],
+          [
+            for (final m in flow.months)
+              [
+                m.month == 0 ? 'Signing' : '${m.month}',
+                m.from == null ? '' : _shortDate(m.from!),
+                _money(m.costs),
+                _money(m.billed),
+                _money(m.received),
+                _money(m.cumulative),
+              ],
+          ],
+          width: 72,
+          strong: {?peak},
+        ),
+        _heading('Assumptions'),
+        for (final note in [
+          'Amounts are before VAT, which is collected for the BIR and passed '
+              'on.',
+          'A month is $workDaysPerMonth working days of the schedule, Monday '
+              'to Saturday.',
+          'Materials are bought when each task starts; labour, tools and '
+              'equipment are paid as the work is done; general requirements '
+              'and hauling are spread over the job; escalation and '
+              'contingency are spent in proportion.',
+          'The work done each month, from the planned S-curve, is billed at '
+              'the end of the month and paid ${formatNumber(t.paymentDays)} '
+              'days later, less ${formatNumber(t.downpaymentPct)}% '
+              'downpayment recouped and ${formatNumber(t.retentionPct)}% '
+              'retention'
+              '${rates.incomeTax > 0 ? ' and ${formatNumber(rates.incomeTax)}% income tax withheld' : ''}.',
+          'The retention is paid that long after the work is finished and '
+              'accepted.',
+        ])
+          pw.Bullet(
+            text: _pdfText(note),
+            style: const pw.TextStyle(fontSize: 9),
+          ),
+      ],
+    ),
+  );
+  return doc.save();
+}
+
+/// The purchase schedule: each material, how much, the phase that first
+/// needs it, when, and the day to order it by.
+Future<Uint8List> purchaseSchedulePdf(
+  Project project,
+  BusinessProfile profile, {
+  DateTime? date,
+}) async {
+  final doc = await _document('${project.name} purchase schedule');
+  final lines = purchaseSchedule(project);
+  final today = date ?? DateTime.now();
+  final dated = project.contract.startDate != null;
+  String week(double day) => 'Week ${(day / workDaysPerWeek).floor() + 1}';
+  doc.addPage(
+    pw.MultiPage(
+      pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.fromLTRB(36, 36, 36, 40),
+      footer: _footer,
+      build: (context) => [
+        _letterhead(profile, 'PURCHASE SCHEDULE', formatDate(today)),
+        pw.Text(
+          _pdfText(project.name),
+          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+        ),
+        if (project.location.isNotEmpty)
+          _small('Location: ${project.location}'),
+        _small(
+          dated
+              ? 'Work starts ${formatDate(project.contract.startDate!)}. '
+                    'Order each material by the date shown so it arrives '
+                    'before the work that needs it.'
+              : 'Weeks are counted from the start of work; order each '
+                    'material its lead time before the week shown.',
+        ),
+        pw.SizedBox(height: 6),
+        pw.Table(
+          columnWidths: const {
+            0: pw.FlexColumnWidth(),
+            1: pw.FixedColumnWidth(70),
+            2: pw.FixedColumnWidth(100),
+            3: pw.FixedColumnWidth(60),
+            4: pw.FixedColumnWidth(60),
+          },
+          border: const pw.TableBorder(
+            horizontalInside: pw.BorderSide(color: _line, width: 0.5),
+          ),
+          children: [
+            pw.TableRow(
+              decoration: const pw.BoxDecoration(color: _band),
+              children: [
+                _head('Material'),
+                _head('Quantity', right: true),
+                _head('First needed for'),
+                _head(dated ? 'Needed' : 'Needed in', right: true),
+                _head(dated ? 'Order by' : 'Lead time', right: true),
+              ],
+            ),
+            for (final l in lines)
+              pw.TableRow(
+                children: [
+                  _cell(l.material.label),
+                  _cell(
+                    '${formatNumber(l.material.quantity)} ${l.material.unit}',
+                    right: true,
+                  ),
+                  _cell(l.phase),
+                  _cell(
+                    l.needed == null
+                        ? week(l.neededDay)
+                        : _shortDate(l.needed!),
+                    right: true,
+                  ),
+                  _cell(
+                    l.orderBy == null
+                        ? '${l.leadMin}–${l.leadMax} days'
+                        : _shortDate(l.orderBy!),
+                    right: true,
+                    strong: true,
+                  ),
+                ],
+              ),
+          ],
+        ),
+        pw.SizedBox(height: 8),
+        _small(
+          'Lead times: stock items 3–7 days; long-span roofing cut to length '
+          'and tiles 7–14; plumbing fixtures up to 14; doors, jambs and '
+          'windows made to the measured openings 21–30. Order-by dates use '
+          'the longest. Check them with your suppliers.',
         ),
       ],
     ),

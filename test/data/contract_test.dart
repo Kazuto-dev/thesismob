@@ -129,6 +129,8 @@ void main() {
   test('the schedule follows the building order', () {
     final schedule = Schedule.of(house());
     final phases = [for (final t in schedule.tasks) t.label];
+    expect(phases.first, 'Mobilization and layout');
+    expect(phases.last, 'Testing, punch list and turnover');
     expect(
       phases.indexOf('Foundations'),
       lessThan(phases.indexOf('Walls and rough-ins')),
@@ -139,8 +141,8 @@ void main() {
     );
     for (var i = 1; i < schedule.tasks.length; i++) {
       expect(
-        schedule.tasks[i].start,
-        greaterThanOrEqualTo(schedule.tasks[i - 1].start),
+        schedule.tasks[i].phase,
+        greaterThanOrEqualTo(schedule.tasks[i - 1].phase),
       );
     }
     final curve = schedule.sCurve;
@@ -150,11 +152,124 @@ void main() {
       expect(curve[i], greaterThanOrEqualTo(curve[i - 1]));
     }
 
-    // Two masonry crews halve the walls.
+    // Three masonry crews instead of the one the app picks for so small a
+    // wall finish it sooner.
     final faster = Schedule.of(
-      house(contract: const ContractData(crews: {'structural': 2})),
+      house(contract: const ContractData(crews: {'structural': 3})),
     );
     expect(faster.days, lessThan(schedule.days));
+  });
+
+  test('billings show the taxes the client withholds', () {
+    final base = house();
+    final keys = [for (final l in contractLines(base)) l.key];
+    Project withClient(ClientType client, {double vat = 12}) => base.copyWith(
+      costs: base.costs.copyWith(vatPct: vat),
+      contract: ContractData(
+        terms: QuoteTerms(client: client),
+        billings: [
+          Billing(
+            id: 'b1',
+            date: DateTime(2026, 12, 1),
+            progress: {for (final k in keys) k: 50},
+          ),
+        ],
+      ),
+    );
+
+    // A homeowner withholds nothing.
+    final home = billingStatements(withClient(ClientType.individual)).single;
+    expect(home.withholding, 0);
+    expect(home.received, home.netDue);
+
+    // A company withholds 2% of the billing before VAT.
+    final company = billingStatements(withClient(ClientType.company)).single;
+    final beforeVat = company.thisPeriod / 1.12;
+    expect(company.incomeTax, closeTo(beforeVat * 0.02, 0.01));
+    expect(company.businessTax, 0);
+    expect(company.received, closeTo(company.netDue - company.incomeTax, 0.01));
+
+    // Government also withholds 5% VAT, or 3% percentage tax from a
+    // contractor without VAT.
+    final gov = billingStatements(withClient(ClientType.government)).single;
+    expect(gov.incomeTax, closeTo(beforeVat * 0.02, 0.01));
+    expect(gov.businessTax, closeTo(beforeVat * 0.05, 0.01));
+    expect(gov.withholding, closeTo(gov.incomeTax + gov.businessTax, 0.001));
+    expect(gov.received, closeTo(gov.netDue - gov.withholding, 0.01));
+    final nonVat = withClient(ClientType.government, vat: 0);
+    final s = billingStatements(nonVat).single;
+    expect(s.businessTax, closeTo(s.thisPeriod * 0.03, 0.01));
+    expect(businessTaxName(nonVat), 'percentage tax');
+    expect(withholdingRates(ClientType.government, vatRegistered: true), (
+      incomeTax: 2.0,
+      businessTax: 5.0,
+    ));
+  });
+
+  test('actuals show the cost variance and the crews\' productivity', () {
+    final base = house();
+    final keys = [for (final l in contractLines(base)) l.key];
+    Project withActuals({double labour = 0, double materials = 0}) =>
+        base.copyWith(
+          contract: ContractData(
+            billings: [
+              Billing(
+                id: 'b1',
+                date: DateTime(2026, 12, 1),
+                progress: {for (final k in keys) k: 40},
+              ),
+            ],
+            expenses: [
+              if (labour > 0)
+                Expense(
+                  id: 'x1',
+                  date: DateTime(2026, 11, 20),
+                  description: 'Payroll',
+                  kind: ExpenseKind.labour,
+                  amount: labour,
+                ),
+              if (materials > 0)
+                Expense(
+                  id: 'x2',
+                  date: DateTime(2026, 11, 10),
+                  description: 'Cement',
+                  kind: ExpenseKind.materials,
+                  amount: materials,
+                ),
+            ],
+          ),
+        );
+
+    expect(reviewActuals(base), isNull);
+    final b = base.breakdown;
+    final noSpend = reviewActuals(withActuals())!;
+    expect(noSpend.earnedMaterials, closeTo(b.materials * 0.4, 1));
+    expect(noSpend.earnedLabour, closeTo(b.labour * 0.4, 1));
+    expect(noSpend.productivity, isNull);
+    expect(noSpend.percentComplete, closeTo(40, 0.01));
+
+    // Labour cost a quarter more than earned: crews at 80% of the pace.
+    final slow = reviewActuals(
+      withActuals(labour: b.labour * 0.4 * 1.25, materials: b.materials * 0.3),
+    )!;
+    expect(slow.productivity, closeTo(80, 0.1));
+    expect(slow.suggestedProductivity, 80);
+    expect(slow.spentMaterials, lessThan(slow.earnedMaterials));
+
+    // On an estimate already at 90%, the setting goes to 90% × 80%.
+    final at90 = withActuals(labour: 1)
+        .copyWith(costs: base.costs.copyWith(productivityPct: 90));
+    final review = reviewActuals(
+      withActuals(labour: reviewActuals(at90)!.earnedLabour * 1.25)
+          .copyWith(costs: base.costs.copyWith(productivityPct: 90)),
+    )!;
+    expect(review.suggestedProductivity, 72);
+
+    // Labour priced as a share of materials has no crews to speed up.
+    final percent = withActuals(
+      labour: 5000,
+    ).copyWith(costs: base.costs.copyWith(labourMethod: LabourMethod.percent));
+    expect(reviewActuals(percent)!.suggestedProductivity, isNull);
   });
 
   test('working days skip Sundays', () {
@@ -163,5 +278,32 @@ void main() {
       Schedule.addWorkingDays(DateTime(2026, 11, 7), 2),
       DateTime(2026, 11, 10),
     );
+  });
+
+  test('new contract settings are saved, and old saves read', () {
+    final c = ContractData(
+      terms: const QuoteTerms(client: ClientType.government, paymentDays: 45),
+      rainPct: 15,
+      targetWeeks: 24,
+      finishBy: DateTime(2027, 5, 31),
+    );
+    final back = ContractData.fromJson(c.toJson());
+    expect(back.terms.client, ClientType.government);
+    expect(back.terms.paymentDays, 45);
+    expect(back.rainPct, 15);
+    expect(back.targetWeeks, 24);
+    expect(back.finishBy, DateTime(2027, 5, 31));
+    expect(back.withTarget().targetWeeks, isNull);
+    expect(back.withTarget().finishBy, isNull);
+
+    final old = ContractData.fromJson({
+      'terms': {'downpaymentPct': 20},
+    });
+    expect(old.terms.client, ClientType.individual);
+    expect(old.terms.paymentDays, 30);
+    expect(old.rainPct, ContractData.defaultRainPct);
+    expect(old.targetWeeks, isNull);
+    expect(const ContractData().isEmpty, isTrue);
+    expect(const ContractData(rainPct: 5).isEmpty, isFalse);
   });
 }

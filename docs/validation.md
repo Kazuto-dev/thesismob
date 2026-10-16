@@ -152,7 +152,8 @@ Measure whether people can use the app to get these estimates with the
   particular site.
 - Prices are Metro Manila in late 2026 with regional factors; many are our
   own estimates and are marked as such in the price book.
-- The schedule ignores weather, holidays, lead times and curing.
+- The schedule spreads the rain allowance evenly instead of by season and
+  does not know which storey each column is on.
 - The structural calculators measure materials for sizes the user enters.
   They are not a structural design and do not check that a member is
   strong enough.

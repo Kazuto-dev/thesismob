@@ -993,7 +993,9 @@ follow as VO-1, VO-2…
   amount in words ("One Million … Pesos Only");
 - the payment terms: downpayment (30% by default, recouped from billings),
   progress billings, retention (10% by default, released on acceptance or
-  at the end of the warranty) and the warranty (12 months by default);
+  at the end of the warranty), the warranty (12 months by default), the
+  days the client takes to pay (30 by default) and, for a company or
+  government client, the taxes it withholds (see below);
 - the schedule by phase, and the inclusions and exclusions as typed
   (**Use common exclusions** fills in permits and fees, utility
   connections, furniture and unlisted work);
@@ -1002,30 +1004,189 @@ follow as VO-1, VO-2…
 
 ### Schedule
 
-The schedule is worked out from the crew-days of each work item:
+The schedule ([`lib/data/schedule.dart`](../lib/data/schedule.dart)) is
+worked out from the crew-days of each work item, the crews working at once
+and how the phases of building a house follow each other:
 
 ```
-lane days   = Σ crew-days of a trade's work in a phase ÷ crews in that trade
-phase days  = the longest lane in the phase (rounded up to half days)
-start       = the end of the phase before
+lane          = one trade's work in one phase, e.g. structural work in Foundations
+lane days     = Σ crew-days of the lane ÷ crews in the lane (rounded up to half days)
+                + 7 days of curing when it holds a suspended slab
+phase days    = the longest lane in the phase
+phase start   = the latest of its links (table below)
+working days  = the last phase's finish × (1 + rain allowance %)
+months        = (working days + regular holidays on the way) ÷ 26
 ```
 
-Work is grouped into phases in building order: site preparation and
-earthworks; foundations; columns and ground slab; beams, upper slabs and
-stairs; walls and rough-ins; roofing; plastering, ceilings and
-waterproofing; finishes and openings; fixtures, testing and turnover.
-Bars and forms follow their element (a beam's rebar is with the beams).
+Bars and forms go with their element (a beam's rebar is with the beams).
 Trades in the same phase work side by side, so electrical and plumbing
-rough-ins run alongside the walls. Six working days a week, Monday to
-Saturday; the finish date skips Sundays. Items priced as a share of
-materials take their labour ÷ (skilled + helper rate) as crew-days.
+rough-ins run alongside the walls. Items priced as a share of materials
+take their labour ÷ (skilled + helper rate) as crew-days.
+
+**Phases and links.** Each phase may start once an earlier one is part or
+all of the way through, plus a lag in working days for curing or setting.
+When it overlaps the earlier phase it also finishes no sooner than a set
+number of days after it, since its last piece of work follows the earlier
+phase's last (start-to-start and finish-to-finish links).
+
+| Phase | Waits for |
+| --- | --- |
+| Mobilization and layout | Nothing; 5 days for clearing, staking, batter boards and the bodega |
+| Site preparation and earthworks | Mobilization |
+| Foundations | Earthworks half done; finishes 1 day after the last pit |
+| Columns and ground slab (with backfill and gravel bedding) | Foundations + 3 days of curing |
+| Beams, upper slabs and stairs | Columns + 3 days: the frame goes up floor by floor; a suspended slab adds 7 days of curing before the floor above |
+| Walls and rough-ins | Ground slab + 2 days; the upper walls finish 3 days after the upper slab |
+| Roof framing and roofing | Beams and upper slabs + 7 days of curing, and half the walls |
+| Plastering and waterproofing | A third of the walls + 2 days; finishes 3 days after the last wall |
+| Ceilings | The roof, and half the plaster |
+| Finishes and openings | Half the plaster + 14 days, so it can be painted; finishes 14 days after the last plaster and 2 days after the ceilings |
+| Fixtures | Three quarters of the finishes; finishes 2 days after them |
+| Testing, punch list and turnover | Everything; 6 days |
+
+A phase with no work in the project is skipped, and phases after it wait
+for what it waited for. The **critical phases** are the chain of links
+that sets the finish date: a day's delay in one of them delays the job.
+The Gantt chart outlines their bars and the quotation prints them in bold.
+
+**Crews.** A trade left on **Auto** gets its crews phase by phase: enough
+for about three weeks of work (`autoLaneDays`, 18 working days), at least
+one, and no more than a small site run by one foreman holds:
+
+| Trade | Most workers at once |
+| --- | ---: |
+| Structural (diggers, masons, carpenters, steelmen, concrete gang) | 8 |
+| Architectural (roofing, tiles, paint, doors and windows) | 4 |
+| Electrical | 2 |
+| Plumbing | 2 |
+| Other works | 3 |
+
+Crews in a lane = ⌈lane crew-days ÷ 18⌉, capped at ⌊workers ÷ workers in
+one crew⌋, where the crew is the work item's (a digger is one helper, a
+mason one mason and a helper, a concrete gang about five and a half people
+with a mixer). So excavation gets several diggers while the concrete of
+the footings gets one gang. Typing a number for a trade fixes its crews in
+every phase; clearing it goes back to Auto, shown as "Auto · up to n".
+
+**Finish-by target.** Enter the working weeks the job should take, or a
+date to finish by (with a start date, counted in working days). The app
+then shortens the three-week aim half a day at a time, so trades on Auto
+get more crews, until the schedule fits. When even the site's limits are
+not enough it shows the fastest schedule it can make and says so; add
+crews by hand or move the date. A target longer than the usual schedule
+changes nothing.
+
+**Rain and unworkable days.** The working days are stretched by an
+allowance, 10% by default, spread over every phase so the S-curve and cash
+flow stay even. Philippine public works contracts include a number of
+"predetermined unworkable days" in the contract time and grant extensions
+only for rain beyond it: ordinary bad weather is not grounds for an
+extension (IRR of RA 9184, Annex E, sec. 10; DPWH DO 39 s. 2024 and DO 42
+s. 2020 on monthly time suspension reports). For example, a DPWH
+flood-control contract in Cebu gave 330 calendar days including 35
+predetermined unworkable days and 35 Sundays, about 12% of its working
+days. Use 10–15% for a job mostly in the dry season and 15–25% for one
+through the rainy months (June to November on the western side of the
+country, November to February on the eastern side).
+
+**Holidays.** Finish dates skip Sundays and the regular holidays (Labor
+Code art. 94, as amended by EO 203 and RA 9492): New Year's Day, Araw ng
+Kagitingan (9 April), Labor Day, Independence Day (12 June), Bonifacio Day
+(30 November), Christmas and Rizal Day (30 December) on their fixed dates;
+Maundy Thursday and Good Friday from Easter; and National Heroes Day on the
+last Monday of August. They match Proclamation No. 1006 s. 2025 for 2026.
+Eid'l Fitr and Eid'l Adha are not skipped because their dates are
+proclaimed each year, nor are special non-working days such as 1 November
+and 24 and 31 December, when sites may work at premium pay; the rain
+allowance covers them. Without a start date, 9 holidays a year are
+assumed. The job's months, which price the time-related general
+requirements, include them.
+
+**Example.** The two-storey house of about 140 m² in the tests
+([`test/data/sample_house.dart`](../test/data/sample_house.dart)): with
+one crew per trade and phases strictly one after another it took 355
+working days (13.7 months), excavation alone 47 days with one helper. Now
+it takes about 145 working days, 5.7 months with the rain allowance and
+holidays: four to five diggers for two and a half weeks of earthworks,
+two to four structural crews on the frame, and the frame, roof, ceilings,
+finishes and fixtures on the critical path.
 
 The **S-curve** is the planned cumulative value of the work week by week:
 each lane's direct cost spread evenly over its days, with general
 requirements and hauling spread over the whole job.
 
-The schedule is a planning guide: it has no weather, holidays, material
-lead times or curing waits, and phases do not overlap.
+The schedule is still a planning guide: it does not know which storey
+each column is on, it spreads rain evenly instead of by season, and it
+assumes materials arrive on time (see the purchase schedule below).
+
+### Cash flow
+
+The **Cash flow** card ([`lib/data/job_plan.dart`](../lib/data/job_plan.dart))
+plans the money out and in month by month, a month being 26 working days of
+the schedule. Amounts are **before VAT**, which the contractor collects
+for the BIR and passes on.
+
+```
+money out (month)  = materials of the tasks that start this month
+                   + labour, tools and equipment of the work done this month
+                   + general requirements and hauling ÷ the job's months
+                   all × (direct + escalation + contingency) ÷ direct
+billed (month)     = price before VAT × S-curve progress gained this month
+money in (signing) = price before VAT × downpayment %
+money in (month)   = billed × (1 − downpayment % − retention % − income tax withheld %),
+                     paid ⌈payment days ÷ 30.44⌉ months after it is billed
+retention          = price before VAT × retention %, paid as long after the finish
+running total      = Σ (money in − money out)
+peak cash need     = the lowest running total, as a positive amount
+```
+
+The **peak cash need** is the working capital the contractor must have
+ready, its own money or a credit line, at the worst point of the job. A
+larger downpayment, shorter payment days or smaller retention lower it.
+The days the client takes to pay are a quotation term (30 by default).
+The income tax a company or government withholds is a credit against the
+contractor's income tax, recovered only when it files, so the cash flow
+counts it as not received; the VAT or percentage tax government withholds
+is credited against the tax the contractor remits and does not change a
+cash flow before VAT.
+
+For the sample house (₱3.40 million before VAT, ₱2.85 million of cost,
+30% down, 10% retention, paid in 30 days) the running total is lowest in
+month 3, at about −₱347,000: that is its peak cash need. **Download cash
+flow** makes a PDF with the summary, the table and these assumptions.
+
+### Purchase schedule
+
+The **Purchase schedule** card lists every material of the shopping list
+(`project.materials`) with when it is first needed and when to order it:
+
+```
+needed     = start of the earliest scheduled task that uses the material
+order by   = needed − the longest lead time of its group (calendar days)
+```
+
+A material goes with the work item it is used in, as in the unit price
+analysis: bars and forms with their element, gravel bedding with the
+slab, purlins and gutters with the roof, the rest with the estimate's
+main work. So cement is first needed for the footings, CHB for the walls
+and tiles for the finishes. Lines are sorted by when to order them, so
+doors needed late but made to order come before paint needed sooner.
+With a start date the card and the PDF show dates; without one, the week
+of the schedule and the lead time.
+
+Lead times are typical for small orders from Metro Manila hardware stores
+and suppliers (`leadTimes`); check them with yours, especially in the
+provinces and before the holidays:
+
+| Group | Lead time | Why |
+| --- | ---: | --- |
+| Cement and aggregates, masonry, reinforcing steel, lumber, ceiling framing, paint, electrical, plumbing, other | 3–7 days | Stock items, delivered by the hardware or the supplier's truck |
+| Roofing and insulation | 7–14 days | Long-span sheets are roll-formed to length |
+| Tiles and floor finishes | 7–14 days | Chosen designs are often ordered in from the distributor |
+| Plumbing fixtures | 7–14 days | Chosen models, sometimes from the distributor |
+| Doors and windows | 21–30 days | Doors, jambs and aluminium windows are made to the measured openings |
+
+**Download purchase schedule** makes a PDF to hand to whoever buys.
 
 ### Progress billing
 
@@ -1046,6 +1207,39 @@ with the statement, the amount due in words and each line's previous and
 current percent. New billings start from the last one's percentages; the
 "All 25/50/75/100%" buttons raise every line to at least that.
 
+**Taxes withheld.** Clients in business and government withhold taxes
+from what they pay a contractor and give a BIR Form 2307 so the contractor
+can credit them against its own taxes. The quotation terms set the
+**client**:
+
+| Client | Withheld from each billing, on the amount before VAT |
+| --- | --- |
+| Individual or household | Nothing: a person not in business is not a withholding agent |
+| Private company | 2% creditable income tax (expanded withholding tax on contractors) |
+| Government | 2% creditable income tax, plus 5% VAT from a VAT-registered contractor or 3% percentage tax from one that is not |
+
+```
+before VAT   = this billing ÷ (1 + VAT %)
+income tax   = before VAT × 2%
+business tax = before VAT × 5% VAT, or × 3% percentage tax (government only)
+received     = amount due − income tax − business tax
+```
+
+Sources: RR 2-98 sec. 2.57.2(E), as amended by RR 11-2018, for the 2% on
+payments to general engineering, building and specialty contractors; NIRC
+sec. 114(C), as amended by the TRAIN law (RA 10963, sec. 37), for the 5%
+VAT withheld by government, which since 1 January 2021 is **creditable**
+rather than final (RMC 36-2021); and NIRC sec. 116 for the 3% percentage
+tax, back at 3%
+since 1 July 2023 after CREATE's temporary 1%. The Ease of Paying Taxes
+Act (RA 11976, RR 3-2024 and RR 4-2024) changed when VAT on services is
+due, to the invoice rather than the collection, but not these rates.
+Taxes are withheld on the work billed, so the downpayment is paid in full
+and the recouped part is taxed when billed; a client that withholds on
+the downpayment instead takes the same total earlier. The billing PDF
+lists each tax and the **net amount received**, and the billing list in
+the app shows it.
+
 ### Variation orders
 
 Changes after the contract: a description and an amount with markups and
@@ -1060,6 +1254,31 @@ materials, labour with labour and minor tools, equipment with equipment,
 other with hauling and general requirements. The card also shows the
 share of the direct cost spent against the percent complete of the last
 billing, the first sign of a job running over.
+
+**Learn from actuals.** Once there is a billing, the card compares the
+budget of the work done with what was spent (`reviewActuals` in
+[`lib/data/contract_math.dart`](../lib/data/contract_math.dart)):
+
+```
+earned materials = Σ each work item's material cost × its percent done at the last billing
+earned labour    = Σ each work item's labour cost × its percent done
+variance         = earned − spent (positive: under budget)
+productivity     = earned labour ÷ labour spent × 100
+suggested        = the project's productivity setting × productivity ÷ 100
+                   (rounded, 25–200%)
+```
+
+A productivity of 80% means the crews took a quarter more labour than the
+estimate for the work they finished. **Use n% productivity for this
+estimate** sets the project's productivity (Budget, labour by crews) to
+the suggested value, so the rest of the estimate, the schedule and the
+time-related costs follow what the crews actually do. Applying it again
+changes nothing, since the earned labour then matches. Read the figures
+with care: labour paid at other rates than the project's daily rates
+shows up here too, payroll recorded late makes the crews look faster, and
+before about a fifth of the work is done (the card says so) a few days of
+rain or a slow start weigh too much. Labour priced as a share of
+materials has no crew outputs to adjust, so the button is not offered.
 
 ## Shopping list
 

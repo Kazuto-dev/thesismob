@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart' show DateFormat, NumberFormat;
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +9,7 @@ import '../../core/theme.dart';
 import '../../core/widgets.dart';
 import '../../data/contract.dart';
 import '../../data/contract_math.dart';
+import '../../data/job_plan.dart';
 import '../../data/project.dart';
 import '../../materials/material_spec.dart';
 import '../../state/projects_controller.dart';
@@ -27,6 +29,10 @@ class ContractTab extends StatelessWidget {
       _QuotationCard(project: project),
       const SizedBox(height: Space.lg),
       _ScheduleCard(project: project),
+      const SizedBox(height: Space.lg),
+      _CashFlowCard(project: project),
+      const SizedBox(height: Space.lg),
+      _PurchaseCard(project: project),
       const SizedBox(height: Space.lg),
       _BillingCard(project: project),
       const SizedBox(height: Space.lg),
@@ -207,6 +213,43 @@ class _QuotationCard extends StatelessWidget {
             onChanged: (v) => terms((x) => x.copyWith(retentionPct: v)),
           ),
         ),
+        pair(
+          DropdownButtonFormField<ClientType>(
+            initialValue: t.client,
+            isExpanded: true,
+            decoration: InputDecoration(
+              labelText: context.tr('Client'),
+              isDense: true,
+            ),
+            items: [
+              for (final c in ClientType.values)
+                DropdownMenuItem(
+                  value: c,
+                  child: Text(
+                    context.tr(c.label),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+            onChanged: (c) {
+              if (c != null) terms((x) => x.copyWith(client: c));
+            },
+          ),
+          _NumberField(
+            label: context.tr('Client pays within'),
+            suffix: context.tr('days'),
+            value: t.paymentDays,
+            max: 180,
+            onChanged: (v) => terms((x) => x.copyWith(paymentDays: v)),
+          ),
+        ),
+        if (t.client != ClientType.individual)
+          Text(
+            _withholdingNote(context, project),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         _TextArea(
           label: context.tr('Inclusions'),
           hint: context.tr('One per line, e.g. Supply of materials and labour'),
@@ -243,6 +286,28 @@ class _QuotationCard extends StatelessWidget {
       ],
     );
   }
+}
+
+/// What [project]'s client withholds from each billing, in a sentence.
+String _withholdingNote(BuildContext context, Project project) {
+  final rates = withholding(project);
+  if (rates.businessTax <= 0) {
+    return context.tr(
+      'The client withholds {pct}% creditable income tax from each billing, '
+      'before VAT, and gives you BIR Form 2307 to credit it.',
+      {'pct': formatNumber(rates.incomeTax)},
+    );
+  }
+  return context.tr(
+    'The client withholds {pct}% creditable income tax and {tax}% {name} '
+    'from each billing, before VAT, and gives you BIR Form 2307 to credit '
+    'them.',
+    {
+      'pct': formatNumber(rates.incomeTax),
+      'tax': formatNumber(rates.businessTax),
+      'name': context.tr(businessTaxName(project)),
+    },
+  );
 }
 
 /// Multi-line text that saves as the user types.
@@ -320,32 +385,71 @@ class _ScheduleCard extends StatelessWidget {
     }
   }
 
+  Future<void> _pickFinishBy(BuildContext context, DateTime start) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate:
+          project.contract.finishBy ?? start.add(const Duration(days: 7 * 26)),
+      firstDate: start.add(const Duration(days: 1)),
+      lastDate: DateTime(start.year + 5),
+    );
+    if (picked != null && context.mounted) {
+      _update(context, project, (c) => c.withTarget(date: picked));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    final contract = project.contract;
     final schedule = Schedule.of(project);
-    final start = project.contract.startDate;
+    final start = contract.startDate;
     final finish = start == null
         ? null
         : Schedule.addWorkingDays(start, schedule.days);
     final weeks = schedule.weeks.ceil();
+    final trades = [
+      for (final trade in MaterialCategory.values) tradeKey(trade),
+      if (schedule.crewsFor('other') != null) 'other',
+    ];
+    String tradeName(String key) =>
+        MaterialCategory.byId(key)?.label ?? 'Other works';
+    final target = schedule.target;
     return _Panel(
       icon: Icons.calendar_month_outlined,
       title: context.tr('Schedule'),
       subtitle: context.tr(
-        'Worked out from each item\'s crew-days and the crews working at '
-        'once, six working days a week. A planning guide, not a promise.',
+        'Worked out from each item\'s crew-days, the crews working at once '
+        'and how the phases overlap, six working days a week, with an '
+        'allowance for rain and the regular holidays skipped. A planning '
+        'guide, not a promise.',
       ),
       children: [
         Text(
           schedule.days <= 0
               ? context.tr('Add estimates to see a schedule.')
-              : context.tr('About {weeks} weeks ({days} working days)', {
-                  'weeks': weeks,
-                  'days': formatNumber(schedule.days),
-                }),
+              : context.tr(
+                  'About {weeks} weeks ({days} working days), about {months} '
+                  'months',
+                  {
+                    'weeks': weeks,
+                    'days': formatNumber(schedule.days),
+                    'months': formatNumber((schedule.months * 10).round() / 10),
+                  },
+                ),
           style: theme.textTheme.titleSmall,
         ),
+        if (schedule.days > 0 && schedule.allowanceDays > 0)
+          Text(
+            context.tr(
+              'Includes {days} working days for rain and unworkable days.',
+              {'days': formatNumber(schedule.allowanceDays)},
+            ),
+            style: muted,
+          ),
         Wrap(
           spacing: Space.sm,
           runSpacing: Space.sm,
@@ -369,33 +473,134 @@ class _ScheduleCard extends StatelessWidget {
               ),
           ],
         ),
+        Wrap(
+          spacing: Space.md,
+          runSpacing: Space.md,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            SizedBox(
+              width: 190,
+              child: _NumberField(
+                label: context.tr('Rain and unworkable days'),
+                suffix: '%',
+                value: contract.rainPct,
+                max: 50,
+                onChanged: (v) =>
+                    _update(context, project, (c) => c.copyWith(rainPct: v)),
+              ),
+            ),
+            SizedBox(
+              width: 190,
+              child: _OptionalNumberField(
+                key: ValueKey(contract.finishBy),
+                label: context.tr('Finish within'),
+                suffix: context.tr('weeks'),
+                hint: context.tr('No target'),
+                value: contract.finishBy == null ? contract.targetWeeks : null,
+                max: 520,
+                onChanged: (v) =>
+                    _update(context, project, (c) => c.withTarget(weeks: v)),
+              ),
+            ),
+            OutlinedButton.icon(
+              onPressed: start == null
+                  ? null
+                  : () => _pickFinishBy(context, start),
+              icon: const Icon(Icons.flag_outlined, size: 18),
+              label: Text(
+                contract.finishBy == null
+                    ? context.tr('Finish by a date')
+                    : context.tr('Finish by {date}', {
+                        'date': formatDate(contract.finishBy!),
+                      }),
+              ),
+            ),
+            if (contract.targetWeeks != null || contract.finishBy != null)
+              IconButton(
+                tooltip: context.tr('Clear the target'),
+                icon: const Icon(Icons.close),
+                onPressed: () =>
+                    _update(context, project, (c) => c.withTarget()),
+              ),
+          ],
+        ),
+        if (contract.finishBy != null && start == null)
+          Text(
+            context.tr('Set a start date to use the finish-by date.'),
+            style: muted,
+          )
+        else if (target != null && schedule.meetsTarget != null)
+          Text(
+            schedule.meetsTarget!
+                ? context.tr(
+                    'Meets the target of {weeks} weeks with the crews below.',
+                    {'weeks': formatNumber((target / 6 * 10).round() / 10)},
+                  )
+                : context.tr(
+                    "Can't finish within {weeks} weeks with a small site's "
+                    'limits; the fastest is about {fastest} weeks. Add crews '
+                    'by hand, or move the date.',
+                    {
+                      'weeks': formatNumber((target / 6 * 10).round() / 10),
+                      'fastest': weeks,
+                    },
+                  ),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: schedule.meetsTarget!
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.error,
+            ),
+          ),
         Text(
           context.tr('Crews working at once'),
           style: theme.textTheme.labelLarge,
+        ),
+        Text(
+          context.tr(
+            'Leave a trade on Auto and the app sizes its crews phase by '
+            'phase, about three weeks of work each, within a small site\'s '
+            'limits.',
+          ),
+          style: muted,
         ),
         Wrap(
           spacing: Space.md,
           runSpacing: Space.md,
           children: [
-            for (final trade in MaterialCategory.values)
+            for (final trade in trades)
               SizedBox(
                 width: 150,
-                child: _NumberField(
-                  label: context.tr(trade.label),
-                  value: project.contract.crewsFor(trade.name),
+                child: _OptionalNumberField(
+                  label: context.tr(tradeName(trade)),
+                  hint: schedule.crewsFor(trade) == null
+                      ? context.tr('Auto')
+                      : context.tr('Auto · up to {n}', {
+                          'n': formatNumber(schedule.crewsFor(trade)!),
+                        }),
+                  value: contract.crews[trade],
+                  min: 1,
                   max: 20,
-                  onChanged: (v) {
-                    if (v < 1) return;
-                    _update(
-                      context,
-                      project,
-                      (c) => c.copyWith(crews: {...c.crews, trade.name: v}),
-                    );
-                  },
+                  onChanged: (v) => _update(
+                    context,
+                    project,
+                    (c) => c.copyWith(
+                      crews: v == null
+                          ? ({...c.crews}..remove(trade))
+                          : {...c.crews, trade: v},
+                    ),
+                  ),
                 ),
               ),
           ],
         ),
+        if (schedule.critical.isNotEmpty)
+          Text(
+            context.tr('Critical phases: {phases}', {
+              'phases': [for (final p in schedule.critical) context.tr(p)]
+                  .join(' → '),
+            }),
+            style: theme.textTheme.bodyMedium,
+          ),
         if (schedule.tasks.isNotEmpty) ...[
           _Gantt(schedule: schedule),
           _SCurve(points: schedule.sCurve),
@@ -403,6 +608,71 @@ class _ScheduleCard extends StatelessWidget {
       ],
     );
   }
+}
+
+/// A number that may be left empty, saved as the user types: null when
+/// empty.
+class _OptionalNumberField extends StatefulWidget {
+  const _OptionalNumberField({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.hint,
+    this.suffix,
+    this.min = 0,
+    this.max = 100,
+  });
+
+  final String label;
+  final String? hint;
+  final double? value;
+  final String? suffix;
+  final double min;
+  final double max;
+  final ValueChanged<double?> onChanged;
+
+  @override
+  State<_OptionalNumberField> createState() => _OptionalNumberFieldState();
+}
+
+class _OptionalNumberFieldState extends State<_OptionalNumberField> {
+  late final _controller = TextEditingController(
+    text: widget.value == null
+        ? ''
+        : formatNumber(widget.value!).replaceAll(',', ''),
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => TextField(
+    controller: _controller,
+    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+    inputFormatters: [
+      const DecimalInputFormatter(),
+      LengthLimitingTextInputFormatter(6),
+    ],
+    style: tabular(Theme.of(context).textTheme.bodyLarge),
+    decoration: InputDecoration(
+      labelText: widget.label,
+      hintText: widget.hint,
+      floatingLabelBehavior: FloatingLabelBehavior.always,
+      suffixText: widget.suffix,
+      isDense: true,
+    ),
+    onChanged: (raw) {
+      if (raw.trim().isEmpty) return widget.onChanged(null);
+      final v = double.tryParse(raw.trim());
+      if (v != null && v >= widget.min && v <= widget.max) {
+        widget.onChanged(v);
+      }
+    },
+  );
 }
 
 /// The schedule as bars along the working days.
@@ -428,10 +698,21 @@ class _Gantt extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${context.tr(t.label)} · '
-                    '${context.tr(t.trade?.label ?? 'Other')} · '
-                    '${formatNumber(t.days)} ${context.tr('days')}',
-                    style: theme.textTheme.bodySmall,
+                    [
+                      context.tr(t.label),
+                      if (t.crewDays > 0) context.tr(t.trade?.label ?? 'Other'),
+                      '${formatNumber(t.days)} ${context.tr('days')}',
+                      if (t.crewDays > 0)
+                        t.crews == 1
+                            ? context.tr('1 crew')
+                            : context.tr('{n} crews', {
+                                'n': formatNumber(t.crews),
+                              }),
+                      if (t.critical) context.tr('critical'),
+                    ].join(' · '),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: t.critical ? FontWeight.w700 : null,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   LayoutBuilder(
@@ -454,8 +735,16 @@ class _Gantt extends StatelessWidget {
                           bottom: 0,
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              color: palette.category(t.trade).chart,
+                              color: t.crewDays > 0
+                                  ? palette.category(t.trade).chart
+                                  : theme.colorScheme.outline,
                               borderRadius: BorderRadius.circular(Radii.sm),
+                              border: t.critical
+                                  ? Border.all(
+                                      color: theme.colorScheme.onSurface,
+                                      width: 1.5,
+                                    )
+                                  : null,
                             ),
                           ),
                         ),
@@ -575,6 +864,365 @@ class _CurvePainter extends CustomPainter {
       old.points != points || old.line != line;
 }
 
+/// What the expenses so far say about the estimate: the cost variance of
+/// materials and labour, the crews' productivity, and a button to use it.
+class _Actuals extends StatelessWidget {
+  const _Actuals(this.project, this.review);
+
+  final Project project;
+  final ActualsReview review;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    String variance(double earned, double spent) {
+      final diff = earned - spent;
+      final pct = earned <= 0
+          ? ''
+          : ' (${formatNumber((diff.abs() / earned * 1000).round() / 10)}%)';
+      return diff >= 0
+          ? context.tr('{amount} under budget', {
+              'amount': '${formatMoney(diff)}$pct',
+            })
+          : context.tr('{amount} over budget', {
+              'amount': '${formatMoney(-diff)}$pct',
+            });
+    }
+
+    Widget line(String label, double earned, double spent) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        KeyValueLine(
+          label,
+          context.tr('{earned} earned · {spent} spent', {
+            'earned': formatMoney(earned),
+            'spent': formatMoney(spent),
+          }),
+          padding: const EdgeInsets.symmetric(vertical: 2),
+        ),
+        Text(
+          variance(earned, spent),
+          style: tabular(theme.textTheme.bodySmall)?.copyWith(
+            color: spent > earned
+                ? theme.colorScheme.error
+                : theme.colorScheme.primary,
+          ),
+        ),
+      ],
+    );
+
+    final productivity = review.productivity;
+    final suggested = review.suggestedProductivity;
+    final current = project.costs.productivityPct;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          context.tr('Learn from actuals'),
+          style: theme.textTheme.labelLarge,
+        ),
+        const SizedBox(height: Space.xs),
+        Text(
+          context.tr(
+            'The budget of the work done by the last billing, {pct}% '
+            'complete, against what you recorded.',
+            {'pct': formatNumber((review.percentComplete * 10).round() / 10)},
+          ),
+          style: muted,
+        ),
+        if (review.spentMaterials > 0)
+          line(
+            context.tr('Materials'),
+            review.earnedMaterials,
+            review.spentMaterials,
+          ),
+        if (review.spentLabour > 0)
+          line(context.tr('Labour'), review.earnedLabour, review.spentLabour),
+        if (productivity != null)
+          Padding(
+            padding: const EdgeInsets.only(top: Space.sm),
+            child: Text(
+              context.tr(
+                "Crews' productivity: {pct}% of the estimate's pace "
+                '(earned labour ÷ labour spent).',
+                {'pct': formatNumber(productivity.roundToDouble())},
+              ),
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
+        if (review.percentComplete < 20 && productivity != null)
+          Text(
+            context.tr(
+              'Early figures are rough: wait until about a fifth of the '
+              'work is done.',
+            ),
+            style: muted,
+          ),
+        if (suggested != null && (suggested - current).abs() >= 1)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () {
+                context.read<ProjectsController>().updateCosts(
+                  project.id,
+                  project.costs.copyWith(productivityPct: suggested),
+                );
+                showMessage(
+                  context,
+                  context.tr('The estimate now uses {pct}% productivity.', {
+                    'pct': formatNumber(suggested),
+                  }),
+                );
+              },
+              icon: const Icon(Icons.speed_outlined),
+              label: Text(
+                context.tr('Use {pct}% productivity for this estimate', {
+                  'pct': formatNumber(suggested),
+                }),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+final _pesos = NumberFormat('#,##0', 'en_US');
+
+/// [value] in whole pesos, `₱1,234` or `−₱1,234`, for narrow tables.
+String _wholePesos(double value) =>
+    '${value < -0.5 ? '−' : ''}₱${_pesos.format(value.abs().round())}';
+
+/// The name of cash-flow month [m]: the signing, or "Month 3 · Jan 4".
+String _monthName(BuildContext context, CashFlowMonth m) {
+  if (m.month == 0) return context.tr('Signing');
+  final name = context.tr('Month {n}', {'n': m.month});
+  final from = m.from;
+  return from == null
+      ? name
+      : '$name · ${DateFormat('MMM d', 'en_US').format(from)}';
+}
+
+class _CashFlowCard extends StatelessWidget {
+  const _CashFlowCard({required this.project});
+
+  final Project project;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final flow = cashFlow(project);
+    final terms = project.contract.terms;
+    final small = tabular(theme.textTheme.bodySmall);
+    final head = theme.textTheme.labelMedium;
+    Widget cell(String text, {TextStyle? style, bool right = true}) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Text(
+        text,
+        textAlign: right ? TextAlign.right : TextAlign.left,
+        style: style ?? small,
+      ),
+    );
+    return _Panel(
+      icon: Icons.savings_outlined,
+      title: context.tr('Cash flow'),
+      subtitle: context.tr(
+        'Money out and in month by month, before VAT: materials bought as '
+        'each task starts, labour as the work is done and site costs every '
+        'month, against the downpayment and the monthly billings, paid '
+        '{days} days later less the downpayment recouped, the retention '
+        'and the tax withheld.',
+        {'days': formatNumber(terms.paymentDays)},
+      ),
+      children: [
+        if (flow.months.isEmpty)
+          Text(context.tr('Add estimates to see a cash flow.'))
+        else ...[
+          KeyValueLine(
+            context.tr('Peak cash need (working capital)'),
+            formatMoney(flow.peakNeed),
+            emphasize: true,
+            padding: const EdgeInsets.symmetric(vertical: 4),
+          ),
+          Text(
+            flow.peakMonth == null
+                ? context.tr(
+                    'The downpayment and billings cover the costs all along.',
+                  )
+                : context.tr(
+                    'Lowest in month {n}: have this much ready, or ask for a '
+                    'larger downpayment or faster payment.',
+                    {'n': flow.peakMonth!},
+                  ),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          Semantics(
+            label: context.tr('Cash flow by month'),
+            child: Table(
+              columnWidths: const {
+                0: FlexColumnWidth(),
+                1: FixedColumnWidth(80),
+                2: FixedColumnWidth(80),
+                3: FixedColumnWidth(84),
+              },
+              children: [
+                TableRow(
+                  children: [
+                    cell(context.tr('Month'), style: head, right: false),
+                    cell(context.tr('Out'), style: head),
+                    cell(context.tr('In'), style: head),
+                    cell(context.tr('Running total'), style: head),
+                  ],
+                ),
+                for (final m in flow.months)
+                  TableRow(
+                    children: [
+                      cell(_monthName(context, m), right: false),
+                      cell(_wholePesos(m.costs)),
+                      cell(_wholePesos(m.received)),
+                      cell(
+                        _wholePesos(m.cumulative),
+                        style: small?.copyWith(
+                          color: m.cumulative < 0
+                              ? theme.colorScheme.error
+                              : null,
+                          fontWeight: m.month == flow.peakMonth
+                              ? FontWeight.w700
+                              : null,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: () => downloadCashFlow(context, project),
+              icon: const Icon(Icons.picture_as_pdf_outlined),
+              label: Text(context.tr('Download cash flow')),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// When to buy each material: when it is first needed and when to order
+/// it, given the usual lead times.
+class _PurchaseCard extends StatefulWidget {
+  const _PurchaseCard({required this.project});
+
+  final Project project;
+
+  @override
+  State<_PurchaseCard> createState() => _PurchaseCardState();
+}
+
+class _PurchaseCardState extends State<_PurchaseCard> {
+  static const _shown = 8;
+  var _all = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final lines = purchaseSchedule(widget.project);
+    final visible = _all ? lines : lines.take(_shown);
+    String week(double day) =>
+        context.tr('week {n}', {'n': (day / workDaysPerWeek).floor() + 1});
+    return _Panel(
+      icon: Icons.local_shipping_outlined,
+      title: context.tr('Purchase schedule'),
+      subtitle: context.tr(
+        'When each material is first needed, from the schedule, and when to '
+        'order it given usual lead times: stock items 3–7 days, long-span '
+        'roofing and tiles 7–14, plumbing fixtures up to 14, doors and '
+        'windows made to measure 21–30. Ask your suppliers.',
+      ),
+      children: [
+        if (lines.isEmpty)
+          Text(context.tr('Add estimates to see when to buy.'))
+        else ...[
+          if (widget.project.contract.startDate == null)
+            Text(
+              context.tr('Set a start date to see the dates.'),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          for (final l in visible)
+            Material(
+              type: MaterialType.transparency,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                title: Text(
+                  '${l.material.label} · '
+                  '${formatNumber(l.material.quantity)} ${l.material.unit}',
+                ),
+                subtitle: Text(
+                  l.needed == null
+                      ? context.tr(
+                          'Needed {week} for {phase} · order {days} days '
+                          'before',
+                          {
+                            'week': week(l.neededDay),
+                            'phase': context.tr(l.phase),
+                            'days': l.leadMax,
+                          },
+                        )
+                      : context.tr(
+                          'Order by {order} · needed {needed} for {phase}',
+                          {
+                            'order': DateFormat(
+                              'MMM d',
+                              'en_US',
+                            ).format(l.orderBy!),
+                            'needed': DateFormat(
+                              'MMM d',
+                              'en_US',
+                            ).format(l.needed!),
+                            'phase': context.tr(l.phase),
+                          },
+                        ),
+                  style: tabular(theme.textTheme.bodySmall),
+                ),
+              ),
+            ),
+          Wrap(
+            spacing: Space.sm,
+            runSpacing: Space.sm,
+            children: [
+              if (lines.length > _shown)
+                TextButton(
+                  onPressed: () => setState(() => _all = !_all),
+                  child: Text(
+                    _all
+                        ? context.tr('Show fewer')
+                        : context.tr('Show all {n}', {'n': lines.length}),
+                  ),
+                ),
+              OutlinedButton.icon(
+                onPressed: () =>
+                    downloadPurchaseSchedule(context, widget.project),
+                icon: const Icon(Icons.picture_as_pdf_outlined),
+                label: Text(context.tr('Download purchase schedule')),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _BillingCard extends StatelessWidget {
   const _BillingCard({required this.project});
 
@@ -619,10 +1267,25 @@ class _BillingCard extends StatelessWidget {
                 }),
               ),
               subtitle: Text(
-                context.tr('{pct}% complete · net due {amount}', {
-                  'pct': formatNumber((s.percentComplete * 10).round() / 10),
-                  'amount': formatMoney(s.netDue),
-                }),
+                s.withholding > 0
+                    ? context.tr(
+                        '{pct}% complete · net due {amount} · you receive '
+                        '{received} after {taxes} withheld',
+                        {
+                          'pct': formatNumber(
+                            (s.percentComplete * 10).round() / 10,
+                          ),
+                          'amount': formatMoney(s.netDue),
+                          'received': formatMoney(s.received),
+                          'taxes': formatMoney(s.withholding),
+                        },
+                      )
+                    : context.tr('{pct}% complete · net due {amount}', {
+                        'pct': formatNumber(
+                          (s.percentComplete * 10).round() / 10,
+                        ),
+                        'amount': formatMoney(s.netDue),
+                      }),
                 style: tabular(theme.textTheme.bodySmall),
               ),
               trailing: Wrap(
@@ -809,6 +1472,7 @@ class _CostsCard extends StatelessWidget {
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
+        if (reviewActuals(project) case final r?) _Actuals(project, r),
         for (final e in expenses.reversed.take(5))
           KeyValueLine(
             '${formatDate(e.date)} · ${e.description}',

@@ -67,5 +67,28 @@ void main() {
     expect(latin1.decode(quote.sublist(0, 5)), '%PDF-');
     final billing = await billingPdf(project, profile, 0);
     expect(latin1.decode(billing.sublist(0, 5)), '%PDF-');
+
+    // A government client: the quotation notes and the billing shows the
+    // taxes withheld.
+    final government = project.copyWith(
+      contract: project.contract.copyWith(
+        terms: project.contract.terms.copyWith(client: ClientType.government),
+      ),
+    );
+    expect(billingStatements(government).single.withholding, greaterThan(0));
+    final govQuote = await quotationPdf(government, profile);
+    expect(latin1.decode(govQuote.sublist(0, 5)), '%PDF-');
+    final govBilling = await billingPdf(government, profile, 0);
+    expect(latin1.decode(govBilling.sublist(0, 5)), '%PDF-');
+
+    final flow = await cashFlowPdf(government, profile);
+    expect(latin1.decode(flow.sublist(0, 5)), '%PDF-');
+    final purchases = await purchaseSchedulePdf(government, profile);
+    expect(latin1.decode(purchases.sublist(0, 5)), '%PDF-');
+    final undated = await purchaseSchedulePdf(
+      Project.create('Shed').copyWith(items: project.items),
+      profile,
+    );
+    expect(latin1.decode(undated.sublist(0, 5)), '%PDF-');
   });
 }

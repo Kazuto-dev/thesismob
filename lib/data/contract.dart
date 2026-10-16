@@ -12,6 +12,51 @@ String _text(Object? value) => value is String ? value : '';
 
 String _day(DateTime d) => d.toIso8601String().substring(0, 10);
 
+/// Who the client is, which sets the taxes they withhold from each
+/// payment to a contractor.
+enum ClientType {
+  /// A homeowner or other person not in business, who withholds nothing.
+  individual('Individual or household'),
+
+  /// A corporation or other business, which withholds 2% creditable
+  /// income tax (expanded withholding tax) on payments to contractors.
+  company('Private company'),
+
+  /// A national agency, local government or government corporation,
+  /// which also withholds 5% VAT, or 3% percentage tax from a contractor
+  /// not registered for VAT.
+  government('Government');
+
+  const ClientType(this.label);
+
+  final String label;
+}
+
+/// The taxes a client withholds from a payment, as percentages of the
+/// amount before VAT.
+typedef WithholdingRates = ({
+  /// Creditable income tax: the expanded withholding tax on contractors.
+  double incomeTax,
+
+  /// VAT withheld by government from a VAT-registered contractor, or
+  /// percentage tax from one that is not.
+  double businessTax,
+});
+
+/// The taxes [client] withholds from a contractor's payments:
+/// RR 2-98 as amended by RR 11-2018 for the 2% on contractors, NIRC
+/// sec. 114(C) as amended by the TRAIN law for the 5% VAT (creditable
+/// since 2021), and NIRC sec. 116 for the 3% percentage tax.
+/// [vatRegistered] is whether the contractor charges VAT.
+WithholdingRates withholdingRates(
+  ClientType client, {
+  required bool vatRegistered,
+}) => switch (client) {
+  ClientType.individual => (incomeTax: 0, businessTax: 0),
+  ClientType.company => (incomeTax: 2, businessTax: 0),
+  ClientType.government => (incomeTax: 2, businessTax: vatRegistered ? 5 : 3),
+};
+
 /// The terms a quotation offers: how long it is valid, how the client
 /// pays, the warranty, and what is and is not included.
 @immutable
@@ -23,6 +68,8 @@ class QuoteTerms {
     this.warrantyMonths = 12,
     this.inclusions = '',
     this.exclusions = '',
+    this.client = ClientType.individual,
+    this.paymentDays = 30,
   });
 
   factory QuoteTerms.fromJson(Map<String, dynamic> json) => QuoteTerms(
@@ -32,6 +79,11 @@ class QuoteTerms {
     warrantyMonths: _number(json['warrantyMonths'], 12),
     inclusions: _text(json['inclusions']),
     exclusions: _text(json['exclusions']),
+    client: ClientType.values.firstWhere(
+      (c) => c.name == json['client'],
+      orElse: () => ClientType.individual,
+    ),
+    paymentDays: _number(json['paymentDays'], 30).clamp(0, 365).toDouble(),
   );
 
   final double validityDays;
@@ -47,6 +99,12 @@ class QuoteTerms {
   final String inclusions;
   final String exclusions;
 
+  /// Who the client is, for the taxes withheld from billings.
+  final ClientType client;
+
+  /// Days the client takes to pay a billing, for the cash flow.
+  final double paymentDays;
+
   static const defaultExclusions =
       'Building permit and professional fees\n'
       'Utility connections and meter deposits\n'
@@ -60,6 +118,8 @@ class QuoteTerms {
     double? warrantyMonths,
     String? inclusions,
     String? exclusions,
+    ClientType? client,
+    double? paymentDays,
   }) => QuoteTerms(
     validityDays: validityDays ?? this.validityDays,
     downpaymentPct: downpaymentPct ?? this.downpaymentPct,
@@ -67,6 +127,8 @@ class QuoteTerms {
     warrantyMonths: warrantyMonths ?? this.warrantyMonths,
     inclusions: inclusions ?? this.inclusions,
     exclusions: exclusions ?? this.exclusions,
+    client: client ?? this.client,
+    paymentDays: paymentDays ?? this.paymentDays,
   );
 
   Map<String, dynamic> toJson() => {
@@ -76,6 +138,8 @@ class QuoteTerms {
     'warrantyMonths': warrantyMonths,
     if (inclusions.isNotEmpty) 'inclusions': inclusions,
     if (exclusions.isNotEmpty) 'exclusions': exclusions,
+    if (client != ClientType.individual) 'client': client.name,
+    if (paymentDays != 30) 'paymentDays': paymentDays,
   };
 
   @override
@@ -86,7 +150,9 @@ class QuoteTerms {
       other.retentionPct == retentionPct &&
       other.warrantyMonths == warrantyMonths &&
       other.inclusions == inclusions &&
-      other.exclusions == exclusions;
+      other.exclusions == exclusions &&
+      other.client == client &&
+      other.paymentDays == paymentDays;
 
   @override
   int get hashCode => Object.hash(
@@ -96,6 +162,8 @@ class QuoteTerms {
     warrantyMonths,
     inclusions,
     exclusions,
+    client,
+    paymentDays,
   );
 }
 
@@ -242,7 +310,14 @@ class ContractData {
     this.billings = const [],
     this.variations = const [],
     this.expenses = const [],
+    this.rainPct = defaultRainPct,
+    this.targetWeeks,
+    this.finishBy,
   });
+
+  /// The usual allowance for rain and unworkable days: about one working
+  /// day in ten, as in DPWH contract times.
+  static const defaultRainPct = 10.0;
 
   factory ContractData.fromJson(Map<String, dynamic> json) {
     List<T> list<T>(String key, T Function(Map<String, dynamic>) parse) {
@@ -271,6 +346,15 @@ class ContractData {
       billings: list('billings', Billing.fromJson),
       variations: list('variations', VariationOrder.fromJson),
       expenses: list('expenses', Expense.fromJson),
+      rainPct: _number(
+        json['rainPct'],
+        defaultRainPct,
+      ).clamp(0, 100).toDouble(),
+      targetWeeks:
+          json['targetWeeks'] is num && (json['targetWeeks'] as num) > 0
+          ? (json['targetWeeks'] as num).toDouble()
+          : null,
+      finishBy: _date(json['finishBy']),
     );
   }
 
@@ -279,11 +363,24 @@ class ContractData {
   /// The first working day, for the schedule.
   final DateTime? startDate;
 
-  /// Crews working at once in each trade, by category name; 1 when unset.
+  /// Crews working at once in the trades the user has set, by category
+  /// name (`other` for other works). The schedule sizes the crews of the
+  /// other trades itself.
   final Map<String, double> crews;
   final List<Billing> billings;
   final List<VariationOrder> variations;
   final List<Expense> expenses;
+
+  /// Allowance for rain and unworkable days, as a percentage of the
+  /// working days.
+  final double rainPct;
+
+  /// The working weeks the job should take, when the user set a target.
+  final double? targetWeeks;
+
+  /// The date the job should finish by, when the user set one. It needs a
+  /// [startDate], and wins over [targetWeeks].
+  final DateTime? finishBy;
 
   bool get isEmpty =>
       terms == const QuoteTerms() &&
@@ -291,9 +388,28 @@ class ContractData {
       crews.isEmpty &&
       billings.isEmpty &&
       variations.isEmpty &&
-      expenses.isEmpty;
+      expenses.isEmpty &&
+      rainPct == defaultRainPct &&
+      targetWeeks == null &&
+      finishBy == null;
 
+  /// The crews the user set for [trade], or 1. A schedule's own
+  /// `crewsFor` gives the crews it uses, sized by the app where unset.
   double crewsFor(String trade) => crews[trade] ?? 1;
+
+  /// This contract with the finish-by target set to [weeks] or [date],
+  /// or cleared when both are null.
+  ContractData withTarget({double? weeks, DateTime? date}) => ContractData(
+    terms: terms,
+    startDate: startDate,
+    crews: crews,
+    billings: billings,
+    variations: variations,
+    expenses: expenses,
+    rainPct: rainPct,
+    targetWeeks: weeks,
+    finishBy: date,
+  );
 
   double get variationsTotal => variations.fold(0, (s, v) => s + v.amount);
 
@@ -306,6 +422,7 @@ class ContractData {
     List<Billing>? billings,
     List<VariationOrder>? variations,
     List<Expense>? expenses,
+    double? rainPct,
   }) => ContractData(
     terms: terms ?? this.terms,
     startDate: startDate ?? this.startDate,
@@ -313,6 +430,9 @@ class ContractData {
     billings: billings ?? this.billings,
     variations: variations ?? this.variations,
     expenses: expenses ?? this.expenses,
+    rainPct: rainPct ?? this.rainPct,
+    targetWeeks: targetWeeks,
+    finishBy: finishBy,
   );
 
   Map<String, dynamic> toJson() => {
@@ -323,6 +443,9 @@ class ContractData {
     if (variations.isNotEmpty)
       'variations': [for (final v in variations) v.toJson()],
     if (expenses.isNotEmpty) 'expenses': [for (final e in expenses) e.toJson()],
+    if (rainPct != defaultRainPct) 'rainPct': rainPct,
+    if (targetWeeks != null) 'targetWeeks': targetWeeks,
+    if (finishBy != null) 'finishBy': _day(finishBy!),
   };
 
   /// A fresh id for a billing, change or expense.
