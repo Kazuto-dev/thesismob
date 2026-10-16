@@ -168,6 +168,70 @@ WithholdingRates withholding(Project project) => withholdingRates(
   vatRegistered: project.costs.vatPct > 0,
 );
 
+/// What the money spent says about the estimate: the budgeted materials
+/// and labour of the work done by the latest billing (earned) against the
+/// expenses recorded for them.
+typedef ActualsReview = ({
+  /// Percent complete by the latest billing.
+  double percentComplete,
+  double earnedMaterials,
+  double spentMaterials,
+  double earnedLabour,
+  double spentLabour,
+
+  /// How fast the crews work against the estimate, in percent: earned
+  /// labour ÷ labour spent × 100. Null before any labour is recorded.
+  double? productivity,
+
+  /// The productivity setting that matches what the crews did: the
+  /// project's own times [productivity]. Null when labour is not priced
+  /// by crews or nothing is known yet.
+  double? suggestedProductivity,
+});
+
+/// [project]'s [ActualsReview], or null before the first billing with
+/// progress.
+ActualsReview? reviewActuals(Project project) {
+  final billings = project.contract.billings;
+  if (billings.isEmpty) return null;
+  final progress = billings.last.progress;
+  var materials = 0.0;
+  var labour = 0.0;
+  for (final section in workSections(project)) {
+    for (final (number: _, :analysis) in section.entries) {
+      final a = analysis;
+      final done =
+          (progress['${a.estimate.id}|${a.work.key}'] ?? 0).clamp(0, 100) / 100;
+      materials += a.materialCost * done;
+      labour += a.labourCost * done;
+    }
+  }
+  if (materials <= 0 && labour <= 0) return null;
+  double spent(ExpenseKind kind) => project.contract.expenses
+      .where((e) => e.kind == kind)
+      .fold(0, (s, e) => s + e.amount);
+  final spentLabour = spent(ExpenseKind.labour);
+  final productivity = spentLabour > 0 && labour > 0
+      ? labour / spentLabour * 100
+      : null;
+  final costs = project.costs;
+  return (
+    percentComplete: billingStatements(project).last.percentComplete,
+    earnedMaterials: _centavos(materials),
+    spentMaterials: _centavos(spent(ExpenseKind.materials)),
+    earnedLabour: _centavos(labour),
+    spentLabour: _centavos(spentLabour),
+    productivity: productivity,
+    suggestedProductivity:
+        productivity == null || costs.labourMethod != LabourMethod.crews
+        ? null
+        : (costs.productivityPct * productivity / 100)
+              .roundToDouble()
+              .clamp(25, 200)
+              .toDouble(),
+  );
+}
+
 /// The name of the business tax [project]'s client withholds: VAT from a
 /// VAT-registered contractor, percentage tax from one that is not.
 String businessTaxName(Project project) =>

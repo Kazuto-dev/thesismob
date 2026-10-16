@@ -206,6 +206,72 @@ void main() {
     ));
   });
 
+  test('actuals show the cost variance and the crews\' productivity', () {
+    final base = house();
+    final keys = [for (final l in contractLines(base)) l.key];
+    Project withActuals({double labour = 0, double materials = 0}) =>
+        base.copyWith(
+          contract: ContractData(
+            billings: [
+              Billing(
+                id: 'b1',
+                date: DateTime(2026, 12, 1),
+                progress: {for (final k in keys) k: 40},
+              ),
+            ],
+            expenses: [
+              if (labour > 0)
+                Expense(
+                  id: 'x1',
+                  date: DateTime(2026, 11, 20),
+                  description: 'Payroll',
+                  kind: ExpenseKind.labour,
+                  amount: labour,
+                ),
+              if (materials > 0)
+                Expense(
+                  id: 'x2',
+                  date: DateTime(2026, 11, 10),
+                  description: 'Cement',
+                  kind: ExpenseKind.materials,
+                  amount: materials,
+                ),
+            ],
+          ),
+        );
+
+    expect(reviewActuals(base), isNull);
+    final b = base.breakdown;
+    final noSpend = reviewActuals(withActuals())!;
+    expect(noSpend.earnedMaterials, closeTo(b.materials * 0.4, 1));
+    expect(noSpend.earnedLabour, closeTo(b.labour * 0.4, 1));
+    expect(noSpend.productivity, isNull);
+    expect(noSpend.percentComplete, closeTo(40, 0.01));
+
+    // Labour cost a quarter more than earned: crews at 80% of the pace.
+    final slow = reviewActuals(
+      withActuals(labour: b.labour * 0.4 * 1.25, materials: b.materials * 0.3),
+    )!;
+    expect(slow.productivity, closeTo(80, 0.1));
+    expect(slow.suggestedProductivity, 80);
+    expect(slow.spentMaterials, lessThan(slow.earnedMaterials));
+
+    // On an estimate already at 90%, the setting goes to 90% × 80%.
+    final at90 = withActuals(labour: 1)
+        .copyWith(costs: base.costs.copyWith(productivityPct: 90));
+    final review = reviewActuals(
+      withActuals(labour: reviewActuals(at90)!.earnedLabour * 1.25)
+          .copyWith(costs: base.costs.copyWith(productivityPct: 90)),
+    )!;
+    expect(review.suggestedProductivity, 72);
+
+    // Labour priced as a share of materials has no crews to speed up.
+    final percent = withActuals(
+      labour: 5000,
+    ).copyWith(costs: base.costs.copyWith(labourMethod: LabourMethod.percent));
+    expect(reviewActuals(percent)!.suggestedProductivity, isNull);
+  });
+
   test('working days skip Sundays', () {
     // Saturday 7 November 2026 + 2 working days = Tuesday the 10th.
     expect(

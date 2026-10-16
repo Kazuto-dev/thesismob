@@ -955,6 +955,31 @@ other with hauling and general requirements. The card also shows the
 share of the direct cost spent against the percent complete of the last
 billing, the first sign of a job running over.
 
+**Learn from actuals.** Once there is a billing, the card compares the
+budget of the work done with what was spent (`reviewActuals` in
+[`lib/data/contract_math.dart`](../lib/data/contract_math.dart)):
+
+```
+earned materials = Σ each work item's material cost × its percent done at the last billing
+earned labour    = Σ each work item's labour cost × its percent done
+variance         = earned − spent (positive: under budget)
+productivity     = earned labour ÷ labour spent × 100
+suggested        = the project's productivity setting × productivity ÷ 100
+                   (rounded, 25–200%)
+```
+
+A productivity of 80% means the crews took a quarter more labour than the
+estimate for the work they finished. **Use n% productivity for this
+estimate** sets the project's productivity (Budget, labour by crews) to
+the suggested value, so the rest of the estimate, the schedule and the
+time-related costs follow what the crews actually do. Applying it again
+changes nothing, since the earned labour then matches. Read the figures
+with care: labour paid at other rates than the project's daily rates
+shows up here too, payroll recorded late makes the crews look faster, and
+before about a fifth of the work is done (the card says so) a few days of
+rain or a slow start weigh too much. Labour priced as a share of
+materials has no crew outputs to adjust, so the button is not offered.
+
 ## Shopping list
 
 The project's **To buy** tab merges every main material and companion of

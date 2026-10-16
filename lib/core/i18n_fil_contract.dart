@@ -121,4 +121,23 @@ const filipinoContract = <String, String>{
   'Show all {n}': 'Ipakita ang lahat ng {n}',
   'Download purchase schedule': 'I-download ang iskedyul ng pagbili',
   'Downloaded the purchase schedule.': 'Na-download ang iskedyul ng pagbili.',
+
+  // Learning from actuals
+  'Learn from actuals': 'Matuto sa aktuwal',
+  'The budget of the work done by the last billing, {pct}% complete, against what you recorded.':
+      'Ang budget ng natapos na trabaho ayon sa huling billing, {pct}% '
+      'tapos, laban sa inyong naitala.',
+  '{earned} earned · {spent} spent': '{earned} kinita · {spent} nagastos',
+  '{amount} under budget': '{amount} kulang sa budget',
+  '{amount} over budget': '{amount} lampas sa budget',
+  "Crews' productivity: {pct}% of the estimate's pace (earned labour ÷ labour spent).":
+      'Bilis ng mga grupo: {pct}% ng bilis sa estimate (kinitang labor ÷ '
+      'nagastos na labor).',
+  'Early figures are rough: wait until about a fifth of the work is done.':
+      'Magaspang pa ang maagang bilang: hintaying matapos ang mga '
+      'ikalimang bahagi ng trabaho.',
+  'Use {pct}% productivity for this estimate':
+      'Gamitin ang {pct}% na bilis sa estimate na ito',
+  'The estimate now uses {pct}% productivity.':
+      'Gumagamit na ang estimate ng {pct}% na bilis.',
 };

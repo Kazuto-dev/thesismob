@@ -864,6 +864,132 @@ class _CurvePainter extends CustomPainter {
       old.points != points || old.line != line;
 }
 
+/// What the expenses so far say about the estimate: the cost variance of
+/// materials and labour, the crews' productivity, and a button to use it.
+class _Actuals extends StatelessWidget {
+  const _Actuals(this.project, this.review);
+
+  final Project project;
+  final ActualsReview review;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    String variance(double earned, double spent) {
+      final diff = earned - spent;
+      final pct = earned <= 0
+          ? ''
+          : ' (${formatNumber((diff.abs() / earned * 1000).round() / 10)}%)';
+      return diff >= 0
+          ? context.tr('{amount} under budget', {
+              'amount': '${formatMoney(diff)}$pct',
+            })
+          : context.tr('{amount} over budget', {
+              'amount': '${formatMoney(-diff)}$pct',
+            });
+    }
+
+    Widget line(String label, double earned, double spent) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        KeyValueLine(
+          label,
+          context.tr('{earned} earned · {spent} spent', {
+            'earned': formatMoney(earned),
+            'spent': formatMoney(spent),
+          }),
+          padding: const EdgeInsets.symmetric(vertical: 2),
+        ),
+        Text(
+          variance(earned, spent),
+          style: tabular(theme.textTheme.bodySmall)?.copyWith(
+            color: spent > earned
+                ? theme.colorScheme.error
+                : theme.colorScheme.primary,
+          ),
+        ),
+      ],
+    );
+
+    final productivity = review.productivity;
+    final suggested = review.suggestedProductivity;
+    final current = project.costs.productivityPct;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          context.tr('Learn from actuals'),
+          style: theme.textTheme.labelLarge,
+        ),
+        const SizedBox(height: Space.xs),
+        Text(
+          context.tr(
+            'The budget of the work done by the last billing, {pct}% '
+            'complete, against what you recorded.',
+            {'pct': formatNumber((review.percentComplete * 10).round() / 10)},
+          ),
+          style: muted,
+        ),
+        if (review.spentMaterials > 0)
+          line(
+            context.tr('Materials'),
+            review.earnedMaterials,
+            review.spentMaterials,
+          ),
+        if (review.spentLabour > 0)
+          line(context.tr('Labour'), review.earnedLabour, review.spentLabour),
+        if (productivity != null)
+          Padding(
+            padding: const EdgeInsets.only(top: Space.sm),
+            child: Text(
+              context.tr(
+                "Crews' productivity: {pct}% of the estimate's pace "
+                '(earned labour ÷ labour spent).',
+                {'pct': formatNumber(productivity.roundToDouble())},
+              ),
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
+        if (review.percentComplete < 20 && productivity != null)
+          Text(
+            context.tr(
+              'Early figures are rough: wait until about a fifth of the '
+              'work is done.',
+            ),
+            style: muted,
+          ),
+        if (suggested != null && (suggested - current).abs() >= 1)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () {
+                context.read<ProjectsController>().updateCosts(
+                  project.id,
+                  project.costs.copyWith(productivityPct: suggested),
+                );
+                showMessage(
+                  context,
+                  context.tr('The estimate now uses {pct}% productivity.', {
+                    'pct': formatNumber(suggested),
+                  }),
+                );
+              },
+              icon: const Icon(Icons.speed_outlined),
+              label: Text(
+                context.tr('Use {pct}% productivity for this estimate', {
+                  'pct': formatNumber(suggested),
+                }),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 final _pesos = NumberFormat('#,##0', 'en_US');
 
 /// [value] in whole pesos, `₱1,234` or `−₱1,234`, for narrow tables.
@@ -1346,6 +1472,7 @@ class _CostsCard extends StatelessWidget {
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
+        if (reviewActuals(project) case final r?) _Actuals(project, r),
         for (final e in expenses.reversed.take(5))
           KeyValueLine(
             '${formatDate(e.date)} · ${e.description}',
