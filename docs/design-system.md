@@ -5,8 +5,8 @@ content, and a dark "ink" panel with a faint blueprint grid for the numbers
 that matter (the home header, an estimate and the project total). Amber is
 the construction accent; four category colours help people find their way.
 
-Everything is defined in [`lib/core/theme.dart`](../lib/core/theme.dart) and
-the shared components in [`lib/core/widgets.dart`](../lib/core/widgets.dart).
+Everything is defined in [`lib/core/theme.dart`](../frontend/lib/core/theme.dart) and
+the shared components in [`lib/core/widgets.dart`](../frontend/lib/core/widgets.dart).
 The app follows the system light or dark setting, and Settings → Appearance
 can override it.
 

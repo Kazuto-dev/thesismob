@@ -5,7 +5,7 @@ Philippine estimating practice and the sizes sold in Philippine hardware
 stores. Quantities are planning estimates: confirm them with your supplier
 and engineer before buying.
 
-The formulas live in [`lib/materials/`](../lib/materials). Each calculator's
+The formulas live in [`lib/materials/`](../frontend/lib/materials). Each calculator's
 **Definitions** and **Solution** sheets in the app show the same formulas;
 where a sheet and the code differ, this page follows the code. Default
 prices and their sources are in [Prices and costing](prices-and-costing.md).
@@ -39,7 +39,7 @@ amount you can buy:
 Companions are priced from the price book when the estimate is saved, and
 they **are part of the cost**. An estimate's materials total is the main
 material plus all its companions (`Estimate.grandTotal` in
-[`lib/data/estimate.dart`](../lib/data/estimate.dart)). One companion is an
+[`lib/data/estimate.dart`](../frontend/lib/data/estimate.dart)). One companion is an
 allowance rather than a count: PVC fittings at 40% of the pipe cost, bought
 as one lot.
 
@@ -53,7 +53,7 @@ are in brackets.
 ## Shared factors
 
 Several calculators share these factors, kept in
-[`lib/materials/factors.dart`](../lib/materials/factors.dart).
+[`lib/materials/factors.dart`](../frontend/lib/materials/factors.dart).
 
 | Factor | Value | Source and status |
 | --- | --- | --- |
@@ -1412,12 +1412,12 @@ Price sources read in October 2026:
 
 Eight calculators for scope a house estimate usually needs beyond the
 building itself. Their code is in
-[`lib/materials/exterior.dart`](../lib/materials/exterior.dart) (fence,
+[`lib/materials/exterior.dart`](../frontend/lib/materials/exterior.dart) (fence,
 gate, fascia, soffit, flashing) and
-[`lib/materials/home_services.dart`](../lib/materials/home_services.dart)
+[`lib/materials/home_services.dart`](../frontend/lib/materials/home_services.dart)
 (service entrance, water heater, bathroom accessories); the tests are in
-[`test/materials/exterior_test.dart`](../test/materials/exterior_test.dart)
-and [`test/materials/home_services_test.dart`](../test/materials/home_services_test.dart).
+[`test/materials/exterior_test.dart`](../frontend/test/materials/exterior_test.dart)
+and [`test/materials/home_services_test.dart`](../frontend/test/materials/home_services_test.dart).
 
 ### Perimeter fence (Structural)
 
@@ -1688,7 +1688,7 @@ height, its doors and windows, and its finishes: floor, walls (paint, or
 tiles to a height with paint above), ceiling boards and ceiling paint, and
 optionally its light points and outlets. **Update finishes from rooms**
 turns the rooms into ordinary estimates made with the calculators above.
-The code is in [`lib/data/rooms.dart`](../lib/data/rooms.dart).
+The code is in [`lib/data/rooms.dart`](../frontend/lib/data/rooms.dart).
 
 **Room geometry.** For a room with wall length P (2 × (length + width) for
 a rectangle; 4 × √area when a room given by its area has no wall length),
@@ -1754,22 +1754,22 @@ Each calculator is tested with hand-worked examples: the expected numbers are
 worked out by hand in the test comments, then compared with what the app's
 own `calculate` function returns.
 
-- [`test/materials/structure_test.dart`](../test/materials/structure_test.dart):
+- [`test/materials/structure_test.dart`](../frontend/test/materials/structure_test.dart):
   blocks, plywood, insulation, ceiling, bar cutting, slabs, footings, columns
   and beams.
-- [`test/materials/structure_extras_test.dart`](../test/materials/structure_extras_test.dart):
+- [`test/materials/structure_extras_test.dart`](../frontend/test/materials/structure_extras_test.dart):
   laying and plaster lines of block walls and their unit price analyses, slab
   edge forms, form reuse, beam sides under a slab, tie beams, wall footings,
   lintels and stiffeners, and pavements.
-- [`test/materials/architectural_test.dart`](../test/materials/architectural_test.dart):
+- [`test/materials/architectural_test.dart`](../frontend/test/materials/architectural_test.dart):
   paint, tiles, roofing, carpet, wallpaper, doors and windows. It also runs
   every option of every architectural calculator and checks that each one
   calculates and is priced from its own price book item.
-- [`test/materials/mep_test.dart`](../test/materials/mep_test.dart): bulbs,
+- [`test/materials/mep_test.dart`](../frontend/test/materials/mep_test.dart): bulbs,
   switches, boxes, outlets, wire, rough-in, pipe, fixtures, water and septic
   tanks. It also checks that no definition or solution text says companions
   are left out of the cost.
-- [`test/materials/calculators_test.dart`](../test/materials/calculators_test.dart):
+- [`test/materials/calculators_test.dart`](../frontend/test/materials/calculators_test.dart):
   the catalog of 29, one price field for every option, plain inputs for every
   calculator, rounding noise (a 6 m² wall needs 75 blocks, not 76) and totals
   to the centavo.

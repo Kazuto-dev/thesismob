@@ -21,9 +21,9 @@ screen. `{name}` placeholders are filled in after translating.
 
 | File | Holds |
 | --- | --- |
-| [`lib/core/i18n.dart`](../lib/core/i18n.dart) | The languages, `tr` and `translate` |
-| [`lib/core/i18n_fil.dart`](../lib/core/i18n_fil.dart) | Filipino for the screens |
-| [`lib/core/i18n_fil_materials.dart`](../lib/core/i18n_fil_materials.dart) | Filipino for calculator names, fields and options |
+| [`lib/core/i18n.dart`](../frontend/lib/core/i18n.dart) | The languages, `tr` and `translate` |
+| [`lib/core/i18n_fil.dart`](../frontend/lib/core/i18n_fil.dart) | Filipino for the screens |
+| [`lib/core/i18n_fil_materials.dart`](../frontend/lib/core/i18n_fil_materials.dart) | Filipino for calculator names, fields and options |
 
 Calculator labels are translated where they are shown, so the specs in
 `lib/materials` stay in English.

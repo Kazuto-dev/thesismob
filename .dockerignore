@@ -1,0 +1,19 @@
+# Only what the images need goes to the Docker build.
+.git
+.github
+.claude
+docs
+reports
+research_notes
+.env
+deploy/backups
+**/.dart_tool
+**/build
+backend/test
+frontend/test
+frontend/tool
+frontend/android
+frontend/ios
+frontend/linux
+frontend/macos
+frontend/windows

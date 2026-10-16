@@ -1,9 +1,20 @@
 # BuildQuantify
 
 BuildQuantify estimates how much construction material a job needs and what
-it costs, using the sizes and prices of the Philippine market. Its 29
-calculators cover concrete and rebar through to finishes, wiring and
-plumbing.
+it costs, using the sizes and prices of the Philippine market. Its 51
+calculators cover earthworks, concrete and rebar through to finishes,
+wiring and plumbing.
+
+The repository has two halves:
+
+- [`frontend/`](frontend): the app, in Flutter for the web;
+- [`backend/`](backend): the server, in Dart with PostgreSQL, for accounts,
+  plans, the free trial, activation codes, cloud projects and companies.
+
+At the root are the [`Dockerfile`](Dockerfile) that builds both,
+[`docker-compose.yml`](docker-compose.yml) that runs them with nginx and
+PostgreSQL, the CI pipeline in [`.github/workflows`](.github/workflows),
+[`deploy/`](deploy) (nginx settings and server scripts) and [`docs/`](docs).
 
 Each estimate prices every material the job needs (cement, sand, bars, tie
 wire, forms, fittings…) from a built-in price book of 2026 Metro Manila
@@ -27,7 +38,7 @@ light or dark mode.
 
 | Login | Project on a phone | Project on a desktop |
 | --- | --- | --- |
-| ![Login on a phone](test/golden/goldens/login_phone.png) | ![Project on a phone](test/golden/goldens/project_phone.png) | ![Project on a desktop](test/golden/goldens/project_desktop.png) |
+| ![Login on a phone](frontend/test/golden/goldens/login_phone.png) | ![Project on a phone](frontend/test/golden/goldens/project_phone.png) | ![Project on a desktop](frontend/test/golden/goldens/project_desktop.png) |
 
 - [How each material is calculated, with sources](docs/calculations.md)
 - [Prices, budgets and exports](docs/prices-and-costing.md)
@@ -63,13 +74,20 @@ light or dark mode.
 Requires Flutter **3.47.7** (Dart 3.13).
 
 ```sh
+cd frontend
 flutter pub get
 flutter run -d chrome
 ```
 
+To run everything together as on the server (app, API, database and
+nginx), from the repository root: `cp .env.example .env`, set
+`POSTGRES_PASSWORD`, then `docker compose up -d --build` and open
+<http://localhost/>. See [docs/backend.md](docs/backend.md).
+
 ## Build for the web
 
 ```sh
+cd frontend
 flutter build web --release --no-web-resources-cdn \
   --dart-define=GOOGLE_CLIENT_ID=1234567890-abc.apps.googleusercontent.com \
   --dart-define=API_URL=https://api.example.com
@@ -84,9 +102,10 @@ flutter build web --release --no-web-resources-cdn \
   else works and Settings explains that Google sign-in isn't set up.
 - `API_URL` is the address of the BuildQuantify server
   ([docs/backend.md](docs/backend.md)), for accounts, plans, the free trial
-  and activation codes. Without it, the app works on its own on the free
-  plan and Settings shows no plan card.
-- `web/sw.js` is a service worker that caches the app as it loads, so after
+  and activation codes: a full address, or `/api` when nginx serves the app
+  and the API together (the Docker image does this). Without it, the app
+  works on its own on the free plan and Settings shows no plan card.
+- `frontend/web/sw.js` is a service worker that caches the app as it loads, so after
   one visit it starts without a connection. It is skipped on `localhost`
   unless the URL has `?offline`, so debug builds are never served stale.
 - URLs use the `#/` form (for example `#/category/structural/chb`), so any
@@ -98,12 +117,16 @@ Users sign in with their own Google account and each project is saved as a
 spreadsheet in their Google Drive, with the bill of quantities, the materials
 list and the budget on separate tabs. The app asks only for the `drive.file`
 permission, so it can open the spreadsheets it creates and nothing else, and
-Google does not require an app review. There is no server and no key. Setup
+Google does not require an app review. Sheets and Drive are reached straight
+from the browser, with no key. Setup
 for the Google client ID is in [docs/google-sheets.md](docs/google-sheets.md).
 
 ## Test
 
+The app, in `frontend/`:
+
 ```sh
+cd frontend
 flutter analyze
 flutter test                                    # unit, widget and golden tests
 flutter test --platform chrome test/data test/materials test/state
@@ -123,31 +146,50 @@ cd tool/smoke && npm ci && npx playwright install chromium
 BASE_URL=http://127.0.0.1:8090/ node smoke.mjs
 ```
 
-CI runs all of the above on every push (`.github/workflows/ci.yml`).
+The server, in `backend/`, against a PostgreSQL database:
+
+```sh
+cd backend
+dart pub get
+TEST_DATABASE_URL=postgres://user:pass@localhost:5432/test dart test -j 1
+```
+
+CI runs all of the above on every push (`.github/workflows/ci.yml`), then
+builds the Docker images and checks that nginx serves the app and reaches
+the API.
 
 ## Project layout
 
 ```
-lib/
-  main.dart, app.dart      start-up, providers, theme
-  router.dart              go_router routes, old-URL redirects
-  core/                    theme, breakpoints, formatting, shared widgets
-  data/                    Estimate and Project models, cost build-up,
-                           storage, legacy import, Sheets client
-  state/                   history, projects, price book, sheet settings
-  materials/               the 51 calculators as data (MaterialSpec), the
+Dockerfile                 builds the backend and the frontend images
+docker-compose.yml         database, backend, frontend (nginx), certbot
+.env.example               the server's settings
+.github/workflows/         CI: tests, builds and a run of the images
+deploy/                    nginx settings; setup, certificate, backup,
+                           restore and update scripts for the server
+docs/                      calculations, prices, backend, design
+backend/                   the API (Dart)
+  bin/                     server.dart, and admin.dart (codes, accounts)
+  lib/src/                 routes, database, plans, codes, Google sign-in,
+                           email
+  test/                    unit tests, and the API against PostgreSQL
+frontend/                  the app (Flutter)
+  lib/
+    main.dart, app.dart    start-up, providers, theme
+    router.dart            go_router routes, old-URL redirects
+    core/                  theme, breakpoints, formatting, shared widgets
+    data/                  Estimate and Project models, cost build-up,
+                           storage, legacy import, Sheets and API clients
+    state/                 history, projects, price book, account, settings
+    materials/             the 51 calculators as data (MaterialSpec), the
                            price-book items and shared estimating factors
-  export/                  bill of quantities as PDF, CSV, text; backups
-  features/                screens: home, category, calculator, history,
+    export/                bill of quantities as PDF, CSV, text; backups
+    features/              screens: home, category, calculator, history,
                            projects, settings, price book, help, shell
-assets/                    images and the Plus Jakarta Sans font (OFL)
-docs/                      calculations, design system, design QA
-server/                    the API (Dart): accounts, plans, codes,
-                           cloud projects, companies; its own tests
-deploy/                    Docker Compose, Caddy and scripts for the
-                           Ubuntu server
-tool/smoke/                Playwright smoke test
-test/                      unit, widget and golden tests
+  assets/                  images and the Plus Jakarta Sans font (OFL)
+  web/                     index.html, service worker, icons
+  tool/smoke/              Playwright smoke test
+  test/                    unit, widget and golden tests
 ```
 
 UI code imports `package:material_ui/material_ui.dart`, which Flutter now
@@ -156,16 +198,19 @@ recommends over `package:flutter/material.dart`.
 ### Adding a material
 
 1. Add any new things to buy to the price book in
-   `lib/materials/items_*.dart`, with a price and its source (mark guesses
+   `frontend/lib/materials/items_*.dart`, with a price and its source (mark guesses
    `estimate: true`).
-2. Add a `MaterialSpec` to the right file in `lib/materials/` with its
+2. Add a `MaterialSpec` to the right file in `frontend/lib/materials/`
+   with its
    fields, choices, `compute` function, definitions, solution steps,
    sources and search keywords. Set `itemKey` on the result and `priceRef`
    on the spec so its price is suggested, and list the other materials it
    needs with `buy(itemKey, quantity)`. List it in `catalog.dart`.
-3. Give it an `icon`, or draw `assets/images/materials/<id>.png` (192 px,
+3. Give it an `icon`, or draw
+   `frontend/assets/images/materials/<id>.png` (192 px,
    one colour on transparent; the app tints it).
-4. Add hand-worked examples to the matching test in `test/materials/`.
+4. Add hand-worked examples to the matching test in
+   `frontend/test/materials/`.
 
 The calculator screen, routing, projects and exports pick it up
 automatically.

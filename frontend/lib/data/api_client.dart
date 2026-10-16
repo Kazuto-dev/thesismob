@@ -23,7 +23,9 @@ class ApiException implements Exception {
 }
 
 /// Talks to the BuildQuantify server (see docs/backend.md). Its address
-/// is set when the app is built, with `--dart-define=API_URL=…`; without
+/// is set when the app is built, with `--dart-define=API_URL=…`: a full
+/// address such as `https://api.example.com`, or a path such as `/api`
+/// on the address the app itself is served from, as nginx does. Without
 /// one, accounts and plans are off and the app works on its own.
 class ApiClient {
   ApiClient({String? baseUrl, http.Client? client})
@@ -37,6 +39,12 @@ class ApiClient {
   final http.Client _client;
 
   bool get isConfigured => baseUrl.isNotEmpty;
+
+  /// The full address of [path]: a relative [baseUrl] is taken from the
+  /// page the app was loaded from.
+  Uri uri(String path) => baseUrl.startsWith('/')
+      ? Uri.base.resolve('$baseUrl$path')
+      : Uri.parse('$baseUrl$path');
 
   Future<Map<String, dynamic>> get(String path, {String? token}) =>
       _send('GET', path, token: token);
@@ -65,7 +73,7 @@ class ApiClient {
     if (!isConfigured) {
       throw ApiException(0, 'not_configured', 'Accounts are not set up yet.');
     }
-    final request = http.Request(method, Uri.parse('$baseUrl$path'));
+    final request = http.Request(method, uri(path));
     if (token != null) request.headers['authorization'] = 'Bearer $token';
     if (body != null) {
       request.headers['content-type'] = 'application/json';

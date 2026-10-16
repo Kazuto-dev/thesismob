@@ -20,7 +20,7 @@ exports. For how quantities are worked out, see
   VAT included, as the sources list it.
 - The **suggested price** is the default price × the region factor, rounded
   to the centavo
-  ([`PriceBookController`](../lib/state/price_book_controller.dart)).
+  ([`PriceBookController`](../frontend/lib/state/price_book_controller.dart)).
 - **Your own price** replaces the suggested one. It is used as you typed it,
   in every region.
 - Each of your prices can carry the **supplier** and the **date of the
@@ -45,7 +45,7 @@ exports. For how quantities are worked out, see
 ### Sources and dates
 
 The default prices were gathered for **Metro Manila, August to October
-2026** (`priceListLabel` in [`items.dart`](../lib/materials/items.dart)). Of
+2026** (`priceListLabel` in [`items.dart`](../frontend/lib/materials/items.dart)). Of
 the 166 items listed, 27 come from DTI's monitored prices, 21 from retailer
 listings and cost blogs, and 118 are our own estimates.
 
@@ -93,7 +93,7 @@ August 2026, and PSA's construction materials retail price index for NCR was up
 The bundled prices carry no dates of their own: the whole list is dated by
 its label, *Metro Manila, Aug–Oct 2026* (`priceListLabel`). Your own
 prices now carry a date too, and optionally a supplier
-([`PriceQuote`](../lib/data/price_quote.dart)):
+([`PriceQuote`](../frontend/lib/data/price_quote.dart)):
 
 - In the price book, tapping a material asks for the price, the
   **supplier** (optional) and the day it was **quoted** (today unless you
@@ -119,7 +119,7 @@ prices now carry a date too, and optionally a supplier
 
 Choose the project's region at the top of the price book (**Where is the
 project?**). One factor scales every default price
-([`PriceRegion`](../lib/materials/items.dart)).
+([`PriceRegion`](../frontend/lib/materials/items.dart)).
 
 | Region | Factor |
 | --- | --- |
@@ -153,9 +153,9 @@ track, so treat regional prices as rougher than Metro Manila ones.
 ### Default price list
 
 Generated from
-[`items_structure.dart`](../lib/materials/items_structure.dart),
-[`items_finishes.dart`](../lib/materials/items_finishes.dart) and
-[`items_mep.dart`](../lib/materials/items_mep.dart), in the order the price
+[`items_structure.dart`](../frontend/lib/materials/items_structure.dart),
+[`items_finishes.dart`](../frontend/lib/materials/items_finishes.dart) and
+[`items_mep.dart`](../frontend/lib/materials/items_mep.dart), in the order the price
 book shows them. Prices are Metro Manila; multiply by the region factor.
 **Estimate: yes** marks our own estimates. **†** marks items no calculator
 uses yet; they are there for your own pricing.
@@ -394,9 +394,9 @@ have no unit price of their own.
 Calculators price materials and measure the work. A project adds labour,
 tools, equipment, hauling, general requirements, contingency, markups and
 VAT in its **Budget** section (a tab on phones). The model is in
-[`lib/data/project.dart`](../lib/data/project.dart) (`CostSettings` and
+[`lib/data/project.dart`](../frontend/lib/data/project.dart) (`CostSettings` and
 `CostBreakdown.of`) and
-[`lib/data/unit_prices.dart`](../lib/data/unit_prices.dart) (crews and unit
+[`lib/data/unit_prices.dart`](../frontend/lib/data/unit_prices.dart) (crews and unit
 price analyses).
 
 ### Materials by trade
@@ -538,7 +538,7 @@ below), or enter what you pay. Equipment rates are typical day rentals.
 
 **Rates for region** lists the 18 wage regions with their minimum wage
 and the market rates the app derives from it
-([`lib/data/labour_regions.dart`](../lib/data/labour_regions.dart)).
+([`lib/data/labour_regions.dart`](../frontend/lib/data/labour_regions.dart)).
 Choosing one sets the foreman, skilled worker and helper rates of the
 project; equipment rates stay as they are. The picker starts on the
 region whose rates the project already pays; when several regions share
@@ -701,7 +701,7 @@ overhead, profit and VAT apply as to any other line.
 
 **Work out permit fees**, next to **Suggest amounts**, opens a worksheet
 of the building permit and its ancillary fees
-([`lib/data/permit_fees.dart`](../lib/data/permit_fees.dart)). **Put … in
+([`lib/data/permit_fees.dart`](../frontend/lib/data/permit_fees.dart)). **Put … in
 permits** writes the total into the general requirement *Permits,
 clearances and fees*.
 
@@ -759,7 +759,7 @@ excavation, 8 kVA, two bathrooms, no fence or air-conditioners):
 | Fire safety inspection, at least | ₱500.00 |
 | **Permits and fees** | **₱11,299.00** |
 
-[`test/data/permit_fees_test.dart`](../test/data/permit_fees_test.dart)
+[`test/data/permit_fees_test.dart`](../frontend/test/data/permit_fees_test.dart)
 checks it to the peso. Real assessments run higher: cities add filing
 and processing fees, inspection fees and clearances, and some multiply the
 national rates under their revenue codes; 2026 guides quote ₱20,000–80,000
@@ -785,7 +785,7 @@ and [Palanan's zoning fees](https://www.palanan.gov.ph/wp-content/uploads/Zoning
 
 **Work out professional fees** opens a worksheet of design and
 supervision fees as a percentage of the project cost
-([`lib/data/professional_fees.dart`](../lib/data/professional_fees.dart)).
+([`lib/data/professional_fees.dart`](../frontend/lib/data/professional_fees.dart)).
 Tick the services the owner pays for and change any percentage; **Put …
 in professional fees** writes the total into the general requirement
 *Professional fees: plans, design and signing*. The project cost starts
@@ -825,7 +825,7 @@ VAT, and are agreed with each professional.
 For a ₱3.7M house: architectural ₱222,000, structural ₱74,000,
 electrical ₱37,000 and plumbing ₱37,000, **₱370,000** in all (10%); with
 full-time supervision (₱55,500), ₱425,500.
-[`test/data/professional_fees_test.dart`](../test/data/professional_fees_test.dart)
+[`test/data/professional_fees_test.dart`](../frontend/test/data/professional_fees_test.dart)
 checks it.
 
 Sources (search-result excerpts, October 2026):
@@ -849,7 +849,7 @@ reasonable allowance. Leave it at 0 when the prices are current.
 
 Under the budget, **Checks** compares the project with what is usual for
 houses, to catch a wrong input before the estimate goes out
-([`lib/data/checks.dart`](../lib/data/checks.dart)):
+([`lib/data/checks.dart`](../frontend/lib/data/checks.dart)):
 
 | Check | Warns when | Usual |
 | --- | --- | --- |
@@ -935,7 +935,7 @@ to re-size it.
 | **Total** | **₱1,540,000** | **₱2,016,000** | **₱1,890,000** |
 
 The DPWH column follows the DO 197 s.2016 build-up, and
-[`test/data/project_test.dart`](../test/data/project_test.dart) checks it to
+[`test/data/project_test.dart`](../frontend/test/data/project_test.dart) checks it to
 the peso: a direct cost of ₱1,440,000 falls in the "up to ₱5M" bracket, so
 OCM is 15% and profit 10%; VAT at 5% gives ₱1,890,000. At 12% VAT the same
 job would be ₱2,016,000.
@@ -972,8 +972,8 @@ job would be ₱2,016,000.
 ## Contract
 
 The project's **Contract** tab carries the job past the estimate. Its
-model is in [`lib/data/contract.dart`](../lib/data/contract.dart) and
-[`lib/data/contract_math.dart`](../lib/data/contract_math.dart).
+model is in [`lib/data/contract.dart`](../frontend/lib/data/contract.dart) and
+[`lib/data/contract_math.dart`](../frontend/lib/data/contract_math.dart).
 
 ### Contract lines
 
@@ -1005,7 +1005,7 @@ follow as VO-1, VO-2…
 
 ### Schedule
 
-The schedule ([`lib/data/schedule.dart`](../lib/data/schedule.dart)) is
+The schedule ([`lib/data/schedule.dart`](../frontend/lib/data/schedule.dart)) is
 worked out from the crew-days of each work item, the crews working at once
 and how the phases of building a house follow each other:
 
@@ -1104,7 +1104,7 @@ assumed. The job's months, which price the time-related general
 requirements, include them.
 
 **Example.** The two-storey house of about 140 m² in the tests
-([`test/data/sample_house.dart`](../test/data/sample_house.dart)): with
+([`test/data/sample_house.dart`](../frontend/test/data/sample_house.dart)): with
 one crew per trade and phases strictly one after another it took 355
 working days (13.7 months), excavation alone 47 days with one helper. Now
 it takes about 145 working days, 5.7 months with the rain allowance and
@@ -1122,7 +1122,7 @@ assumes materials arrive on time (see the purchase schedule below).
 
 ### Cash flow
 
-The **Cash flow** card ([`lib/data/job_plan.dart`](../lib/data/job_plan.dart))
+The **Cash flow** card ([`lib/data/job_plan.dart`](../frontend/lib/data/job_plan.dart))
 plans the money out and in month by month, a month being 26 working days of
 the schedule. Amounts are **before VAT**, which the contractor collects
 for the BIR and passes on.
@@ -1258,7 +1258,7 @@ billing, the first sign of a job running over.
 
 **Learn from actuals.** Once there is a billing, the card compares the
 budget of the work done with what was spent (`reviewActuals` in
-[`lib/data/contract_math.dart`](../lib/data/contract_math.dart)):
+[`lib/data/contract_math.dart`](../frontend/lib/data/contract_math.dart)):
 
 ```
 earned materials = Σ each work item's material cost × its percent done at the last billing
@@ -1302,8 +1302,8 @@ plaster and a slab appears once.
 The project menu has **Download PDF**, **Download for Excel (CSV)**,
 **Copy as text** and **Send to Google Sheet**. Settings makes a backup
 file. The layouts are in
-[`lib/export/project_documents.dart`](../lib/export/project_documents.dart)
-and [`lib/export/project_pdf.dart`](../lib/export/project_pdf.dart).
+[`lib/export/project_documents.dart`](../frontend/lib/export/project_documents.dart)
+and [`lib/export/project_pdf.dart`](../frontend/lib/export/project_pdf.dart).
 
 ### Bill of quantities
 
@@ -1423,8 +1423,8 @@ projects or entries, unknown item keys and negative prices are skipped.
 
 The project menu has **Estimate revisions**, **Bill of quantities for
 bidders** and **Compare quotes**. The models are in
-[`lib/data/revisions.dart`](../lib/data/revisions.dart) and
-[`lib/data/quotes.dart`](../lib/data/quotes.dart).
+[`lib/data/revisions.dart`](../frontend/lib/data/revisions.dart) and
+[`lib/data/quotes.dart`](../frontend/lib/data/quotes.dart).
 
 ### Estimate revisions
 

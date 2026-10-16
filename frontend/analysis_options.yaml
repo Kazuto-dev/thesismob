@@ -12,8 +12,6 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
-    # The server is its own Dart package, checked by its own CI job.
-    - server/**
 
 linter:
   rules:

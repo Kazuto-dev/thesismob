@@ -5,10 +5,15 @@ projects in the cloud, Enterprise companies and the admin tools. The app
 itself still works without it; the server adds what one browser cannot
 do alone.
 
-- [`server/`](../server): the API, in Dart, with its database schema and
-  tests.
-- [`deploy/`](../deploy): everything to run it on an Ubuntu 24.04 server
-  with Docker: the database, the API and Caddy for HTTPS.
+- [`backend/`](../backend): the API, in Dart, with its database schema
+  and tests.
+- [`frontend/`](../frontend): the app, which nginx serves from the same
+  server.
+- At the repository root, [`Dockerfile`](../Dockerfile) builds both and
+  [`docker-compose.yml`](../docker-compose.yml) runs them on an Ubuntu
+  24.04 server: PostgreSQL, the backend, nginx (the frontend) and certbot
+  for HTTPS. [`deploy/`](../deploy) holds the nginx settings and the
+  server scripts.
 
 ## What needs the server
 
@@ -30,15 +35,23 @@ do alone.
 ## How it fits together
 
 ```
- Browser (the app)                     Your Ubuntu server
- ─────────────────                     ───────────────────────────────────────
- Google Sign-In ──token──► Caddy :443 ──► API :8080 ──► PostgreSQL 16
-                           (HTTPS)        (Dart)        (only the API reaches it)
-                                            │
-                                            ├─► Google: checks the sign-in token
-                                            └─► Gmail (SMTP 587): codes,
-                                                invitations, inquiries
+ Browser                      Your Ubuntu server (docker compose)
+ ───────                      ──────────────────────────────────────────────────
+ https://yourdomain ────────► frontend: nginx :80/:443
+                                ├─ /        the web app (built into the image)
+                                └─ /api/ ──► backend: the API :8080 ──► db: PostgreSQL 16
+                                                │
+                              certbot: renews   ├─► Google: checks sign-in tokens
+                              the certificate   └─► Gmail (SMTP 587): codes,
+                                                    invitations, inquiries
 ```
+
+nginx serves the app and the API from one address, so the browser needs
+no cross-origin permission, and the app needs no address built in: it
+calls `/api/…` on whatever domain it was opened from. Only nginx is
+published; the backend and the database are reachable only inside
+Docker's network. The paths below are the API's; through nginx they
+start with `/api`, such as `https://yourdomain/api/v1/me`.
 
 1. The app signs in with Google and sends the Google token to
    `POST /v1/auth/google`. The server asks Google whose token it is and
@@ -110,58 +123,58 @@ Admins are the Google accounts listed in `ADMIN_EMAILS`.
 
 ## Running it on the Oracle server
 
-You need the server (Ubuntu 24.04, ARM or Intel), a domain for the API,
-and SSH access.
+You need the server (Ubuntu 24.04, ARM or Intel) with SSH access. A
+domain comes later; until then the app runs on the server's IP address.
 
 1. **Open the ports in Oracle Cloud.** In the console, go to the
    instance's VCN, then its subnet's security list, and add ingress rules
-   for TCP 80, TCP 443 and UDP 443 from `0.0.0.0/0`.
-2. **Point the domain at the server.** Create a DNS `A` record such as
-   `api.yourdomain.com` with the server's public IP. If you want the app
-   served from the same server, add `app.yourdomain.com` too.
-3. **Get the code onto the server and prepare it:**
+   for TCP 80 and TCP 443 from `0.0.0.0/0`.
+2. **Get the code onto the server and prepare it:**
    ```sh
    git clone https://github.com/kazuto-dev/thesismob.git buildquantify
-   cd buildquantify/deploy
-   sudo ./setup-ubuntu.sh
+   cd buildquantify
+   sudo ./deploy/setup-ubuntu.sh
    ```
    This installs Docker and opens ports 80 and 443 in the server's own
    firewall. It also turns on automatic security updates, creates `.env`
    with a random database password, and schedules a backup every night
    at 02:30.
-4. **Fill in `deploy/.env`.** Set `API_DOMAIN`, `ADMIN_EMAILS`,
-   `ALLOWED_ORIGINS` and `APP_URL`, and the Gmail settings (next
-   section). Add `GOOGLE_CLIENT_IDS` when you have the client ID.
-5. **Start it:** log out and in again first, so your user can run Docker,
+3. **Fill in `.env`** at the repository root: `ADMIN_EMAILS` and the
+   Gmail settings (next section). Add `DOMAIN`, `CERTBOT_EMAIL` and
+   `GOOGLE_CLIENT_ID` when you have them.
+4. **Start it:** log out and in again first, so your user can run Docker,
    then:
    ```sh
-   cd buildquantify/deploy
+   cd buildquantify
    docker compose up -d --build
-   docker compose logs -f api
+   docker compose logs -f backend
    ```
-   Caddy gets the HTTPS certificate by itself within a minute. Check it
-   with `curl https://api.yourdomain.com/health`.
-6. **Keep the free server from being reclaimed.** Oracle reclaims Always
+   The first build takes 10–15 minutes on a 2-CPU server, because it
+   downloads Flutter and compiles the app; later builds reuse most of it.
+   The app is then at `http://<the server's IP>/`, and
+   `curl http://<the server's IP>/api/health` answers
+   `{"ok":true,…}`.
+5. **Add the domain and HTTPS.** Point the domain's DNS `A` record (such
+   as `app.yourdomain.com`) at the server's public IP, set `DOMAIN` and
+   `CERTBOT_EMAIL` in `.env`, then:
+   ```sh
+   ./deploy/get-certificate.sh
+   ```
+   It checks the domain reaches the server, gets a Let's Encrypt
+   certificate and switches nginx to HTTPS, with HTTP redirecting to it.
+   certbot renews the certificate by itself, and nginx picks up the new
+   one within six hours.
+6. **Turn on Google sign-in.** In Google Cloud Console, add
+   `https://app.yourdomain.com` to the OAuth client's authorized
+   JavaScript origins, set `GOOGLE_CLIENT_ID` in `.env` and rebuild with
+   `docker compose up -d --build`. Google sign-in works only over HTTPS
+   (or on `localhost`), so it needs step 5 first. Settings then shows the
+   Plan card: sign in, start the trial, enter a code, compare the plans
+   and ask about Enterprise.
+7. **Keep the free server from being reclaimed.** Oracle reclaims Always
    Free instances that stay mostly idle for a week. Upgrading the account
    to Pay As You Go stops that; the Always Free resources still cost
    nothing.
-
-7. **Build the app for the server.** Build the web app with the API's
-   address and the same Google client ID:
-   ```sh
-   flutter build web --release --no-web-resources-cdn \
-     --dart-define=API_URL=https://api.yourdomain.com \
-     --dart-define=GOOGLE_CLIENT_ID=<your web client ID>
-   ```
-   Then host `build/web` where you host the app now, or copy it into
-   `deploy/site/` to serve it from this server at `APP_DOMAIN`. Settings
-   then shows the Plan card: sign in, start the trial, enter a code,
-   compare the plans and ask about Enterprise.
-
-Until a domain is set, the server can be tried on its IP address only
-over plain HTTP, with `API_DOMAIN=http://<public-ip>`. Browsers will not
-let the app call it from an HTTPS page, so use this only for testing
-with `curl`.
 
 ### Gmail for sending codes
 
@@ -188,8 +201,8 @@ log instead.
 On the server:
 
 ```sh
-cd buildquantify/deploy
-docker compose exec api admin issue-code --plan business --months 1 \
+cd buildquantify
+docker compose exec backend admin issue-code --plan business --months 1 \
   --email customer@gmail.com --send
 ```
 
@@ -202,6 +215,8 @@ docker compose exec api admin issue-code --plan business --months 1 \
 - **Expiry:** a code must be used within 30 days (`CODE_VALID_DAYS`).
 
 Other commands:
+
+Each runs as `docker compose exec backend admin …`:
 
 | Command | What it does |
 | --- | --- |
@@ -217,27 +232,35 @@ The same actions are in the API for an admin screen in the app.
 
 ### Backups, restores and updates
 
-- **Backups:** `./backup.sh` saves the database to `deploy/backups/` and
+- **Backups:** `./deploy/backup.sh` saves the database to `deploy/backups/` and
   keeps 14 days; cron runs it nightly. To keep copies off the server,
   install the OCI CLI, create an Object Storage bucket and set
   `OCI_BUCKET` for the cron job. Object Storage includes free space.
-- **Restoring:** `./restore.sh backups/buildquantify-YYYYMMDD-HHMM.dump`
+- **Restoring:**
+  `./deploy/restore.sh deploy/backups/buildquantify-YYYYMMDD-HHMM.dump`
   replaces the database with a backup; it asks first.
-- **Updating:** `./update.sh` backs up, pulls the latest code and
-  rebuilds. The API brings the database schema up to date when it
-  starts.
+- **Updating:** `./deploy/update.sh` backs up, pulls the latest code and
+  rebuilds both images. The API brings the database schema up to date
+  when it starts.
 
 ## Security
 
-- **Only Caddy is reachable,** on ports 80 and 443. The database has no
-  published port, and the API runs as an unprivileged user.
+- **Only nginx is reachable,** on ports 80 and 443. The backend and the
+  database have no published port, and the API runs as an unprivileged
+  user. nginx sends the real client address to the API and replaces any
+  `X-Forwarded-For` a client sends, so rate limits cannot be dodged.
+- **HTTPS** uses TLS 1.2 and 1.3 with HSTS once the certificate is in
+  place; the security headers (`nosniff`, `SAMEORIGIN` framing, a strict
+  referrer policy) are set on every response.
 - **Codes and session tokens are stored only as SHA-256 hashes,** so a
   copy of the database does not hand out working codes. Codes have
   80 random bits and are limited to 10 tries per 15 minutes per account
   and per address.
-- **Google sign-ins are accepted only for the client IDs in
-  `GOOGLE_CLIENT_IDS`** and only with a verified email.
-- **Browsers may call the API only from `ALLOWED_ORIGINS`.**
+- **Google sign-ins are accepted only for `GOOGLE_CLIENT_ID`** and only
+  with a verified email.
+- **The app and the API share one address,** so no other site may call
+  the API from a browser (`ALLOWED_ORIGINS` allows more, for a copy of
+  the app hosted elsewhere).
 - **Every code issued and redeemed, plan change and membership change
   goes to the audit log.**
 - **Keep `.env` private.** It holds the database and Gmail passwords;
@@ -249,12 +272,13 @@ The same actions are in the API for an admin screen in the app.
 
 ## In the app
 
-- [`lib/data/api_client.dart`](../lib/data/api_client.dart) talks to the
-  API.
-- [`lib/state/account_controller.dart`](../lib/state/account_controller.dart)
+- [`frontend/lib/data/api_client.dart`](../frontend/lib/data/api_client.dart)
+  talks to the API, at `API_URL`: `/api` in the Docker image, or a full
+  address for a copy hosted elsewhere.
+- [`frontend/lib/state/account_controller.dart`](../frontend/lib/state/account_controller.dart)
   keeps the session and the last plan on the device, so the plan holds
   offline and ends on its date even without a connection.
-- [`lib/features/settings/plan_section.dart`](../lib/features/settings/plan_section.dart)
+- [`frontend/lib/features/settings/plan_section.dart`](../frontend/lib/features/settings/plan_section.dart)
   is the Plan card in Settings.
 - `context.watch<AccountController>().plan` gives the plan in force:
   `AppPlan.free`, `business` or `enterprise`.
@@ -264,7 +288,7 @@ The same actions are in the API for an admin screen in the app.
 ## Development and tests
 
 ```sh
-cd server
+cd backend
 dart pub get
 # Unit tests, plus the API end to end against a real PostgreSQL:
 TEST_DATABASE_URL=postgres://bq:bq@localhost:5432/bq_test dart test -j 1
@@ -274,8 +298,9 @@ DATABASE_URL=postgres://bq:bq@localhost:5432/bq_dev ADMIN_EMAILS=you@gmail.com \
 ```
 
 The API tests empty the test database before each test. CI runs them
-against PostgreSQL 16 and builds the Docker image.
+against PostgreSQL 16, then builds both images and checks that nginx
+serves the app and reaches the API.
 
 Schema changes go in a new entry at the end of `migrations` in
-[`server/lib/src/db.dart`](../server/lib/src/db.dart). Never edit one
+[`backend/lib/src/db.dart`](../backend/lib/src/db.dart). Never edit one
 that has already run on the server.

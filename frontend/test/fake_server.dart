@@ -15,6 +15,9 @@ class FakeServer {
   bool trialAvailable = true;
   String? trialEndsAt;
   String? paidUntil;
+
+  /// The company giving the Enterprise plan, as `{id, name, role, seats}`.
+  Map<String, Object?>? organization;
   final inquiries = <Map<String, dynamic>>[];
   final calls = <String>[];
 
@@ -35,7 +38,7 @@ class FakeServer {
       'paidUntil': paidUntil,
       'inGrace': false,
       'trialAvailable': trialAvailable,
-      'organization': null,
+      'organization': organization,
       'projectLimit': plan == 'free' ? 2 : null,
     },
     'organizations': <Object>[],

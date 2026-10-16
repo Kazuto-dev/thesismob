@@ -119,11 +119,11 @@ including PDF and Excel downloads, works as usual.
 
 | File | Role |
 | --- | --- |
-| [`lib/features/auth/login_screen.dart`](../lib/features/auth/login_screen.dart) | The login screen; the router in [`lib/router.dart`](../lib/router.dart) shows it until the user signs in or continues |
-| [`lib/data/google_auth.dart`](../lib/data/google_auth.dart) | Gets access tokens through Google Identity Services (`google_sign_in`) |
-| [`lib/data/google_sheets_client.dart`](../lib/data/google_sheets_client.dart) | Calls the user info, Sheets and Drive REST APIs: create, update, format; find, save and read the backup |
-| [`lib/export/project_sheets.dart`](../lib/export/project_sheets.dart) | Turns a project into the three tabs |
-| [`lib/state/google_account_controller.dart`](../lib/state/google_account_controller.dart) | Sign in, sign out, save, back up and restore; turns Google errors into messages |
+| [`lib/features/auth/login_screen.dart`](../frontend/lib/features/auth/login_screen.dart) | The login screen; the router in [`lib/router.dart`](../frontend/lib/router.dart) shows it until the user signs in or continues |
+| [`lib/data/google_auth.dart`](../frontend/lib/data/google_auth.dart) | Gets access tokens through Google Identity Services (`google_sign_in`) |
+| [`lib/data/google_sheets_client.dart`](../frontend/lib/data/google_sheets_client.dart) | Calls the user info, Sheets and Drive REST APIs: create, update, format; find, save and read the backup |
+| [`lib/export/project_sheets.dart`](../frontend/lib/export/project_sheets.dart) | Turns a project into the three tabs |
+| [`lib/state/google_account_controller.dart`](../frontend/lib/state/google_account_controller.dart) | Sign in, sign out, save, back up and restore; turns Google errors into messages |
 
 Google only lets the sign-in window open in direct response to a tap, so
 every save asks for the token first, before anything else is awaited. The

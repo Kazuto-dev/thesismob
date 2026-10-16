@@ -5,8 +5,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  flutter:
+  # The Flutter web app in frontend/.
+  frontend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -28,9 +32,9 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: tool/smoke/package-lock.json
+          cache-dependency-path: frontend/tool/smoke/package-lock.json
       - name: Browser smoke test
-        working-directory: tool/smoke
+        working-directory: frontend/tool/smoke
         run: |
           npm ci
           npx playwright install --with-deps chromium
@@ -40,10 +44,11 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: web-build
-          path: build/web
+          path: frontend/build/web
           retention-days: 7
 
-  server:
+  # The Dart API in backend/, tested against a real PostgreSQL.
+  backend:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -61,7 +66,7 @@ jobs:
           --health-retries 10
     defaults:
       run:
-        working-directory: server
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1
@@ -70,9 +75,39 @@ jobs:
       - run: dart pub get
       - run: dart format --output=none --set-exit-if-changed .
       - run: dart analyze --fatal-infos
-      # Unit tests, and the API end to end against a real PostgreSQL.
       - run: dart test -j 1
         env:
           TEST_DATABASE_URL: postgres://bq:bq@localhost:5432/bq_test
-      - name: Build the Docker image
-        run: docker build -t buildquantify-api .
+
+  # The Docker images from the root Dockerfile, run together the way the
+  # server runs them: nginx must serve the app and reach the API.
+  docker:
+    runs-on: ubuntu-latest
+    needs: [frontend, backend]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Settings for the test run
+        run: |
+          cp .env.example .env
+          sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=ci$(openssl rand -hex 12)/" .env
+          sed -i "s/^SMTP_HOST=.*/SMTP_HOST=/" .env
+      - name: Build
+        run: docker compose build
+      - name: Start
+        run: docker compose up -d --wait db backend frontend
+      - name: The app and the API answer through nginx
+        run: |
+          for i in $(seq 1 30); do
+            curl -fsS http://localhost/api/health && break
+            sleep 2
+          done
+          curl -fsS http://localhost/ | grep -q 'BuildQuantify'
+          curl -fsS http://localhost/api/v1/plans | grep -q '"business"'
+          curl -fsS -o /dev/null http://localhost/main.dart.js
+          # Pages of the app fall back to index.html.
+          curl -fsS http://localhost/settings | grep -q 'BuildQuantify'
+      - name: The admin tool works in the backend container
+        run: docker compose exec -T backend admin stats
+      - name: Logs
+        if: failure()
+        run: docker compose logs

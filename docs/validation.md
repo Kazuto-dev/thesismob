@@ -24,7 +24,7 @@ from the plans, the prices and the crew outputs.
 
 Every calculator has unit tests whose expected values are worked out by
 hand from the formula and the published factor, not by running the code
-twice ([`test/materials`](../test/materials)). For example:
+twice ([`test/materials`](../frontend/test/materials)). For example:
 
 | Calculator | Case | Expected, by hand |
 | --- | --- | --- |
@@ -39,7 +39,7 @@ source.
 
 ### Every calculator, every option
 
-Shared tests ([`test/materials/calculators_test.dart`](../test/materials/calculators_test.dart))
+Shared tests ([`test/materials/calculators_test.dart`](../frontend/test/materials/calculators_test.dart))
 run all 51 calculators and check that:
 
 - each one calculates with plain inputs, and its total is quantity × price;
@@ -50,15 +50,15 @@ run all 51 calculators and check that:
 ### Costs that add up
 
 - The unit price analyses of a project add up to its direct cost
-  ([`test/data/unit_prices_test.dart`](../test/data/unit_prices_test.dart)).
+  ([`test/data/unit_prices_test.dart`](../frontend/test/data/unit_prices_test.dart)).
 - Contract lines add up to the contract price to the centavo, and billing
   statements recoup the downpayment and hold retention as set
-  ([`test/data/contract_test.dart`](../test/data/contract_test.dart)).
+  ([`test/data/contract_test.dart`](../frontend/test/data/contract_test.dart)).
 - The DPWH preset reproduces the DO 197 s.2016 build-up to the peso
-  ([`test/data/project_test.dart`](../test/data/project_test.dart)).
+  ([`test/data/project_test.dart`](../frontend/test/data/project_test.dart)).
 - The browser smoke test enters a wall in the release build and checks the
   blocks, the materials total and the budget on screen
-  ([`tool/smoke/smoke.mjs`](../tool/smoke/smoke.mjs)).
+  ([`tool/smoke/smoke.mjs`](../frontend/tool/smoke/smoke.mjs)).
 
 ### Checks in the app
 

@@ -1,0 +1,14 @@
+# Plain HTTP, until a certificate is issued. See 40-buildquantify.sh.
+
+# Strict-Transport-Security only over HTTPS; an empty value sends none.
+map $scheme $hsts {
+  https "max-age=31536000; includeSubDomains";
+  default "";
+}
+
+server {
+  listen 80 default_server;
+  listen [::]:80 default_server;
+  server_name ${DOMAIN};
+  include /etc/nginx/buildquantify/app.conf;
+}

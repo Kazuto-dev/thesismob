@@ -108,4 +108,15 @@ void main() {
     final error = await c.sendInquiry(name: 'Maria', email: 'm@x.ph');
     expect(error, contains("Couldn't reach BuildQuantify"));
   });
+
+  test('a relative server address is taken from the page', () {
+    final api = ApiClient(baseUrl: '/api');
+    final uri = api.uri('/v1/plans');
+    expect(uri.path, '/api/v1/plans');
+    expect(uri.scheme, Uri.base.scheme);
+    expect(
+      ApiClient(baseUrl: 'https://x.ph/').uri('/v1/me').toString(),
+      'https://x.ph/v1/me',
+    );
+  });
 }
