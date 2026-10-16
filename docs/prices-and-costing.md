@@ -23,6 +23,8 @@ exports. For how quantities are worked out, see
   ([`PriceBookController`](../lib/state/price_book_controller.dart)).
 - **Your own price** replaces the suggested one. It is used as you typed it,
   in every region.
+- Each of your prices can carry the **supplier** and the **date of the
+  quote** (see below).
 - Each calculator fills its price field from the price book entry that
   matches the options you chose, such as a 6" block, an 8 ft corrugated
   sheet or a box of 3.5 mm² wire (`priceRef` in each spec). Typing a
@@ -85,6 +87,33 @@ retailer sites could not be opened directly. Prices drift: DTI's prevailing
 cement price in NCR rose from about ₱180–245 in 2025 to ₱210–265 in June to
 August 2026, and PSA's construction materials retail price index for NCR was up
 1.2–1.3% year on year in early 2026.
+
+### Suppliers and quote dates
+
+The bundled prices carry no dates of their own: the whole list is dated by
+its label, *Metro Manila, Aug–Oct 2026* (`priceListLabel`). Your own
+prices now carry a date too, and optionally a supplier
+([`PriceQuote`](../lib/data/price_quote.dart)):
+
+- In the price book, tapping a material asks for the price, the
+  **supplier** (optional) and the day it was **quoted** (today unless you
+  pick another day). Under *Your price* the line then reads *Wilcon Depot
+  · quoted Oct 3, 2026*.
+- A price you set elsewhere (a calculator's companion line, or a line in a
+  project's **To buy** list) is dated the day you set it and keeps the
+  supplier it had.
+- Clearing a price clears its supplier and date. **Clear my prices** can be
+  undone with them.
+- They are saved apart from the prices (`price_quotes_v1`), so prices
+  saved by earlier versions still load, without a date.
+- The CSV and Google Sheets materials lists add a **Supplier** column when
+  any line's material has one in your price book. The PDF and the plain
+  text are unchanged.
+- The **age of the prices** check dates a line by its quote when the line
+  uses your quoted price for that material, and otherwise by when the
+  estimate was made. A fresh estimate priced from a quote you got in
+  January therefore shows as nine months old in October, and re-pricing a
+  line under To buy makes it current.
 
 ### Regional factors
 
@@ -501,8 +530,92 @@ default rates below.
 Labour rates are for Metro Manila in late 2026: the minimum wage is ₱755 a
 day from 26 September 2026, and the rates add the employer's share of
 13th-month pay and SSS, PhilHealth and Pag-IBIG contributions, as DPWH's
-labour cost factor does. Provincial minimum wages are lower; enter what you
-pay under Budget → Daily rates. Equipment rates are typical day rentals.
+labour cost factor does. Provincial minimum wages are lower: **Rates for
+region** under Budget → Daily rates fills in another region's rates (see
+below), or enter what you pay. Equipment rates are typical day rentals.
+
+#### Daily rates by region
+
+**Rates for region** lists the 18 wage regions with their minimum wage
+and the market rates the app derives from it
+([`lib/data/labour_regions.dart`](../lib/data/labour_regions.dart)).
+Choosing one sets the foreman, skilled worker and helper rates of the
+project; equipment rates stay as they are. The picker starts on the
+region whose rates the project already pays; when several regions share
+those rates (CAR and Ilocos, for example) it prefers the price book's
+region. Only **Metro Manila and nearby** in the price book maps onto a
+wage region (NCR); its other regions are island groups, each with several
+wage regions.
+
+The method, the same one that gives the Metro Manila defaults:
+
+```
+rate = minimum wage × trade premium × labour cost factor, rounded to ₱50
+
+trade premium       helper 1.0, skilled worker 1.2, foreman 1.5
+labour cost factor  1.22 = 1 + 13th-month pay 8.3% + SSS employer share
+                    10% (plus EC) + PhilHealth 2.5% + Pag-IBIG about 1%
+```
+
+The premiums are our estimate of what the market pays above the minimum
+wage, set so that NCR's ₱755 gives the existing ₱900, ₱1,100 and ₱1,400.
+The contribution rates are the 2026 ones: SSS 15% of the monthly salary
+credit (employer 10%), PhilHealth 5% shared equally, Pag-IBIG 2% of up to
+₱10,000. Service incentive leave, overtime and meals are left out.
+
+Minimum daily wages for non-agriculture work, as of 16 October 2026: the
+highest band in each region, which covers its cities and larger
+establishments. Smaller towns, retail and service establishments with few
+workers and agriculture can be lower.
+
+| Region | Minimum | Wage order, effective | Next step set by the order | Foreman | Skilled | Helper |
+| --- | ---: | --- | --- | ---: | ---: | ---: |
+| NCR | ₱755 | NCR-28, 26 Sep 2026 | None. NCR-27's ₱780 from January 2027 is held up in court. | ₱1,400 | ₱1,100 | ₱900 |
+| CAR | ₱505 | CAR-24, 30 Dec 2025 | – | ₱900 | ₱750 | ₱600 |
+| I, Ilocos | ₱505 | RB I-24, 19 Nov 2025 (10 or more workers) | – | ₱900 | ₱750 | ₱600 |
+| II, Cagayan Valley | ₱500 | RTWPB II-24, 5 Nov 2025 | – | ₱900 | ₱750 | ₱600 |
+| III, Central Luzon | ₱600 | RBIII-26, 16 Apr 2026 (Aurora ₱560) | – | ₱1,100 | ₱900 | ₱750 |
+| IV-A, CALABARZON | ₱600 | IVA-22, component cities and growth areas, 5 Oct 2025 | IVA-23 adds up to ₱45 from 26 Oct 2026; its schedule by area was not yet published, so ₱645 is the top band if it gets the full ₱45 | ₱1,100 | ₱900 | ₱750 |
+| IV-B, MIMAROPA | ₱455 | RB-MIMAROPA-13, 1 Jan 2026 | – | ₱850 | ₱650 | ₱550 |
+| V, Bicol | ₱455 | RBV-23, 8 Apr 2026 | ₱480 on 1 Dec 2026 | ₱850 | ₱650 | ₱550 |
+| VI, Western Visayas | ₱550 | RBVI-29, 19 Nov 2025 (more than 10 workers) | – | ₱1,000 | ₱800 | ₱650 |
+| NIR, Negros Island | ₱550 | No wage board yet: Negros Occidental follows Region VI (₱550), Negros Oriental and Siquijor Region VII (Class B, ₱542) | – | ₱1,000 | ₱800 | ₱650 |
+| VII, Central Visayas | ₱582 | The ₱42 order affirmed by the NWPC in September 2026 (Class A, Metro Cebu; Class B ₱542), 14 Oct 2026 | – | ₱1,050 | ₱850 | ₱700 |
+| VIII, Eastern Visayas | ₱470 | RB VIII-25, 1 Jun 2026 | – | ₱850 | ₱700 | ₱550 |
+| IX, Zamboanga Peninsula | ₱464 | RIX-24, 1 Jun 2026 (10 or more workers) | – | ₱850 | ₱700 | ₱550 |
+| X, Northern Mindanao | ₱500 | RX-24, 1 May 2026 (Category I cities) | – | ₱900 | ₱750 | ₱600 |
+| XI, Davao | ₱540 | RB XI-24, 1 Sep 2026 | – | ₱1,000 | ₱800 | ₱650 |
+| XII, SOCCSKSARGEN | ₱460 | RB XII-25, 15 Dec 2025 | – | ₱850 | ₱650 | ₱550 |
+| XIII, Caraga | ₱475 | RXIII-20, 1 May 2026 | – | ₱850 | ₱700 | ₱600 |
+| BARMM | ₱436 | BARMM-06, July 2026 (Cotabato, Marawi and Lamitan cities; provinces ₱411) | ₱461 on 1 Dec 2026 | ₱800 | ₱650 | ₱550 |
+
+The rates use the minimum in force today, not the next step; raise them
+when a scheduled increase takes effect. The NWPC's own tables could not be
+opened from here, so the figures come from news reports of DOLE and wage
+board announcements and from wage-tracking sites, read in October 2026:
+[NCR-28 (Philstar)](https://philstarlife.com/news-and-views/933783-p60-wage-hike-in-ncr-takes-effect),
+[NCR-28 (Daily Tribune)](https://tribune.net.ph/2026/09/26/11-million-ncr-workers-to-get-p60-wage-hike),
+[CAR-24 (Emerhub)](https://emerhub.com/news/new-daily-minimum-wage-for-cordillera-region/),
+[Region I (WageIndicator)](https://wageindicator.org/ai/work/minimum-wage/countries/philippines/2601-i-ilocos/),
+[Region II (Manila Bulletin)](https://mb.com.ph/2025/10/21/dole-higher-wages-set-for-cagayan-valley-workers-kasambahay-starting-nov-5),
+[Region III (SunStar)](https://www.sunstar.com.ph/pampanga/another-p40-wage-hike-in-cl-starts-on-april-16),
+[CALABARZON IVA-23 (GMA)](https://www.gmanetwork.com/news/money/economy/1005445/dole-calabarzon-minimum-wage-up-by-p45-on-oct-26-2026/story/)
+and [IVA-22 (WageIndicator)](https://wageindicator.org/work/minimum-wage/countries/philippines/2613-iv-a-calabarzon),
+[MIMAROPA (WageIndicator)](https://wageindicator.org/ai/work/minimum-wage/countries/philippines/55357-iv-b-southwestern-tagalog-regionmimaropa/),
+[Bicol (WageIndicator)](https://wageindicator.org/work/minimum-wage/updates/2026/minimum-wage-revised-in-v-bicol-region-philippines-from-08-april-2026-april-07-2026),
+[Western Visayas (Visayan Daily Star)](https://visayandailystar.com/new-minimum-wage-rates-take-effect-in-western-visayas/),
+[Negros Island Region (SunStar)](https://www.sunstar.com.ph/manila/status-quo-remains-for-negros-island-region-wages),
+[Central Visayas (Philstar)](https://www.philstar.com/business/2026/09/28/2559493/p42-wage-hike-okd),
+[Eastern Visayas (WageIndicator)](https://wageindicator.org/ai/work/minimum-wage/updates/2026/minimum-wage-revised-in-viii-eastern-visayas-philippines-from-01-june-2026/),
+[Zamboanga Peninsula (WageIndicator)](https://wageindicator.org/ai/work/minimum-wage/updates/2026/minimum-wage-revised-in-ix-zamboanga-peninsula-philippines-from-01-june-2026-june-04-2026/),
+[Northern Mindanao (WageIndicator)](https://wageindicator.org/ai/work/minimum-wage/updates/2026/minimum-wage-revised-in-x-northern-mindanao-philippines-from-01-may-2026-may-01-2026/),
+[Davao (People Matters)](https://sea.peoplemattersglobal.com/news/compensation-benefits/davao-region-minimum-wage-workers-receive-second-tranche-of-pay-hike-51884),
+[SOCCSKSARGEN (Payroll Solutions)](https://www.payrollsolutions.ph/articles/146),
+[Caraga (Payroll Solutions)](https://www.payrollsolutions.ph/articles/170),
+[BARMM (Philstar)](https://www.philstar.com/nation/2026/07/17/2542779/barmm-workers-get-p50-daily-wage-increase/amp/),
+and for contributions [KAMI Workforce's 2026 tables](https://kamiworkforce.com/ph/blog/sss-philhealth-pagibig-contribution-tables-2026/).
+Check the regional wage board's order for your town before you rely on a
+figure.
 
 ### Unit price analysis
 
@@ -583,6 +696,146 @@ Units are lot, set, piece, m², m³, m and kg. Each custom item is one line
 of the bill of quantities with its own unit price analysis; contingency,
 overhead, profit and VAT apply as to any other line.
 
+### Permit fees
+
+**Work out permit fees**, next to **Suggest amounts**, opens a worksheet
+of the building permit and its ancillary fees
+([`lib/data/permit_fees.dart`](../lib/data/permit_fees.dart)). **Put … in
+permits** writes the total into the general requirement *Permits,
+clearances and fees*.
+
+Inputs, with what they start from:
+
+| Input | Starts from |
+| --- | --- |
+| Use | House for one family (Division A-1), or apartments, shops, offices, factories and warehouses (Groups B, E–I) |
+| Total floor area | The project's floor area |
+| Storeys | 2 when the floor area is over 100 m², else 1 |
+| Project cost | The project total without its permits and professional fees lines |
+| Street frontage | 10 m (our guess; enter the lot's) |
+| Excavation | The excavation the project's estimates measured, or 0.5 m³ per m² of footprint (floor area ÷ storeys; our guess) |
+| Connected load | 24 VA per m² of floor for lighting plus 4.5 kVA for two small-appliance circuits and a laundry circuit, rounded up (Philippine Electrical Code dwelling loads), before air-conditioners |
+| Bathrooms | One a storey, or one for every 70 m², whichever is more |
+| Air-conditioners, fence, other LGU fees | None |
+
+Until you type them yourself, the connected load, bathrooms and
+excavation follow the floor area and storeys. Plumbing fixtures come from
+the bathrooms: per bathroom a water closet, lavatory, shower and floor
+drain, plus a kitchen sink, a laundry sink, a laundry floor drain and a
+faucet per sink and one outside.
+
+The fees:
+
+| Fee | How it is worked out | Source | Status |
+| --- | --- | --- | --- |
+| Building fee, house (A-1) | Whole floor area × one rate by bracket: up to 20 m² ₱2.00, 20–50 ₱3.40, 50–100 ₱4.80, 100–150 ₱6.00, over 150 ₱7.20 a m² | Revised IRR of PD 1096, reissued as Annex A of NBCDO MC 03 s.2016; DPWH's own sample: 75 m² × ₱4.80 = ₱360 | Rates in DPWH and LGU copies. Some LGUs (San Fernando City's charter) split the area by bracket instead, which gives less. |
+| Building fee, Groups B, E–I | Each band of area at its rate: first 500 m² ₱23.00, then ₱22.00, ₱20.50, ₱19.50, ₱18.00 and ₱17.00 for each next 100 m² to 1,000 m², ₱16.00 to 1,500, ₱15.00 to 2,000, ₱14.00 to 3,000, ₱12.00 above | Same schedule, as reproduced by San Antonio (Zambales), Alaminos (Laguna) and TIEZA, which show "first 500 m² @ ₱23 = ₱11,500, next 100 m² @ ₱22 = ₱2,200" | LGU copies. Schools and hospitals (C, D), duplexes (A-2) and accessory structures (J) have other tables, not included. |
+| Line and grade | ₱24 for the first 10 m of street frontage, ₱2.40 for each metre or fraction after | Alaminos copy of the schedule | LGU copy |
+| Excavation | ₱3 per m³ or fraction | Guiguinto, Bulacan 2026 citizen's charter | LGU copy; basements are ₱4/m³, not modelled |
+| Fencing | Per metre or fraction: ₱3 masonry, concrete or metal up to 1.80 m; ₱4 above 1.80 m; ₱2.40 wire or light materials | Fee schedule copies and Guiguinto | LGU copies |
+| Electrical | On the total connected load in whole kVA: up to 5 kVA ₱200; to 50 kVA ₱200 + ₱20 per kVA over 5; to 300 kVA ₱1,100 + ₱10 per kVA over 50; to 1,500 kVA ₱3,600 + ₱5; to 6,000 kVA ₱9,600 + ₱2.50; above, ₱20,850 + ₱1.25 | Fee schedule copies; Puerto Princesa's worked example (6 kVA: ₱220) | First three tiers seen in sources; the tiers above 300 kVA are our reading of the IRR table, continuous with them. Meter, pole and wiring-permit charges (tens of pesos) are left out. |
+| Mechanical | ₱40 per air-conditioner | The schedule's window-type rate | LGU copies show ₱40 or ₱60; we apply it to split units too. Packaged systems, elevators and pumps are not modelled. |
+| Plumbing | ₱24 for the first "unit" (1 water closet, 2 floor drains, 1 lavatory, 1 sink, 3 faucets, 1 shower head; part of a unit counts whole), then ₱7 per water closet, ₱3 per floor drain, ₱7 per lavatory, ₱3 per sink, ₱2 per faucet and ₱2 per shower head | VIZCODE's copy of the schedule (unit, water closet and floor drain rates) | The lavatory, sink, faucet and shower rates are our reading of the IRR table; water meters and septic tanks are left out |
+| Zoning (locational) clearance, house only | Up to ₱100,000: ₱288; to ₱200,000: ₱576; above: ₱720 + 0.1% of the cost over ₱200,000 | HLURB Resolution 912 s.2013, as adopted by LGUs (Palanan, San Gabriel) | LGUs set their own; other uses are left to *Other LGU fees* |
+| Fire safety evaluation clearance (BFP) | 0.10% of the project cost, at most ₱50,000 | RA 9514 (Fire Code) Sec. 12; BFP citizen's charter for the FSEC | The ₱50,000 cap is from the law as summarised by secondary sources |
+| Certificate of occupancy | On a cost of floor area × ₱10,000 (Table II.G.1 of MC 03 s.2016). House: ₱100 to ₱150,000, ₱200 to ₱400,000, ₱400 to ₱850,000, ₱800 to ₱1.2M and ₱800 for each further million or part. Groups B, E–I: ₱200, ₱400, ₱800, ₱1,000 and ₱1,000 a million | Fee schedule copies, TIEZA | House tiers seen in sources. For B, E–I, only ₱800 (₱400,000–850,000) was seen; the other tiers are our reading, and copies disagree between ₱900 and ₱1,000 above ₱850,000. |
+| Fire safety inspection for occupancy (BFP) | 15% of the occupancy fee, at least ₱500 | 2019 Revised IRR of RA 9514; BFP MC 2021-020 | The 10% in older guides is the 2009 IRR |
+| Other LGU fees | Your own figure | – | Filing and processing fees, barangay clearance, documentary stamps |
+
+A 140 m² two-storey house costing ₱3.7M (10 m frontage, 35 m³ of
+excavation, 8 kVA, two bathrooms, no fence or air-conditioners):
+
+| Fee | Amount |
+| --- | ---: |
+| Building fee, 140 m² × ₱6.00 | ₱840.00 |
+| Line and grade | ₱24.00 |
+| Excavation, 35 m³ × ₱3 | ₱105.00 |
+| Electrical, 8 kVA | ₱260.00 |
+| Plumbing, one unit + ₱26 of extra fixtures | ₱50.00 |
+| Zoning clearance, ₱720 + 0.1% of ₱3.5M | ₱4,220.00 |
+| Fire safety evaluation clearance, 0.1% of ₱3.7M | ₱3,700.00 |
+| Certificate of occupancy, on ₱1.4M | ₱1,600.00 |
+| Fire safety inspection, at least | ₱500.00 |
+| **Permits and fees** | **₱11,299.00** |
+
+[`test/data/permit_fees_test.dart`](../test/data/permit_fees_test.dart)
+checks it to the peso. Real assessments run higher: cities add filing
+and processing fees, inspection fees and clearances, and some multiply the
+national rates under their revenue codes; 2026 guides quote ₱20,000–80,000
+for a house's permits depending on the city. Treat the worksheet as the
+national floor and ask your building official for the assessment.
+
+Sources (read from search-result excerpts in October 2026, because the
+sites could not be opened directly):
+[DPWH, NBCDO MC 03 s.2016 Annex A](https://www.dpwh.gov.ph/DPWH/files/nbc/NEW.pdf);
+[Alaminos, Laguna fee schedule](https://alaminoslaguna.com/wp-content/uploads/2020/08/NBC_FEES_AND_CHARGES.pdf);
+[San Antonio, Zambales](https://www.sanantoniozambales.gov.ph/downloadable%20files/Engineering/Schedule%20of%20Fees%20and%20Other%20Charges.pdf);
+[TIEZA consolidated fees](https://tieza.gov.ph/wp-content/uploads/2019/11/TIEZA-fees-fines-and-penalties-consolidated.pdf);
+[Puerto Princesa OCBO assessment](https://ocbo.puertoprincesa.ph/wp-content/uploads/2022/08/Assessment-of-Fees.pdf);
+[Guiguinto, Bulacan 2026 charter](https://www.guiguinto.gov.ph/wp-content/uploads/2026/03/ENGR-ARTA-CC-LATEST-2026.xlsx-rev.03.17.2026.pdf);
+[VIZCODE, PD 1096](https://vizcodeph.com/code-library/pd-1096-national-building-code-of-the-philippines/);
+[Respicio, how building permit fees are computed](https://www.respicio.ph/commentaries/how-building-permit-fees-are-computed-in-the-philippines);
+[HLURB Resolution 912 s.2013](https://dhsud.gov.ph/wp-content/uploads/Laws_Issuances/00_Archive/HLURB/Board_Resolutions/R-912%20s.%202013.pdf)
+and [Palanan's zoning fees](https://www.palanan.gov.ph/wp-content/uploads/ZoningLocational-Clearance-Fee.pdf);
+[BFP citizen's charter, FSEC](https://bfp.gov.ph/wp-content/uploads/2013/11/New-BFP-Citizen-Charter-FSEC.pdf);
+[BFP MC 2021-020 on fire code fees](https://bfp.gov.ph/wp-content/uploads/2022/06/MC-2021-020-SUPPLEMENTAL-GUIDELINES-ASSESSMENT-COLLECTION-OF-FIRE-CODE-FEES-REL.-TO-THE-IMPLEMENTATION-OF-RA-9514-OTHERWISE-KNOWN-AS-THE-FIRE-CODE-OF-THE-PHILIPPINES-OF-2008-ITS-REVISED-IRR-OF-2019.pdf).
+
+### Professional fees
+
+**Work out professional fees** opens a worksheet of design and
+supervision fees as a percentage of the project cost
+([`lib/data/professional_fees.dart`](../lib/data/professional_fees.dart)).
+Tick the services the owner pays for and change any percentage; **Put …
+in professional fees** writes the total into the general requirement
+*Professional fees: plans, design and signing*. The project cost starts
+from the project total without its permits and professional fees lines.
+
+UAP Doc 202 sets the architect's minimum basic fee (MBF) as a percentage
+of the project construction cost by building group:
+
+| Group | Examples | MBF |
+| --- | --- | ---: |
+| 1, simple | Warehouses, factories, farm buildings, markets | 6% |
+| 2, moderately complex | Schools, offices, stores, fire stations | 7% |
+| 3, complex | Hospitals, hotels, stadiums | 8% |
+| 4, residences | Houses, duplexes, small apartment houses, townhouses | 10% |
+| 5, monumental | Monuments and landmarks | 12% |
+
+In UAP practice the residential 10% pays for the architect and the usual
+engineering on the design team. The worksheet splits the MBF between the
+four design services, so ticking all four gives UAP's figure and
+unticking one (say the owner hires the structural engineer directly)
+leaves it out:
+
+| Service | Share of the MBF | House (Group 4) | Basis |
+| --- | ---: | ---: | --- |
+| Architectural design | 60% | 6% | Our estimate, in line with the 6% often quoted for architecture alone against 10% with structural, electrical and plumbing design |
+| Structural design (civil or structural engineer; ASEP/PICE) | 20% | 2% | Our estimate |
+| Electrical design (professional electrical engineer; IIEE) | 10% | 1% | Our estimate |
+| Sanitary and plumbing design | 10% | 1% | Our estimate |
+| Mechanical design (PSME), ticked by default except for houses | 5%, on top | 0.5% | Our estimate |
+| Full-time construction supervision, not ticked by default | – | 1.5% | UAP SPP 204-A: 1–1.5% of the project construction cost; we use the top for small jobs |
+
+ASEP, IIEE, PSME and the sanitary engineers' groups do publish their own
+schedules, but we could not read them; one structural fee guide quotes
+₱120–480 per m² of floor by building size. Fees are minimums, before
+VAT, and are agreed with each professional.
+
+For a ₱3.7M house: architectural ₱222,000, structural ₱74,000,
+electrical ₱37,000 and plumbing ₱37,000, **₱370,000** in all (10%); with
+full-time supervision (₱55,500), ₱425,500.
+[`test/data/professional_fees_test.dart`](../test/data/professional_fees_test.dart)
+checks it.
+
+Sources (search-result excerpts, October 2026):
+[UAP Doc 202 (Scribd copy)](https://www.scribd.com/document/348049076/UAP-DOC-202-pdf),
+[UAP standards of professional practice](https://pdfcoffee.com/uap-standards-of-professional-practice-pdf-free.html),
+[2010 SPP for Philippine architects, PRBoA](https://www.architectureboard.com.ph/wp-content/uploads/2019/09/1.4-2010-SPP-for-PH-Architects.pdf),
+[Arch Juana's residential fee example](https://archjuana.com/how-to-compute-for-architectural-fee-in-the-philippines-for-architectural-and-engineering-design-services-for-a-residential-building-and-how-to-tell-if-the-fee-is-overpriced/),
+[architect fees for a building permit (6% and 10%)](https://www.scribd.com/document/521331312/Construction-Cost-Estimates),
+[SPP 204-A construction services](https://philarchitecturenotes.weebly.com/spp-204a--b-construction-services.html),
+[minimum fees for structural designers](https://www.scribd.com/document/689094176/Minimum-Fee-for-Structural-Designers-in-Philippines).
+
 ### Price escalation
 
 Prices rise between the estimate and the purchase. **Price escalation**
@@ -604,7 +857,7 @@ houses, to catch a wrong input before the estimate goes out
 | Formwork per m³ of concrete | Above 15 m²/m³ | 4–12 m²/m³ |
 | Labour as a share of materials | Below 15% or above 90% | 30–60% |
 | Materials without a price | Any | – |
-| Age of the prices | Six months or more since the oldest item was priced | – |
+| Age of the prices | Six months or more since the oldest line was priced: its quote date when it uses your quoted price, else when its estimate was made | – |
 | Scope that usually goes together | Concrete but no walls; walls but no paint; no electrical work | – |
 
 The last group are notes, not warnings: a job may rightly leave them out.
@@ -701,15 +954,17 @@ job would be ₱2,016,000.
 
 ### What the model leaves out
 
-- Regional labour cost factors. DO 125 s.2025 sets DPWH labour rates from
-  the regional minimum wage times a labour cost factor; the app uses one
-  set of rates per project, which you can change.
+- DPWH's own labour rates. DO 125 s.2025 sets them from the regional
+  minimum wage times a labour cost factor; the app's **Rates for region**
+  works the same way but with market premiums for skilled workers and
+  foremen, one set of rates per project.
 - Heavy equipment such as backhoes and cranes, and equipment for work the
   calculators don't measure.
 - Under DPWH rules, general requirements are not marked up with OCM or
   profit; the app marks them up with the rest of the direct cost.
-- Professional fees, land, utility connections and the electrical service
-  entrance.
+- Land, utility connections and the electrical service entrance.
+  Professional fees and permits are only in the budget when you enter or
+  work them out under General requirements.
 - DPWH's own engineering and administrative overhead (DO 7 s.2025), which is
   deducted from the appropriation and is not part of a contractor's price.
 
@@ -894,7 +1149,8 @@ A comma-separated file (`<project>-boq.csv`) for Excel or Google Sheets:
 - A `BILL OF QUANTITIES` block: Item, Description, Quantity, Unit, Unit cost
   (PHP), Amount (PHP).
 - A `MATERIALS LIST` block: Group, Material, Quantity, Unit, Unit cost (PHP),
-  Amount (PHP).
+  Amount (PHP), and Supplier when any material has one in your price
+  book.
 - A `COST SUMMARY` block: label and amount.
 - Numbers are plain: whole numbers without decimals, others with two. Cells
   with commas, quotes or line breaks are quoted, with quotes doubled.
@@ -910,7 +1166,7 @@ with "Planning estimate made with BuildQuantify."
 After signing in with Google, a project is saved as a spreadsheet in your
 own Google Drive, "BuildQuantify – project name", with three formatted tabs:
 the bill of quantities, the materials list and the budget, the same content
-as the PDF. Saving again updates the same spreadsheet. See
+as the PDF. The materials tab adds a Supplier column like the CSV. Saving again updates the same spreadsheet. See
 [Saving to Google Sheets](google-sheets.md) for how it works and how to set
 up the Google client ID.
 
@@ -925,6 +1181,7 @@ up the Google client ID.
  "exportedAt": "2026-10-15T09:30:00.000",
  "projects": [ … ],
  "prices": { "cement_40kg": 255 },
+ "priceQuotes": { "cement_40kg": { "supplier": "Wilcon Depot", "date": "2026-10-03" } },
  "history": [ … ]
 }
 ```
@@ -933,6 +1190,8 @@ up the Google client ID.
   prices they were made with) and cost settings.
 - `prices` holds only the prices you set yourself, by item key. The region
   is not saved.
+- `priceQuotes` holds the supplier and quote date of those prices, when
+  there are any. Older backups without it restore as before.
 - `history` holds the calculator history.
 
 Restoring adds projects and history entries that are not already there,

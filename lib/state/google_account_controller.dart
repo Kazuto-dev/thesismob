@@ -231,9 +231,12 @@ class GoogleAccountController extends ChangeNotifier {
   /// the first time or when the old one is gone. Call it straight from a
   /// button press. On success, [GoogleResult.sheet] is the spreadsheet to
   /// remember for the project.
-  Future<GoogleResult> saveProject(Project project) => _run((token) async {
+  Future<GoogleResult> saveProject(
+    Project project, {
+    Map<String, String> suppliers = const {},
+  }) => _run((token) async {
     await _identify(token);
-    final tabs = projectSheetTabs(project);
+    final tabs = projectSheetTabs(project, suppliers: suppliers);
     SpreadsheetRef? sheet;
     if (project.sheetId case final id?) {
       try {

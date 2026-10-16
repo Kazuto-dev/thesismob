@@ -25,6 +25,8 @@ import 'boq_grid.dart';
 import 'checklist_card.dart';
 import 'checks_card.dart';
 import 'contract_tab.dart';
+import 'fee_dialogs.dart';
+import 'labour_region_picker.dart';
 import 'material_picker.dart';
 import 'project_actions.dart';
 import 'project_items.dart';
@@ -1015,6 +1017,14 @@ class _BudgetEditor extends StatelessWidget {
                   },
                 ),
                 children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: () => pickLabourRegion(context, project),
+                      icon: const Icon(Icons.place_outlined, size: 18),
+                      label: Text(context.tr('Rates for region')),
+                    ),
+                  ),
                   for (final key in DailyRates.defaults.keys) ...[
                     _NumberSetting(
                       label: context.tr(DailyRates.labels[key]!),
@@ -1166,22 +1176,33 @@ class _BudgetEditor extends StatelessWidget {
                   ),
                   const SizedBox(height: Space.md),
                 ],
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: () {
-                      final work =
-                          b.materials + b.labour + b.tools + b.equipment;
-                      update(
-                        c.copyWith(
-                          general: suggestGeneralRequirements(work),
-                          monthly: suggestMonthlyRequirements(work),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.auto_fix_high, size: 18),
-                    label: Text(context.tr('Suggest amounts')),
-                  ),
+                Wrap(
+                  children: [
+                    TextButton.icon(
+                      onPressed: () {
+                        final work =
+                            b.materials + b.labour + b.tools + b.equipment;
+                        update(
+                          c.copyWith(
+                            general: suggestGeneralRequirements(work),
+                            monthly: suggestMonthlyRequirements(work),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.auto_fix_high, size: 18),
+                      label: Text(context.tr('Suggest amounts')),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => showPermitFees(context, project),
+                      icon: const Icon(Icons.approval_outlined, size: 18),
+                      label: Text(context.tr('Work out permit fees')),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => showProfessionalFees(context, project),
+                      icon: const Icon(Icons.architecture, size: 18),
+                      label: Text(context.tr('Work out professional fees')),
+                    ),
+                  ],
                 ),
                 Text(
                   context.tr(

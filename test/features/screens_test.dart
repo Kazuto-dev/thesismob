@@ -368,7 +368,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Portland cement, 40 kg'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField).last, '265');
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Price per bag'),
+      '265',
+    );
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
     expect(find.text('₱265.00'), findsOneWidget);

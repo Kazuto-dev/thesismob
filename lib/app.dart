@@ -77,6 +77,7 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
           backupJson(
             projects: _projects.projects,
             prices: _prices.custom,
+            quotes: _prices.quotes,
             history: _estimates.history,
           ),
         ),
