@@ -152,6 +152,7 @@ class Estimate {
     this.mark,
     this.note,
     this.works = const [],
+    this.source,
   });
 
   /// Builds an estimate from a calculation, pricing its companions with
@@ -246,6 +247,7 @@ class Estimate {
         for (final w in json['works'] as List? ?? const [])
           if (w is Map<String, dynamic>) ?_work(w),
       ]),
+      source: _optionalText(json['source']),
     );
   }
 
@@ -290,6 +292,10 @@ class Estimate {
   /// first. Empty for estimates saved before work items existed.
   final List<EstimateWork> works;
 
+  /// What made this estimate when the user did not, such as `rooms:…` for
+  /// one the room schedule keeps up to date. Null for the user's own.
+  final String? source;
+
   static EstimateWork? _work(Map<String, dynamic> json) {
     try {
       return EstimateWork.fromJson(json);
@@ -327,14 +333,15 @@ class Estimate {
       mapEquals(inputs, other.inputs) &&
       mapEquals(choices, other.choices);
 
-  /// A copy with changes. Pass an empty string as [mark] or [note] to
-  /// clear it.
+  /// A copy with changes. Pass an empty string as [mark], [note] or
+  /// [source] to clear it.
   Estimate copyWith({
     String? id,
     double? unitPrice,
     List<EstimateLine>? companions,
     String? mark,
     String? note,
+    String? source,
   }) {
     final price = unitPrice ?? this.unitPrice;
     return Estimate(
@@ -363,6 +370,7 @@ class Estimate {
       mark: mark == null ? this.mark : _optionalText(mark),
       note: note == null ? this.note : _optionalText(note),
       works: works,
+      source: source == null ? this.source : _optionalText(source),
     );
   }
 
@@ -395,5 +403,6 @@ class Estimate {
     if (mark != null) 'mark': mark,
     if (note != null) 'note': note,
     if (works.isNotEmpty) 'works': [for (final w in works) w.toJson()],
+    if (source != null) 'source': source,
   };
 }

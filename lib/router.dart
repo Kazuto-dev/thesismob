@@ -11,6 +11,7 @@ import 'features/shell/app_shell.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/projects/project_screen.dart';
 import 'features/projects/projects_screen.dart';
+import 'features/projects/rooms_screen.dart';
 import 'features/settings/price_book_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/home/quick_budget_screen.dart';
@@ -89,6 +90,9 @@ abstract final class Routes {
   static const quickBudget = '/quick-budget';
 
   static String projectById(String id) => '/project/$id';
+
+  /// A project's room schedule.
+  static String rooms(String projectId) => '/project/$projectId/rooms';
 
   static String category(MaterialCategory c) => '/category/${c.name}';
 
@@ -236,6 +240,13 @@ GoRouter createRouter({
                   path: ':id',
                   builder: (context, state) =>
                       ProjectScreen(projectId: state.pathParameters['id']),
+                  routes: [
+                    GoRoute(
+                      path: 'rooms',
+                      builder: (context, state) =>
+                          RoomsScreen(projectId: state.pathParameters['id']!),
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -7,6 +7,7 @@ import '../materials/work_items.dart';
 import 'contract.dart';
 import 'contract_math.dart';
 import 'estimate.dart';
+import 'rooms.dart';
 import 'unit_prices.dart';
 
 double _centavos(double value) => (value * 100).roundToDouble() / 100;
@@ -636,6 +637,7 @@ class Project {
     this.checklist = const [],
     this.notNeeded = const {},
     this.contract = const ContractData(),
+    this.rooms = const [],
   });
 
   factory Project.create(String name, {DateTime? now}) {
@@ -692,6 +694,7 @@ class Project {
       contract: json['contract'] is Map<String, dynamic>
           ? ContractData.fromJson(json['contract'] as Map<String, dynamic>)
           : const ContractData(),
+      rooms: roomsFromJson(json['rooms']),
     );
   }
 
@@ -721,6 +724,9 @@ class Project {
 
   /// Quotation terms, schedule, billings, changes and actual costs.
   final ContractData contract;
+
+  /// The room schedule, which makes the finish estimates; see rooms.dart.
+  final List<Room> rooms;
 
   /// Whether the checklist entry [materialId] has an estimate.
   bool isEstimated(String materialId) =>
@@ -757,6 +763,7 @@ class Project {
     List<String>? checklist,
     Set<String>? notNeeded,
     ContractData? contract,
+    List<Room>? rooms,
     DateTime? updatedAt,
   }) => Project(
     id: id ?? this.id,
@@ -776,6 +783,7 @@ class Project {
     checklist: checklist ?? this.checklist,
     notNeeded: notNeeded ?? this.notNeeded,
     contract: contract ?? this.contract,
+    rooms: rooms ?? this.rooms,
   );
 
   Map<String, dynamic> toJson() => {
@@ -792,5 +800,6 @@ class Project {
     if (checklist.isNotEmpty) 'checklist': checklist,
     if (notNeeded.isNotEmpty) 'notNeeded': notNeeded.toList(),
     if (!contract.isEmpty) 'contract': contract.toJson(),
+    if (rooms.isNotEmpty) 'rooms': [for (final r in rooms) r.toJson()],
   };
 }

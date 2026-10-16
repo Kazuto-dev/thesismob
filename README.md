@@ -10,6 +10,8 @@ wire, forms, fittings…) from a built-in price book of 2026 Metro Manila
 prices that you can edit and adjust by region. Estimates go into named
 projects. A project builds:
 
+- finish estimates from a room schedule: each room entered once, rooms
+  sharing a finish grouped into one estimate per level;
 - a bill of quantities grouped by trade;
 - a single merged shopping list;
 - a budget with labour, contingency and, for bids, overhead, profit and VAT,
