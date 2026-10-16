@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import 'exterior.dart';
+import 'home_services.dart';
 import 'interiors.dart';
 import 'material_spec.dart';
 import 'sitework.dart';
@@ -541,6 +543,8 @@ const workItems = <WorkItem>[
   ...siteworkWorkItems,
   ...interiorsWorkItems,
   ...utilitiesWorkItems,
+  ...exteriorWorkItems,
+  ...homeServicesWorkItems,
 ];
 
 final _byKey = {for (final w in workItems) w.key: w};

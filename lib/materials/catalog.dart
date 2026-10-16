@@ -1,6 +1,8 @@
 import 'architectural.dart';
 import 'concrete.dart';
+import 'exterior.dart';
 import 'fixtures.dart';
+import 'home_services.dart';
 import 'interiors.dart';
 import 'material_spec.dart';
 import 'openings.dart';
@@ -43,6 +45,8 @@ final List<MaterialSpec> allMaterials = [
   ...siteworkMaterials,
   ...interiorsMaterials,
   ...utilitiesMaterials,
+  ...exteriorMaterials,
+  ...homeServicesMaterials,
 ];
 
 final Map<String, MaterialSpec> _byId = {for (final m in allMaterials) m.id: m};
