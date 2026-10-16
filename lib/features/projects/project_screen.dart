@@ -667,7 +667,8 @@ class _MaterialsTab extends StatelessWidget {
 
   Future<void> _setPrice(BuildContext context, MaterialLine line) async {
     final item = itemByKey(line.key);
-    final price = await showPriceDialog(
+    final book = context.read<PriceBookController>();
+    final quoted = await showQuoteDialog(
       context,
       title: line.label,
       unit: item?.unit ?? line.unit,
@@ -675,11 +676,21 @@ class _MaterialsTab extends StatelessWidget {
       suggested: item == null
           ? 'Updates this project'
           : 'Updates this project and your price book',
+      quote: item == null ? null : book.quoteOf(item.key),
     );
-    if (price == null || !context.mounted) return;
-    context.read<ProjectsController>().setPrice(project.id, line.key, price);
+    if (quoted == null || !context.mounted) return;
+    context.read<ProjectsController>().setPrice(
+      project.id,
+      line.key,
+      quoted.price,
+    );
     if (item != null) {
-      context.read<PriceBookController>().setPrice(item.key, price);
+      book.setPrice(
+        item.key,
+        quoted.price,
+        supplier: quoted.supplier,
+        quotedOn: quoted.date,
+      );
     }
   }
 
