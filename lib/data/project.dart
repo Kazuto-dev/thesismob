@@ -65,12 +65,17 @@ Map<String, double> suggestMonthlyRequirements(double direct) {
   if (direct <= 0) return const {};
   final scale = switch (direct) {
     < 3000000 => 1.0,
-    < 10000000 => 2.0,
+    < 10000000 => 1.5,
     _ => 3.5,
   };
   return {
     'supervision': _toNearest500(8000 * scale),
-    'security': direct < 1000000 ? 0 : _toNearest500(8000 * scale.clamp(1, 2)),
+    'security': switch (direct) {
+      < 1000000 => 0.0,
+      < 3000000 => 8000.0,
+      < 10000000 => 10000.0,
+      _ => 16000.0,
+    },
     'utilities': _toNearest500(2000 * scale),
     'transport': _toNearest500(2000 * scale),
   }..removeWhere((_, v) => v <= 0);

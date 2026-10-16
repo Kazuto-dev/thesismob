@@ -655,7 +655,8 @@ debris.
 **Monthly costs**, in pesos a month, for as long as the job runs: the site
 engineer and supervision, a watchman or security guard, power and water
 bills, and transport, phone and site office supplies. The months come from
-the schedule in the Contract tab (working days ÷ 26, six-day weeks), so a
+the schedule in the Contract tab (its length with the rain allowance and
+holidays, in months of 26 working days), so a
 longer job costs more and more crews cost less here. In the bill of
 quantities each is a line of so many months at the monthly cost.
 
@@ -670,9 +671,9 @@ quantities each is a line of so many months at the monthly cost.
 | Occupational safety and health | 0.5% |
 | Signboard | ₱5,000 |
 | Clean-up and disposal | 0.5% |
-| Site engineer and supervision | ₱8,000 a month (a share of an engineer's time) below ₱3M of work, ₱16,000 to ₱10M, ₱28,000 above |
-| Watchman | ₱8,000 a month from ₱1M of work, ₱16,000 from ₱3M |
-| Power and water; transport and phone | ₱2,000 a month each, scaled the same way |
+| Site engineer and supervision | ₱8,000 a month (a share of an engineer's time) below ₱3M of work, ₱12,000 to ₱10M, ₱28,000 above |
+| Watchman | ₱8,000 a month from ₱1M of work, ₱10,000 from ₱3M, ₱16,000 from ₱10M |
+| Power and water; transport and phone | ₱2,000 a month each below ₱3M, ₱3,000 to ₱10M, ₱7,000 above |
 
 Lump sums are rounded up to ₱500. Professional fees are left blank: they
 are the owner's cost and depend on the services. These are our estimates

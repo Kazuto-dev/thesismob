@@ -31,7 +31,7 @@ void main() {
     );
     final months = project.months;
     expect(months, greaterThan(0));
-    expect(months, closeTo(Schedule.of(project).days / 26, 0.005));
+    expect(months, closeTo(Schedule.of(project).months, 0.005));
     final b = project.breakdown;
     expect(b.months, months);
     expect(b.timeRelated, closeTo(18000 * months, 0.01));

@@ -13,12 +13,17 @@ const SHELL = [
   'index.html',
   'flutter_bootstrap.js',
   'main.dart.js',
-  // Deferred parts: the PDF library and the PDF documents, loaded when a
-  // PDF is first downloaded. Missing names are skipped.
+  // Deferred parts: the PDF library and the PDF documents (project, bid,
+  // contract, cash flow and purchase schedule), loaded when a PDF is first
+  // downloaded. Missing names are skipped.
   'main.dart.js_1.part.js',
   'main.dart.js_2.part.js',
   'main.dart.js_3.part.js',
   'main.dart.js_4.part.js',
+  'main.dart.js_5.part.js',
+  'main.dart.js_6.part.js',
+  'main.dart.js_7.part.js',
+  'main.dart.js_8.part.js',
   'manifest.json',
   'favicon.png',
   'icons/mark-64.png',

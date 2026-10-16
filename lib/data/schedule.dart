@@ -59,7 +59,7 @@ const schedulePhases = <SchedulePhase>[
   ),
   (
     label: 'Foundations',
-    works: {Work.concreteFooting},
+    works: {Work.concreteFooting, 'concrete_tie_beam'},
     after: [(phase: 1, done: 0.5, lag: 0, tail: 1)],
     fixedDays: 0,
   ),
@@ -91,6 +91,7 @@ const schedulePhases = <SchedulePhase>[
       Work.wiring,
       Work.boxes,
       Work.septicChb,
+      'concrete_lintel',
       'aux_point',
       'catch_basin',
     },
@@ -108,6 +109,8 @@ const schedulePhases = <SchedulePhase>[
       Work.gutter,
       Work.insulation,
       'steel_truss',
+      'fascia_board',
+      'roof_flashing',
     },
     after: [
       (phase: 4, done: 1, lag: 7, tail: 0),
@@ -128,7 +131,7 @@ const schedulePhases = <SchedulePhase>[
   ),
   (
     label: 'Ceilings',
-    works: {Work.ceiling, Work.plywood},
+    works: {Work.ceiling, Work.plywood, 'eaves_soffit'},
     after: [
       (phase: 6, done: 1, lag: 0, tail: 0),
       (phase: 7, done: 0.5, lag: 0, tail: 0),
@@ -150,6 +153,8 @@ const schedulePhases = <SchedulePhase>[
       'cabinets_built',
       'countertop',
       'steel_railing',
+      'steel_gate',
+      'pcc_pavement',
     },
     after: [
       (phase: 7, done: 0.5, lag: 14, tail: 14),
@@ -170,6 +175,9 @@ const schedulePhases = <SchedulePhase>[
       Work.tank,
       'pump_install',
       'cctv_camera',
+      'service_entrance',
+      'water_heater',
+      'bath_accessory',
     },
     after: [(phase: 9, done: 0.75, lag: 0, tail: 2)],
     fixedDays: 0,
