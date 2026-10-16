@@ -7,19 +7,30 @@ import '../../core/i18n.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
+import '../../data/custom_items.dart';
 import '../../data/estimate.dart';
 import '../../data/project.dart';
 import '../../data/unit_prices.dart';
 import '../../materials/catalog.dart';
 import '../../router.dart';
-import 'unit_price_view.dart';
 import '../../state/projects_controller.dart';
+import 'custom_item_dialog.dart';
+import 'unit_price_view.dart';
 
 // What can be done to an item in a project, from its menu, its details
 // sheet or the bill of quantities grid.
 
-/// Opens the item in its calculator to change it.
+/// Whether [e] can be changed: in its calculator, or a custom item.
+bool canEditItem(Estimate e) =>
+    e.isCustom || materialById(e.materialId) != null;
+
+/// Opens the item in its calculator to change it, or a custom item in its
+/// dialog.
 void editItem(BuildContext context, Project project, Estimate e) {
+  if (e.isCustom) {
+    editCustomItem(context, project.id, e);
+    return;
+  }
   final spec = materialById(e.materialId);
   if (spec == null) return;
   context.go(Routes.material(spec, fromEstimate: e.id, inProject: project.id));
@@ -49,7 +60,7 @@ void moveItem(
   e.id,
   up: up,
   projectId: project.id,
-  groupOf: (x) => materialById(x.materialId)?.category,
+  groupOf: tradeOf,
 );
 
 void removeItem(BuildContext context, Project project, Estimate e) {
@@ -111,9 +122,9 @@ void showItemDetails(BuildContext context, Project project, Estimate e) {
         child: _ItemDetails(
           estimate: e,
           analyses: analyseEstimate(e, project.costs),
-          onEdit: materialById(e.materialId) == null
-              ? null
-              : () => then(() => editItem(context, project, e)),
+          onEdit: canEditItem(e)
+              ? () => then(() => editItem(context, project, e))
+              : null,
           onLabel: () => then(() => labelItem(context, project, e)),
           onDuplicate: () => then(() => duplicateItem(context, project, e)),
           onRemove: () => then(() => removeItem(context, project, e)),
@@ -144,7 +155,7 @@ class ItemMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final e = estimate;
-    final canEdit = materialById(e.materialId) != null;
+    final canEdit = canEditItem(e);
     return MenuAnchor(
       builder: (context, controller, _) => IconButton(
         tooltip: 'Actions for ${e.title}',
@@ -156,7 +167,7 @@ class ItemMenu extends StatelessWidget {
         MenuItemButton(
           leadingIcon: const Icon(Icons.edit_outlined),
           onPressed: canEdit ? () => editItem(context, project, e) : null,
-          child: Text(context.tr('Edit in calculator')),
+          child: Text(context.tr(e.isCustom ? 'Edit' : 'Edit in calculator')),
         ),
         MenuItemButton(
           leadingIcon: const Icon(Icons.label_outline),

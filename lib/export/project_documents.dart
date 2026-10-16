@@ -306,6 +306,8 @@ List<(String, double, {bool strong})> costLines(Project project) {
         strong: false,
       ),
     if (b.equipment > 0) ('Equipment rental', b.equipment, strong: false),
+    if (b.subcontracts > 0)
+      ('Subcontracts and provisional sums', b.subcontracts, strong: false),
     if (b.hauling > 0) ('Hauling and delivery', b.hauling, strong: false),
     if (b.general > 0) ('General requirements', b.general, strong: false),
     ('Direct cost', b.direct, strong: true),

@@ -1,11 +1,11 @@
 import 'package:flutter/foundation.dart';
 
-import '../materials/catalog.dart';
 import '../materials/items.dart';
 import '../materials/material_spec.dart';
 import '../materials/work_items.dart';
 import 'contract.dart';
 import 'contract_math.dart';
+import 'custom_items.dart';
 import 'estimate.dart';
 import 'unit_prices.dart';
 
@@ -351,6 +351,7 @@ class CostBreakdown {
     required this.tools,
     required this.hauling,
     this.equipment = 0,
+    this.subcontracts = 0,
     this.general = 0,
     this.timeRelated = 0,
     this.months = 0,
@@ -370,10 +371,16 @@ class CostBreakdown {
     double months = 0,
   }) {
     final byTrade = <MaterialCategory?, double>{};
+    var allIn = 0.0;
     for (final e in items) {
-      final trade = materialById(e.materialId)?.category;
+      if (e.isAllIn) {
+        allIn += e.grandTotal;
+        continue;
+      }
+      final trade = tradeOf(e);
       byTrade[trade] = (byTrade[trade] ?? 0) + e.grandTotal;
     }
+    final subcontracts = _centavos(allIn);
     final materials = _centavos(
       byTrade.values.fold<double>(0, (sum, v) => sum + v),
     );
@@ -391,7 +398,14 @@ class CostBreakdown {
     final tools = _centavos(labour * s.toolsPct / 100);
     final timeRelated = _centavos(s.monthlyTotal * months);
     final general = _centavos(s.generalTotal + timeRelated);
-    final direct = materials + labour + tools + equipment + s.hauling + general;
+    final direct =
+        materials +
+        labour +
+        tools +
+        equipment +
+        subcontracts +
+        s.hauling +
+        general;
     return CostBreakdown(
       materials: materials,
       materialsByTrade: {
@@ -400,6 +414,7 @@ class CostBreakdown {
       labour: labour,
       tools: tools,
       equipment: equipment,
+      subcontracts: subcontracts,
       general: general,
       timeRelated: timeRelated,
       months: months,
@@ -432,6 +447,9 @@ class CostBreakdown {
   /// Rented equipment such as concrete mixers, from the crews.
   final double equipment;
 
+  /// Subcontracts and provisional sums: all-in amounts entered by hand.
+  final double subcontracts;
+
   /// General requirements: mobilization, temporary facilities and the
   /// like, the time-related ones included.
   final double general;
@@ -452,10 +470,11 @@ class CostBreakdown {
   final double profit;
   final double vat;
 
-  /// Materials, labour, tools, equipment, hauling and general
-  /// requirements.
-  double get direct =>
-      _centavos(materials + labour + tools + equipment + hauling + general);
+  /// Materials, labour, tools, equipment, subcontracts, hauling and
+  /// general requirements.
+  double get direct => _centavos(
+    materials + labour + tools + equipment + subcontracts + hauling + general,
+  );
 
   /// Before tax.
   double get subtotal =>
@@ -524,8 +543,10 @@ List<MaterialLine> consolidate(List<Estimate> items) {
   }
 
   for (final e in items) {
+    // Subcontracts and provisional sums are not bought as materials.
+    if (e.isAllIn) continue;
     final item = e.itemKey == null ? null : itemByKey(e.itemKey!);
-    final trade = materialById(e.materialId)?.category;
+    final trade = tradeOf(e);
     add(
       mainKeyOf(e),
       item?.name ?? e.label,
@@ -733,8 +754,9 @@ class Project {
   ];
 
   /// Cost of all materials, companions included.
-  double get materialsTotal =>
-      _centavos(items.fold<double>(0, (sum, e) => sum + e.grandTotal));
+  double get materialsTotal => _centavos(
+    items.fold<double>(0, (sum, e) => e.isAllIn ? sum : sum + e.grandTotal),
+  );
 
   /// How long the job runs, in months, from its schedule.
   double get months =>

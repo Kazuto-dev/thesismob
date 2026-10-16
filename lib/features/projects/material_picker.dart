@@ -10,6 +10,7 @@ import '../../materials/material_spec.dart';
 import '../../router.dart';
 import '../../state/projects_controller.dart';
 import '../common/tiles.dart';
+import 'custom_item_dialog.dart';
 
 /// Lets the user pick a calculator for a new estimate in [projectId],
 /// which becomes the project new estimates go to.
@@ -30,15 +31,26 @@ Future<void> showMaterialPicker(BuildContext context, {String? projectId}) =>
             Navigator.of(sheet).pop();
             context.go(Routes.material(spec));
           },
+          onCustom: () {
+            Navigator.of(sheet).pop();
+            addCustomItem(context, projectId: projectId);
+          },
         ),
       ),
     );
 
 class _MaterialPicker extends StatefulWidget {
-  const _MaterialPicker({required this.scroll, required this.onPick});
+  const _MaterialPicker({
+    required this.scroll,
+    required this.onPick,
+    required this.onCustom,
+  });
 
   final ScrollController scroll;
   final ValueChanged<MaterialSpec> onPick;
+
+  /// Adds an item no calculator covers, priced by hand.
+  final VoidCallback onCustom;
 
   @override
   State<_MaterialPicker> createState() => _MaterialPickerState();
@@ -112,6 +124,21 @@ class _MaterialPickerState extends State<_MaterialPicker> {
                     Space.xl,
                   ),
                   children: [
+                    Card.outlined(
+                      margin: const EdgeInsets.only(top: Space.sm),
+                      child: ListTile(
+                        leading: const Icon(Icons.edit_note),
+                        title: Text(context.tr('Custom item or lump sum')),
+                        subtitle: Text(
+                          context.tr(
+                            'Anything without a calculator: a subcontract, '
+                            'an appliance, a provisional sum',
+                          ),
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: widget.onCustom,
+                      ),
+                    ),
                     for (final g in groups) ...[
                       SectionHeader(
                         g.category.label,

@@ -5,6 +5,7 @@ import '../../core/i18n.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
+import '../../data/custom_items.dart';
 import '../../data/estimate.dart';
 import '../../materials/catalog.dart';
 import '../../materials/material_spec.dart';
@@ -173,5 +174,4 @@ String estimateSummary(Estimate e) {
 }
 
 /// The category an estimate belongs to, or null for imported entries.
-MaterialCategory? categoryOf(Estimate e) =>
-    materialById(e.materialId)?.category;
+MaterialCategory? categoryOf(Estimate e) => tradeOf(e);

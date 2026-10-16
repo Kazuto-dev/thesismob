@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../materials/catalog.dart';
 import '../materials/material_spec.dart';
 import '../materials/work_items.dart';
+import 'custom_items.dart';
 import 'project.dart';
 import 'unit_prices.dart';
 
@@ -22,6 +22,11 @@ enum FinishLevel {
   final double low;
   final double high;
 }
+
+/// What an owner building with their own workers pays against a
+/// contractor's price with VAT: no overhead, profit or VAT, about
+/// 1 ÷ (1.10 × 1.10 × 1.12).
+const ownerBuildFactor = 0.75;
 
 /// How a house's cost usually splits by trade.
 const parametricSplit = <(MaterialCategory?, double)>[
@@ -83,25 +88,45 @@ List<ProjectCheck> checkProject(Project project, {DateTime? today}) {
   final b = project.breakdown;
   final now = today ?? DateTime.now();
 
-  // Cost per m² of floor area.
+  // Cost per m² of floor area. The usual ranges are a contractor's price
+  // with VAT; an owner building with their own workers pays about a
+  // quarter less, without overhead, profit and VAT.
   final area = project.floorArea;
   if (area != null && area > 0) {
     final perM2 = b.total / area;
-    final range = parametricBudget(area, 1, FinishLevel.standard);
-    final low = FinishLevel.economy.low * 0.5;
-    final high = FinishLevel.premium.high * 1.5;
+    final factor = project.costs.isContractorBid ? 1.0 : ownerBuildFactor;
+    final low = FinishLevel.economy.low * factor;
+    final high = FinishLevel.premium.high * factor;
+    final band = FinishLevel.values.firstWhere(
+      (l) => perM2 <= l.high * factor,
+      orElse: () => FinishLevel.premium,
+    );
+    final usual =
+        '${_peso(low)}–${_peso(high)} a m² from economy to premium'
+        '${factor < 1 ? ' for an owner\'s own build' : ''}';
     checks.add(
       ProjectCheck(
-        perM2 < low || perM2 > high ? CheckLevel.warning : CheckLevel.ok,
+        perM2 < low * 0.5 || perM2 > high * 1.5
+            ? CheckLevel.warning
+            : perM2 < low || perM2 > high
+            ? CheckLevel.info
+            : CheckLevel.ok,
         'Cost per m² of floor area: ${_peso(perM2)}',
-        perM2 < low
-            ? 'Far below the usual ${_peso(FinishLevel.economy.low)} or more '
-                  'for a finished house. Is the whole house estimated?'
+        perM2 < low * 0.5
+            ? 'Far below the usual $usual. Is the whole house estimated?'
+            : perM2 < low
+            ? 'Below the usual $usual. Check that finishes, doors and '
+                  'windows, electrical, plumbing and general requirements '
+                  'are all estimated.'
+            : perM2 > high * 1.5
+            ? 'Far above the usual $usual. Check the floor area and the '
+                  'biggest items.'
             : perM2 > high
-            ? 'Far above the usual. Check the floor area and the biggest items.'
-            : 'A finished standard house usually costs '
-                  '${_peso(range.low / area)}–${_peso(range.high / area)} a '
-                  'm²; finishes and the site move this a lot.',
+            ? 'Above the usual $usual. Fine for special finishes; otherwise '
+                  'check the biggest items.'
+            : 'Within the usual $usual, in the ${band.label.toLowerCase()} '
+                  'range (${_peso(band.low * factor)}–'
+                  '${_peso(band.high * factor)}).',
       ),
     );
   }
@@ -115,7 +140,7 @@ List<ProjectCheck> checkProject(Project project, {DateTime? today}) {
       if (w.key.startsWith('concrete_') || w.key == 'stairs_concrete') {
         concrete += w.quantity;
       } else if (w.key == Work.rebar &&
-          materialById(e.materialId)?.category == MaterialCategory.structural &&
+          tradeOf(e) == MaterialCategory.structural &&
           !e.materialId.startsWith('chb')) {
         steel += w.quantity;
       } else if (w.key == Work.formwork) {
@@ -171,7 +196,7 @@ List<ProjectCheck> checkProject(Project project, {DateTime? today}) {
   // Lines without a price.
   final unpriced = <String>{
     for (final e in project.items) ...[
-      if (e.unitPrice <= 0) e.label,
+      if (e.unitPrice <= 0 && e.labourRate <= 0) e.label,
       for (final l in e.companions)
         if (l.unitPrice <= 0) l.label,
     ],
@@ -233,10 +258,7 @@ List<ProjectCheck> checkProject(Project project, {DateTime? today}) {
     );
   }
   if ((has('chb') || structuralConcrete) &&
-      !project.items.any(
-        (e) =>
-            materialById(e.materialId)?.category == MaterialCategory.electrical,
-      )) {
+      !project.items.any((e) => tradeOf(e) == MaterialCategory.electrical)) {
     checks.add(
       const ProjectCheck(
         CheckLevel.info,

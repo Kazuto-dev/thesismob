@@ -456,7 +456,7 @@ equipment        = crew-days × Σ (units × daily rental)
 | Plywood sheathing, installed | m² | 1 skilled, 1 helper | 15 | ₱133.33 | – |
 | Ceiling, boards on framing | m² | 1 skilled, 1 helper, 1 scaffolding set | 10 | ₱260.00 | 1013 |
 | Roof insulation, foil-faced foam | m² | 1 skilled, 1 helper | 60 | ₱33.33 | – |
-| Painting, per coat | m² | 1 skilled, 0.5 helper, 0.5 scaffolding set | 40 | ₱46.25 | 1032 |
+| Painting, surface preparation and all coats (output per coat) | m² | 1 skilled, 0.5 helper, 0.5 scaffolding set | 40 | ₱46.25 | 1032 |
 | Tiles, set and grouted | m² | 1 skilled, 1 helper | 7 | ₱285.71 | 1018 |
 | Tile skirting | m | 1 skilled, 0.5 helper | 25 | ₱62.00 | – |
 | Roofing sheets, installed | m² | 2 skilled, 1 helper | 35 | ₱88.57 | 1014 |
@@ -529,14 +529,59 @@ sand for laying and plaster are one line, so they stay with the wall.
 
 ### General requirements
 
-Lump sums for running the site, in pesos (DPWH Part A and B items):
-mobilization and demobilization; temporary facilities (bodega, toilet,
-power and water); permits, clearances and fees; occupational safety and
-health; the project signboard; and clean-up and disposal of debris.
-**Suggest amounts** fills in about 5% of the direct cost in all (1%, 1.5%,
-1%, 1% and 0.5%, rounded up to ₱500) plus ₱5,000 for a signboard; change
-them to your own. They are part of the direct cost, so contingency,
-overhead and profit apply to them as to hauling.
+Costs of running the site rather than of any one work item (DPWH Part A
+and B items), in two kinds.
+
+**One-time lump sums**, in pesos: mobilization and demobilization;
+temporary facilities (bodega, toilet, power and water); permits,
+clearances and fees; professional fees (plans, design and signing, usually
+the owner's); contractor's all-risk insurance and bonds; occupational
+safety and health; the project signboard; and clean-up and disposal of
+debris.
+
+**Monthly costs**, in pesos a month, for as long as the job runs: the site
+engineer and supervision, a watchman or security guard, power and water
+bills, and transport, phone and site office supplies. The months come from
+the schedule in the Contract tab (working days ÷ 26, six-day weeks), so a
+longer job costs more and more crews cost less here. In the bill of
+quantities each is a line of so many months at the monthly cost.
+
+**Suggest amounts** fills in, for the direct cost of the work so far:
+
+| Item | Suggested |
+| --- | --- |
+| Mobilization and demobilization | 0.75% |
+| Temporary facilities | 1% |
+| Permits, clearances and fees | 1% |
+| All-risk insurance and bonds | 0.3% |
+| Occupational safety and health | 0.5% |
+| Signboard | ₱5,000 |
+| Clean-up and disposal | 0.5% |
+| Site engineer and supervision | ₱8,000 a month (a share of an engineer's time) below ₱3M of work, ₱16,000 to ₱10M, ₱28,000 above |
+| Watchman | ₱8,000 a month from ₱1M of work, ₱16,000 from ₱3M |
+| Power and water; transport and phone | ₱2,000 a month each, scaled the same way |
+
+Lump sums are rounded up to ₱500. Professional fees are left blank: they
+are the owner's cost and depend on the services. These are our estimates
+of what small builders spend; change them to your own. General
+requirements are part of the direct cost, so contingency, overhead and
+profit apply to them as to hauling.
+
+### Custom items, subcontracts and provisional sums
+
+**Add an estimate → Custom item or lump sum** adds a line no calculator
+measures, described and priced by hand, in the section of the bill of
+quantities you choose:
+
+| Priced as | What it holds | In the budget |
+| --- | --- | --- |
+| Supply and install | Materials and labour per unit, e.g. a range hood at ₱8,000 a set plus ₱1,500 to install | Materials and labour, with minor tools on the labour; the material is on the shopping list |
+| Subcontract | A specialist's all-in price per unit or per lot, e.g. solar panels | Subcontracts and provisional sums; not on the shopping list |
+| Provisional sum | An allowance for work not yet designed or chosen, settled at cost later | The same |
+
+Units are lot, set, piece, m², m³, m and kg. Each custom item is one line
+of the bill of quantities with its own unit price analysis; contingency,
+overhead, profit and VAT apply as to any other line.
 
 ### Price escalation
 
@@ -554,7 +599,7 @@ houses, to catch a wrong input before the estimate goes out
 
 | Check | Warns when | Usual |
 | --- | --- | --- |
-| Cost per m² of floor area (when the project has a floor area) | Below half the economy rate or above 1.5 × the premium rate | ₱36,000–50,000 a m² for a standard house |
+| Cost per m² of floor area (when the project has a floor area) | Below half the economy rate or above 1.5 × the premium rate; a note below the economy rate or above the premium rate | ₱28,000–75,000 a m² from economy to premium, a contractor's price with VAT; for an owner's own build without markups and VAT, three quarters of that |
 | Reinforcing steel per m³ of concrete (CHB wall bars left out) | Below 40 or above 250 kg/m³ | 80–150 kg/m³ in houses |
 | Formwork per m³ of concrete | Above 15 m²/m³ | 4–12 m²/m³ |
 | Labour as a share of materials | Below 15% or above 90% | 30–60% |
@@ -790,7 +835,8 @@ and [`lib/export/project_pdf.dart`](../lib/export/project_pdf.dart).
 The exported bill of quantities lists **work items**, each estimate's work
 in its own line: description (with the estimate's name), quantity, unit,
 direct unit cost and amount. General requirements and hauling follow in
-section F, one lot each. The lines add up to the direct cost; markups and
+section F: one lot each, and the monthly costs as months × the monthly
+cost. The lines add up to the direct cost; markups and
 VAT are in the cost summary. A **Unit price analysis** section (a tab in
 Google Sheets) follows with every line's analysis, numbered the same way.
 
@@ -814,10 +860,11 @@ Estimates are grouped by trade into lettered sections:
 - These letters are the app's own. They are not DPWH pay item numbers or
   part letters, which vary from contract to contract.
 
-The **cost summary** lists Materials, Labour, Minor tools, Hauling and
-delivery, Direct cost, Contingency, Overhead, Profit, Subtotal before VAT,
-VAT and the total. Minor tools, hauling, contingency, overhead, profit and
-VAT appear only when they are above zero, and the subtotal before VAT only
+The **cost summary** lists Materials, Labour, Minor tools, Equipment
+rental, Subcontracts and provisional sums, Hauling and delivery, General
+requirements, Direct cost, Price escalation, Contingency, Overhead, Profit,
+Subtotal before VAT, VAT and the total. Lines other than materials, labour
+and the totals appear only when they are above zero, and the subtotal before VAT only
 with VAT.
 
 ### PDF

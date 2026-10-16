@@ -24,4 +24,42 @@ const filipinoCosts = <String, String>{
       'bahagi ng engineer, bantay, kuryente\'t tubig at pamasahe bawat '
       'buwan, gaya ng karaniwang gastos ng maliliit na builder. Sa may-ari '
       'ang bayad sa propesyonal kaya blangko ito.',
+  // Custom items
+  'Custom item or lump sum': 'Sariling item o lump sum',
+  'Anything without a calculator: a subcontract, an appliance, a provisional sum':
+      'Anumang walang calculator: subcontract, appliance, provisional sum',
+  'Custom item': 'Sariling item',
+  'Change custom item': 'Baguhin ang sariling item',
+  'For work no calculator covers: a subcontractor\'s price, an appliance, an allowance for something not yet chosen.':
+      'Para sa trabahong walang calculator: presyo ng subcontractor, '
+      'appliance, o laan para sa hindi pa napipili.',
+  'Description': 'Paglalarawan',
+  'Solar panels, 3 kW, supplied and installed':
+      'Solar panel, 3 kW, binili at ikinabit',
+  'Describe the work': 'Ilarawan ang trabaho',
+  'Priced as': 'Presyo bilang',
+  'Supply and install': 'Supply at kabit',
+  'Materials and labour priced per unit, like any other item':
+      'Materyales at labor bawat yunit, gaya ng ibang item',
+  'Subcontract': 'Subcontract',
+  'A specialist\'s all-in price: materials, labour and their margin':
+      'Buong presyo ng espesyalista: materyales, labor at kanilang kita',
+  'Provisional sum': 'Provisional sum',
+  'An allowance for work not yet designed or chosen, settled at cost':
+      'Laan para sa trabahong hindi pa nadidisenyo o napipili, babayaran '
+      'ayon sa aktuwal na gastos',
+  'Section of the bill of quantities': 'Seksiyon sa bill of quantities',
+  'Other works': 'Iba pang trabaho',
+  'Quantity': 'Dami',
+  'Unit': 'Yunit',
+  'More than 0': 'Higit sa 0',
+  'Materials per {unit}': 'Materyales bawat {unit}',
+  'All-in price per {unit}': 'Buong presyo bawat {unit}',
+  'Amount per {unit}': 'Halaga bawat {unit}',
+  'Enter a price': 'Maglagay ng presyo',
+  'Labour per {unit}': 'Labor bawat {unit}',
+  'Minor tools and the markups are added as for other items':
+      'Idinadagdag ang maliliit na gamit at markup gaya ng ibang item',
+  'Added {item}.': 'Naidagdag ang {item}.',
+  'Subcontracts and provisional sums': 'Subcontract at provisional sum',
 };

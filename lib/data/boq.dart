@@ -1,5 +1,5 @@
-import '../materials/catalog.dart';
 import '../materials/material_spec.dart';
+import 'custom_items.dart';
 import 'estimate.dart';
 import 'project.dart';
 import 'unit_prices.dart';
@@ -20,13 +20,13 @@ String tradeLabel(MaterialCategory? c) =>
 List<({MaterialCategory? trade, String letter, List<Estimate> items})>
 groupByTrade(List<Estimate> items) => [
   for (final (trade, letter) in tradeSections)
-    if (items.any((e) => materialById(e.materialId)?.category == trade))
+    if (items.any((e) => tradeOf(e) == trade))
       (
         trade: trade,
         letter: letter,
         items: [
           for (final e in items)
-            if (materialById(e.materialId)?.category == trade) e,
+            if (tradeOf(e) == trade) e,
         ],
       ),
 ];

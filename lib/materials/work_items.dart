@@ -347,7 +347,7 @@ const workItems = <WorkItem>[
   ),
   WorkItem(
     Work.painting,
-    'Painting, per coat',
+    'Painting, surface preparation and all coats',
     'm²',
     trade: MaterialCategory.architectural,
     crew: Crew(skilled: 1, helpers: 0.5, equipment: {DailyRates.scaffold: 0.5}),

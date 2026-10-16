@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../materials/catalog.dart';
 import '../materials/work_items.dart';
+import 'custom_items.dart';
 import 'estimate.dart';
 import 'project.dart';
 
@@ -103,7 +104,10 @@ typedef LabourCost = ({double labour, double equipment, double crewDays});
 /// [e]'s labour and equipment: by crews when [s] says so and the work is
 /// known, otherwise as the trade's share of its materials.
 LabourCost labourOf(Estimate e, CostSettings s) {
-  final trade = materialById(e.materialId)?.category;
+  if (e.isCustom) {
+    return (labour: e.quantity * e.labourRate, equipment: 0, crewDays: 0);
+  }
+  final trade = tradeOf(e);
   final works = s.labourMethod == LabourMethod.crews
       ? worksOf(e)
       : const <EstimateWork>[];
@@ -214,6 +218,39 @@ List<WorkAnalysis> analyseProject(Project p) => [
 List<WorkAnalysis> analyseEstimate(Estimate e, CostSettings s) {
   final rates = s.dailyRates;
   final markupPct = s.contingencyPct + s.overheadPct + s.profitPct;
+  if (e.isCustom) {
+    final labour = e.quantity * e.labourRate;
+    return [
+      WorkAnalysis(
+        estimate: e,
+        work: EstimateWork(customItemId, e.quantity),
+        item: null,
+        materials: [
+          (
+            label: e.isAllIn ? e.customKind.label : 'Materials',
+            quantity: e.quantity,
+            unit: e.unit.labelFor(e.quantity),
+            unitPrice: e.unitPrice,
+            amount: e.total,
+          ),
+        ],
+        labour: [
+          if (labour > 0)
+            (
+              label: 'Labour',
+              count: e.quantity,
+              days: 0,
+              rate: e.labourRate,
+              amount: _centavos(labour),
+            ),
+        ],
+        equipment: const [],
+        toolsPct: s.toolsPct,
+        markupPct: markupPct,
+        vatPct: s.vatPct,
+      ),
+    ];
+  }
   final works = s.labourMethod == LabourMethod.crews
       ? worksOf(e)
       : const <EstimateWork>[];
@@ -291,6 +328,6 @@ List<WorkAnalysis> analyseEstimate(Estimate e, CostSettings s) {
 }
 
 String _pct(Estimate e, CostSettings s) {
-  final v = s.labourFor(materialById(e.materialId)?.category);
+  final v = s.labourFor(tradeOf(e));
   return v == v.roundToDouble() ? v.toInt().toString() : v.toString();
 }
