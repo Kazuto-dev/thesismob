@@ -940,6 +940,79 @@ matched by id, and keeps the ones you have. Prices in the backup replace
 yours where both have one. Files from other apps are refused; damaged
 projects or entries, unknown item keys and negative prices are skipped.
 
+## Revisions and bids
+
+The project menu has **Estimate revisions**, **Bill of quantities for
+bidders** and **Compare quotes**. The models are in
+[`lib/data/revisions.dart`](../lib/data/revisions.dart) and
+[`lib/data/quotes.dart`](../lib/data/quotes.dart).
+
+### Estimate revisions
+
+**Save as a revision** keeps a copy of the project's items and cost
+settings with the date, the next number (Rev 1, Rev 2…) and a note such as
+"Client removed the second bathroom".
+
+- A project keeps its last 20 revisions; numbers are never reused.
+- Revisions are saved with the project, so they are in backups. An item
+  that is the same as in the revision before it is saved as just its id,
+  which keeps twenty revisions of a large estimate small.
+- **Compare** shows any revision against the current estimate or another
+  revision: the change in the total and the direct cost, the items added,
+  removed and changed (matched by item, with their direct costs), unchanged
+  items repriced by different settings such as daily rates, general
+  requirements and hauling, and every cost setting that differs.
+- **Restore** puts a revision's items and cost settings back. The current
+  estimate is saved as a revision first unless it already matches one, and
+  **Undo** reverses the restore. The project's details, contract, quotes
+  and revisions are not changed.
+- The PDF, CSV, Google Sheet and bill for bidders print "Revision: Rev 2"
+  when the estimate matches a revision, or "Draft after Rev 2" when it has
+  changed since the latest one. Projects without revisions print nothing.
+
+### Bill of quantities for bidders
+
+A bill for contractors or subcontractors to price, as PDF
+(`<project>-bid-boq.pdf`) or CSV, for the whole job or one trade
+(`<project>-bid-boq-electrical.csv`):
+
+- the project, client, location, scope, revision and date;
+- short instructions: price every item, prices include materials, labour,
+  equipment, overhead, profit and VAT, price the quantities as given and
+  list differences separately, unpriced items are taken as included, and
+  state the validity and exclusions;
+- the work items numbered as in the project's own bill (A.1, C.2…) with
+  their quantities and units, and empty unit price and amount columns;
+  each section has a subtotal line and the bill a total bid price line to
+  fill in. The whole job ends with the general requirements (section F);
+- lines for the bidder's name, address, validity, signature and date.
+
+No unit costs or amounts from the estimate appear in it.
+
+### Quotes from bidders
+
+Each quote records the bidder, its scope (the whole job, a trade A–E or
+the general requirements), the amount, the date, how many days it is
+valid and the inclusions and exclusions as typed. Quotes are grouped by
+scope, lowest first, against the estimate for that scope:
+
+```
+estimate (with markups) = scope's direct cost × total ÷ direct cost
+estimate (direct cost)  = scope's direct cost
+difference              = quote − estimate, in pesos and % of the estimate
+```
+
+- **With markups and VAT** suits contractors bidding to an owner;
+  **Direct cost** suits subcontractor quotes, whose price becomes the
+  contractor's cost. For the whole job with markups the estimate is the
+  project total.
+- The lowest quote in a scope is marked. A quote more than 20% below the
+  estimate is flagged: a price that low often means part of the scope was
+  missed. Quotes past their validity say so.
+- **Mark as awarded** marks one quote per scope; marking another in the
+  same scope moves the award. Awarded quotes do not change the bill of
+  quantities or the budget.
+
 ## Disclaimer
 
 BuildQuantify's prices and totals are planning figures. Prices drift with

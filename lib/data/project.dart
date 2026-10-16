@@ -8,6 +8,8 @@ import 'contract_math.dart';
 import 'custom_items.dart';
 import 'estimate.dart';
 import 'rooms.dart';
+import 'quotes.dart';
+import 'revisions.dart';
 import 'unit_prices.dart';
 
 double _centavos(double value) => (value * 100).roundToDouble() / 100;
@@ -659,6 +661,9 @@ class Project {
     this.notNeeded = const {},
     this.contract = const ContractData(),
     this.rooms = const [],
+    // Estimate revisions and quotes from bidders.
+    this.revisions = const [],
+    this.quotes = const [],
   });
 
   factory Project.create(String name, {DateTime? now}) {
@@ -716,6 +721,9 @@ class Project {
           ? ContractData.fromJson(json['contract'] as Map<String, dynamic>)
           : const ContractData(),
       rooms: roomsFromJson(json['rooms']),
+      // Estimate revisions and quotes from bidders.
+      revisions: revisionsFromJson(json['revisions']),
+      quotes: quotesFromJson(json['quotes']),
     );
   }
 
@@ -748,6 +756,12 @@ class Project {
 
   /// The room schedule, which makes the finish estimates; see rooms.dart.
   final List<Room> rooms;
+
+  /// Saved copies of the estimate, oldest first; see [addRevision].
+  final List<EstimateRevision> revisions;
+
+  /// Prices from bidders and subcontractors, to compare with the estimate.
+  final List<BidQuote> quotes;
 
   /// Whether the checklist entry [materialId] has an estimate.
   bool isEstimated(String materialId) =>
@@ -786,6 +800,8 @@ class Project {
     Set<String>? notNeeded,
     ContractData? contract,
     List<Room>? rooms,
+    List<EstimateRevision>? revisions,
+    List<BidQuote>? quotes,
     DateTime? updatedAt,
   }) => Project(
     id: id ?? this.id,
@@ -806,6 +822,8 @@ class Project {
     notNeeded: notNeeded ?? this.notNeeded,
     contract: contract ?? this.contract,
     rooms: rooms ?? this.rooms,
+    revisions: revisions ?? this.revisions,
+    quotes: quotes ?? this.quotes,
   );
 
   Map<String, dynamic> toJson() => {
@@ -823,5 +841,7 @@ class Project {
     if (notNeeded.isNotEmpty) 'notNeeded': notNeeded.toList(),
     if (!contract.isEmpty) 'contract': contract.toJson(),
     if (rooms.isNotEmpty) 'rooms': [for (final r in rooms) r.toJson()],
+    if (revisions.isNotEmpty) 'revisions': revisionsToJson(revisions),
+    if (quotes.isNotEmpty) 'quotes': [for (final q in quotes) q.toJson()],
   };
 }

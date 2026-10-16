@@ -7,6 +7,8 @@ import '../data/estimate.dart';
 import '../data/project.dart';
 import '../data/project_repository.dart';
 import '../data/rooms.dart';
+import '../data/quotes.dart';
+import '../data/revisions.dart';
 
 /// The user's projects and which one new estimates are added to.
 ///
@@ -338,6 +340,33 @@ class ProjectsController extends ChangeNotifier {
     });
     return (before: before, problems: problems);
   }
+
+  // Estimate revisions and quotes from bidders.
+
+  /// Saves the project's current items and cost settings as its next
+  /// revision, with [note] saying what changed.
+  void saveRevision(String projectId, String note) =>
+      _update(projectId, (p) => p.copyWith(revisions: addRevision(p, note)));
+
+  /// Changes a project's saved revisions, e.g. to delete one.
+  void updateRevisions(
+    String projectId,
+    List<EstimateRevision> Function(List<EstimateRevision>) change,
+  ) => _update(projectId, (p) => p.copyWith(revisions: change(p.revisions)));
+
+  /// Replaces a project's items and cost settings together, e.g. with a
+  /// revision's, or back again to undo that.
+  void setEstimate(
+    String projectId, {
+    required List<Estimate> items,
+    required CostSettings costs,
+  }) => _update(projectId, (p) => p.copyWith(items: items, costs: costs));
+
+  /// Changes a project's quotes from bidders and subcontractors.
+  void updateQuotes(
+    String projectId,
+    List<BidQuote> Function(List<BidQuote>) change,
+  ) => _update(projectId, (p) => p.copyWith(quotes: change(p.quotes)));
 
   /// Remembers the Google spreadsheet a project was saved to.
   void setSheetId(String projectId, String sheetId) =>

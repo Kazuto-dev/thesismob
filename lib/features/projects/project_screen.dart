@@ -20,6 +20,7 @@ import '../../state/projects_controller.dart';
 import '../../state/google_account_controller.dart';
 import '../common/price_dialog.dart';
 import '../common/tiles.dart';
+import 'bid_actions.dart';
 import 'boq_grid.dart';
 import 'checklist_card.dart';
 import 'checks_card.dart';
@@ -440,6 +441,7 @@ class _ProjectMenu extends StatelessWidget {
             onPressed: () => openProjectSheet(project),
             child: Text(context.tr('Open in Google Sheets')),
           ),
+        ...bidMenuItems(context, project),
         const Divider(),
         MenuItemButton(
           leadingIcon: const Icon(Icons.delete_sweep_outlined),
