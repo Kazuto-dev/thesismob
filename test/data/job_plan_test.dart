@@ -104,4 +104,60 @@ void main() {
       expect(cashFlow(Project.create('Empty')).peakNeed, 0);
     });
   });
+
+  group('purchase schedule', () {
+    PurchaseLine line(List<PurchaseLine> lines, String key) =>
+        lines.firstWhere((l) => l.material.key == key);
+
+    test('every material is listed once, when its first task starts', () {
+      final p = sampleHouse();
+      final lines = purchaseSchedule(p);
+      final s = Schedule.of(p);
+      expect(
+        [for (final l in lines) l.material.key]..sort(),
+        [for (final m in p.materials) m.key]..sort(),
+      );
+      // Cement is first needed for the footings, before the walls.
+      final cement = line(lines, 'cement_40kg');
+      expect(cement.phase, 'Foundations');
+      expect(
+        cement.neededDay,
+        s.tasks.firstWhere((t) => t.label == 'Foundations').start,
+      );
+      expect(line(lines, 'chb_6').phase, 'Walls and rough-ins');
+      expect(line(lines, 'longspan_m').phase, 'Roof framing and roofing');
+      expect(line(lines, 'tile_60x60').phase, 'Finishes and openings');
+      expect(line(lines, 'toilet').phase, 'Fixtures');
+      // Gravel bedding goes under the ground slab, not with the dig.
+      expect(line(lines, 'gravel_bedding').phase, 'Columns and ground slab');
+      // Bars come with the concrete they reinforce: the footings' 12 mm,
+      // the columns' 16 mm.
+      expect(line(lines, 'rebar_12').neededDay, cement.neededDay);
+      expect(line(lines, 'rebar_16').phase, 'Columns and ground slab');
+    });
+
+    test('order-by dates allow each group\'s lead time', () {
+      final start = DateTime(2026, 11, 2);
+      final lines = purchaseSchedule(
+        sampleHouse(contract: ContractData(startDate: start)),
+      );
+      for (final l in lines) {
+        expect(l.needed, Schedule.addWorkingDays(start, l.neededDay));
+        expect(l.needed!.difference(l.orderBy!).inDays, l.leadMax);
+      }
+      final doors = line(lines, 'door_set');
+      expect((doors.leadMin, doors.leadMax), (21, 30));
+      expect(line(lines, 'tile_60x60').leadMax, 14);
+      expect(line(lines, 'cement_40kg').leadMax, 7);
+      // Doors are needed late but ordered a month ahead, so they come
+      // before items needed sooner with short lead times.
+      final order = [for (final l in lines) l.material.key];
+      expect(order.indexOf('door_set'), lessThan(order.indexOf('paint_latex')));
+      // Without a start date there are no dates, only working days.
+      final undated = purchaseSchedule(sampleHouse());
+      expect(undated.first.needed, isNull);
+      expect(undated.first.orderBy, isNull);
+      expect(purchaseSchedule(Project.create('Empty')), isEmpty);
+    });
+  });
 }

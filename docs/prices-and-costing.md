@@ -855,6 +855,39 @@ For the sample house (₱3.40 million before VAT, ₱2.85 million of cost,
 month 3, at about −₱347,000: that is its peak cash need. **Download cash
 flow** makes a PDF with the summary, the table and these assumptions.
 
+### Purchase schedule
+
+The **Purchase schedule** card lists every material of the shopping list
+(`project.materials`) with when it is first needed and when to order it:
+
+```
+needed     = start of the earliest scheduled task that uses the material
+order by   = needed − the longest lead time of its group (calendar days)
+```
+
+A material goes with the work item it is used in, as in the unit price
+analysis: bars and forms with their element, gravel bedding with the
+slab, purlins and gutters with the roof, the rest with the estimate's
+main work. So cement is first needed for the footings, CHB for the walls
+and tiles for the finishes. Lines are sorted by when to order them, so
+doors needed late but made to order come before paint needed sooner.
+With a start date the card and the PDF show dates; without one, the week
+of the schedule and the lead time.
+
+Lead times are typical for small orders from Metro Manila hardware stores
+and suppliers (`leadTimes`); check them with yours, especially in the
+provinces and before the holidays:
+
+| Group | Lead time | Why |
+| --- | ---: | --- |
+| Cement and aggregates, masonry, reinforcing steel, lumber, ceiling framing, paint, electrical, plumbing, other | 3–7 days | Stock items, delivered by the hardware or the supplier's truck |
+| Roofing and insulation | 7–14 days | Long-span sheets are roll-formed to length |
+| Tiles and floor finishes | 7–14 days | Chosen designs are often ordered in from the distributor |
+| Plumbing fixtures | 7–14 days | Chosen models, sometimes from the distributor |
+| Doors and windows | 21–30 days | Doors, jambs and aluminium windows are made to the measured openings |
+
+**Download purchase schedule** makes a PDF to hand to whoever buys.
+
 ### Progress billing
 
 Each billing records how far each contract line is done, as a cumulative

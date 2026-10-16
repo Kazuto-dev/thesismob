@@ -99,4 +99,26 @@ const filipinoContract = <String, String>{
   'Running total': 'Kabuuan',
   'Download cash flow': 'I-download ang daloy ng pera',
   'Downloaded the cash flow.': 'Na-download ang daloy ng pera.',
+
+  // Purchase schedule
+  'Purchase schedule': 'Iskedyul ng pagbili',
+  'When each material is first needed, from the schedule, and when to order it given usual lead times: stock items 3–7 days, long-span roofing and tiles 7–14, plumbing fixtures up to 14, doors and windows made to measure 21–30. Ask your suppliers.':
+      'Kailan unang kailangan ang bawat materyales, ayon sa iskedyul, at '
+      'kailan ito oorderin ayon sa karaniwang tagal ng delivery: stock na '
+      'gamit 3–7 araw, long-span na bubong at tiles 7–14, plumbing fixtures '
+      'hanggang 14, pinto at bintanang ginagawa ayon sa sukat 21–30. '
+      'Itanong sa inyong supplier.',
+  'Add estimates to see when to buy.':
+      'Magdagdag ng estimate para makita kung kailan bibili.',
+  'Set a start date to see the dates.':
+      'Itakda ang petsa ng simula para makita ang mga petsa.',
+  'week {n}': 'linggo {n}',
+  'Needed {week} for {phase} · order {days} days before':
+      'Kailangan sa {week} para sa {phase} · umorder {days} araw bago nito',
+  'Order by {order} · needed {needed} for {phase}':
+      'Umorder bago ang {order} · kailangan sa {needed} para sa {phase}',
+  'Show fewer': 'Ipakita ang mas kaunti',
+  'Show all {n}': 'Ipakita ang lahat ng {n}',
+  'Download purchase schedule': 'I-download ang iskedyul ng pagbili',
+  'Downloaded the purchase schedule.': 'Na-download ang iskedyul ng pagbili.',
 };

@@ -32,6 +32,8 @@ class ContractTab extends StatelessWidget {
       const SizedBox(height: Space.lg),
       _CashFlowCard(project: project),
       const SizedBox(height: Space.lg),
+      _PurchaseCard(project: project),
+      const SizedBox(height: Space.lg),
       _BillingCard(project: project),
       const SizedBox(height: Space.lg),
       _VariationsCard(project: project),
@@ -980,6 +982,114 @@ class _CashFlowCard extends StatelessWidget {
               icon: const Icon(Icons.picture_as_pdf_outlined),
               label: Text(context.tr('Download cash flow')),
             ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// When to buy each material: when it is first needed and when to order
+/// it, given the usual lead times.
+class _PurchaseCard extends StatefulWidget {
+  const _PurchaseCard({required this.project});
+
+  final Project project;
+
+  @override
+  State<_PurchaseCard> createState() => _PurchaseCardState();
+}
+
+class _PurchaseCardState extends State<_PurchaseCard> {
+  static const _shown = 8;
+  var _all = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final lines = purchaseSchedule(widget.project);
+    final visible = _all ? lines : lines.take(_shown);
+    String week(double day) =>
+        context.tr('week {n}', {'n': (day / workDaysPerWeek).floor() + 1});
+    return _Panel(
+      icon: Icons.local_shipping_outlined,
+      title: context.tr('Purchase schedule'),
+      subtitle: context.tr(
+        'When each material is first needed, from the schedule, and when to '
+        'order it given usual lead times: stock items 3–7 days, long-span '
+        'roofing and tiles 7–14, plumbing fixtures up to 14, doors and '
+        'windows made to measure 21–30. Ask your suppliers.',
+      ),
+      children: [
+        if (lines.isEmpty)
+          Text(context.tr('Add estimates to see when to buy.'))
+        else ...[
+          if (widget.project.contract.startDate == null)
+            Text(
+              context.tr('Set a start date to see the dates.'),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          for (final l in visible)
+            Material(
+              type: MaterialType.transparency,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                title: Text(
+                  '${l.material.label} · '
+                  '${formatNumber(l.material.quantity)} ${l.material.unit}',
+                ),
+                subtitle: Text(
+                  l.needed == null
+                      ? context.tr(
+                          'Needed {week} for {phase} · order {days} days '
+                          'before',
+                          {
+                            'week': week(l.neededDay),
+                            'phase': context.tr(l.phase),
+                            'days': l.leadMax,
+                          },
+                        )
+                      : context.tr(
+                          'Order by {order} · needed {needed} for {phase}',
+                          {
+                            'order': DateFormat(
+                              'MMM d',
+                              'en_US',
+                            ).format(l.orderBy!),
+                            'needed': DateFormat(
+                              'MMM d',
+                              'en_US',
+                            ).format(l.needed!),
+                            'phase': context.tr(l.phase),
+                          },
+                        ),
+                  style: tabular(theme.textTheme.bodySmall),
+                ),
+              ),
+            ),
+          Wrap(
+            spacing: Space.sm,
+            runSpacing: Space.sm,
+            children: [
+              if (lines.length > _shown)
+                TextButton(
+                  onPressed: () => setState(() => _all = !_all),
+                  child: Text(
+                    _all
+                        ? context.tr('Show fewer')
+                        : context.tr('Show all {n}', {'n': lines.length}),
+                  ),
+                ),
+              OutlinedButton.icon(
+                onPressed: () =>
+                    downloadPurchaseSchedule(context, widget.project),
+                icon: const Icon(Icons.picture_as_pdf_outlined),
+                label: Text(context.tr('Download purchase schedule')),
+              ),
+            ],
           ),
         ],
       ],

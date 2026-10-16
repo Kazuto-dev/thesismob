@@ -824,3 +824,98 @@ Future<Uint8List> cashFlowPdf(
   );
   return doc.save();
 }
+
+/// The purchase schedule: each material, how much, the phase that first
+/// needs it, when, and the day to order it by.
+Future<Uint8List> purchaseSchedulePdf(
+  Project project,
+  BusinessProfile profile, {
+  DateTime? date,
+}) async {
+  final doc = await _document('${project.name} purchase schedule');
+  final lines = purchaseSchedule(project);
+  final today = date ?? DateTime.now();
+  final dated = project.contract.startDate != null;
+  String week(double day) => 'Week ${(day / workDaysPerWeek).floor() + 1}';
+  doc.addPage(
+    pw.MultiPage(
+      pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.fromLTRB(36, 36, 36, 40),
+      footer: _footer,
+      build: (context) => [
+        _letterhead(profile, 'PURCHASE SCHEDULE', formatDate(today)),
+        pw.Text(
+          _pdfText(project.name),
+          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+        ),
+        if (project.location.isNotEmpty)
+          _small('Location: ${project.location}'),
+        _small(
+          dated
+              ? 'Work starts ${formatDate(project.contract.startDate!)}. '
+                    'Order each material by the date shown so it arrives '
+                    'before the work that needs it.'
+              : 'Weeks are counted from the start of work; order each '
+                    'material its lead time before the week shown.',
+        ),
+        pw.SizedBox(height: 6),
+        pw.Table(
+          columnWidths: const {
+            0: pw.FlexColumnWidth(),
+            1: pw.FixedColumnWidth(70),
+            2: pw.FixedColumnWidth(100),
+            3: pw.FixedColumnWidth(60),
+            4: pw.FixedColumnWidth(60),
+          },
+          border: const pw.TableBorder(
+            horizontalInside: pw.BorderSide(color: _line, width: 0.5),
+          ),
+          children: [
+            pw.TableRow(
+              decoration: const pw.BoxDecoration(color: _band),
+              children: [
+                _head('Material'),
+                _head('Quantity', right: true),
+                _head('First needed for'),
+                _head(dated ? 'Needed' : 'Needed in', right: true),
+                _head(dated ? 'Order by' : 'Lead time', right: true),
+              ],
+            ),
+            for (final l in lines)
+              pw.TableRow(
+                children: [
+                  _cell(l.material.label),
+                  _cell(
+                    '${formatNumber(l.material.quantity)} ${l.material.unit}',
+                    right: true,
+                  ),
+                  _cell(l.phase),
+                  _cell(
+                    l.needed == null
+                        ? week(l.neededDay)
+                        : _shortDate(l.needed!),
+                    right: true,
+                  ),
+                  _cell(
+                    l.orderBy == null
+                        ? '${l.leadMin}–${l.leadMax} days'
+                        : _shortDate(l.orderBy!),
+                    right: true,
+                    strong: true,
+                  ),
+                ],
+              ),
+          ],
+        ),
+        pw.SizedBox(height: 8),
+        _small(
+          'Lead times: stock items 3–7 days; long-span roofing cut to length '
+          'and tiles 7–14; plumbing fixtures up to 14; doors, jambs and '
+          'windows made to the measured openings 21–30. Order-by dates use '
+          'the longest. Check them with your suppliers.',
+        ),
+      ],
+    ),
+  );
+  return doc.save();
+}

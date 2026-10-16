@@ -1,7 +1,13 @@
 import 'dart:math' as math;
 
+import '../materials/items.dart';
+import '../materials/material_spec.dart';
+import '../materials/work_items.dart';
+import 'boq.dart';
 import 'contract_math.dart';
+import 'estimate.dart';
 import 'project.dart';
+import 'unit_prices.dart';
 
 double _centavos(double value) => (value * 100).roundToDouble() / 100;
 
@@ -115,7 +121,7 @@ CashFlow cashFlow(Project project) {
   received[count + lag] += price * terms.retentionPct / 100;
 
   var cumulative = 0.0;
-  return CashFlow([
+  return CashFlow(<CashFlowMonth>[
     for (var m = 0; m <= count + lag; m++)
       () {
         final net = received[m] - costs[m];
@@ -136,4 +142,139 @@ CashFlow cashFlow(Project project) {
         );
       }(),
   ]);
+}
+
+// Purchase schedule
+
+/// Usual delivery lead times in calendar days, shortest and longest, by
+/// group of the materials list, for small orders from Metro Manila
+/// hardware stores and suppliers. Stock items arrive in 3–7 days; long-span
+/// roofing is roll-formed to length and tiles are often ordered in from
+/// the distributor, 7–14; plumbing fixtures up to 14; doors, jambs and
+/// aluminium windows are made to the measured openings, 21–30. Ask your
+/// suppliers: these vary with the place and the season.
+const leadTimes = <ItemGroup, (int, int)>{
+  ItemGroup.cement: (3, 7),
+  ItemGroup.masonry: (3, 7),
+  ItemGroup.steel: (3, 7),
+  ItemGroup.lumber: (3, 7),
+  ItemGroup.ceiling: (3, 7),
+  ItemGroup.roofing: (7, 14),
+  ItemGroup.paint: (3, 7),
+  ItemGroup.tiles: (7, 14),
+  ItemGroup.electrical: (3, 7),
+  ItemGroup.plumbing: (3, 7),
+  ItemGroup.fixtures: (7, 14),
+  ItemGroup.doors: (21, 30),
+  ItemGroup.other: (3, 7),
+};
+
+/// One line of the purchase schedule: a material of the shopping list,
+/// when it is first needed and when to order it.
+typedef PurchaseLine = ({
+  MaterialLine material,
+
+  /// The first phase that uses it.
+  String phase,
+
+  /// The working day of the schedule it is first needed on.
+  double neededDay,
+
+  /// Delivery lead time in calendar days, shortest and longest.
+  int leadMin,
+  int leadMax,
+
+  /// The date it is first needed, when the job has a start date.
+  DateTime? needed,
+
+  /// The last day to order it, [leadMax] calendar days before [needed].
+  DateTime? orderBy,
+});
+
+/// The work item [l] of estimate [e] goes into, as [allocateMaterials]
+/// places it: the one the calculator named, gravel to the bedding, and
+/// the rest (bars and forms included) to the main work.
+String _workOf(String? named, String itemKey, Set<String> works, String main) {
+  if (named != null && works.contains(named)) return named;
+  if (itemKey == 'gravel_bedding' && works.contains(Work.gravelBedding)) {
+    return Work.gravelBedding;
+  }
+  return main;
+}
+
+/// [project]'s purchase schedule: every material of its shopping list,
+/// with the start of the earliest task that uses it and the day to order
+/// it by from [leadTimes], earliest first.
+List<PurchaseLine> purchaseSchedule(Project project) {
+  final schedule = Schedule.of(project);
+  if (schedule.tasks.isEmpty) return const [];
+  final start = project.contract.startDate;
+
+  ScheduleTask? taskAt(int phase, MaterialCategory? trade) {
+    for (final t in schedule.tasks) {
+      if (t.phase == phase && t.trade == trade && t.crewDays > 0) return t;
+    }
+    return null;
+  }
+
+  // The earliest task each material goes into, by shopping-list key.
+  final first = <String, ScheduleTask>{};
+  void use(String key, ScheduleTask? task) {
+    if (task == null) return;
+    final known = first[key];
+    if (known == null || task.start < known.start) first[key] = task;
+  }
+
+  for (final section in workSections(project)) {
+    final trade = section.trade;
+    final byEstimate = <Estimate, List<WorkAnalysis>>{};
+    for (final (number: _, :analysis) in section.entries) {
+      byEstimate.putIfAbsent(analysis.estimate, () => []).add(analysis);
+    }
+    for (final MapEntry(key: e, value: analyses) in byEstimate.entries) {
+      final own = worksOf(e);
+      final main = own.isEmpty ? analyses.first.work.key : own.first.key;
+      final works = {for (final w in own) w.key};
+      final mainTask = taskAt(
+        phaseOf(scheduleKey(analyses.first), trade),
+        trade,
+      );
+      ScheduleTask? taskOf(String work) {
+        final key = work == Work.rebar || work == Work.formwork ? main : work;
+        return taskAt(phaseOf(key, trade), trade) ?? mainTask;
+      }
+
+      use(mainKeyOf(e), taskOf(main));
+      for (final l in e.companions) {
+        use(l.itemKey, taskOf(_workOf(l.work, l.itemKey, works, main)));
+      }
+    }
+  }
+
+  final lines = <PurchaseLine>[];
+  for (final m in project.materials) {
+    final task = first[m.key];
+    final day = task?.start ?? 0;
+    final (lo, hi) = leadTimes[m.group] ?? (3, 7);
+    final needed = start == null ? null : Schedule.addWorkingDays(start, day);
+    lines.add((
+      material: m,
+      phase: task?.label ?? schedulePhases.first.label,
+      neededDay: day,
+      leadMin: lo,
+      leadMax: hi,
+      needed: needed,
+      orderBy: needed == null
+          ? null
+          : DateTime(needed.year, needed.month, needed.day - hi),
+    ));
+  }
+  double orderDay(PurchaseLine l) => l.neededDay - l.leadMax * 6 / 7;
+  lines.sort((a, b) {
+    final c = orderDay(a).compareTo(orderDay(b));
+    return c != 0
+        ? c
+        : a.material.group.index.compareTo(b.material.group.index);
+  });
+  return lines;
 }

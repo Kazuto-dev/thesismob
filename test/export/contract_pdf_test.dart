@@ -83,5 +83,12 @@ void main() {
 
     final flow = await cashFlowPdf(government, profile);
     expect(latin1.decode(flow.sublist(0, 5)), '%PDF-');
+    final purchases = await purchaseSchedulePdf(government, profile);
+    expect(latin1.decode(purchases.sublist(0, 5)), '%PDF-');
+    final undated = await purchaseSchedulePdf(
+      Project.create('Shed').copyWith(items: project.items),
+      profile,
+    );
+    expect(latin1.decode(undated.sublist(0, 5)), '%PDF-');
   });
 }
