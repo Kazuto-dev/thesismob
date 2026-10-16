@@ -1158,42 +1158,48 @@ class _PurchaseCardState extends State<_PurchaseCard> {
               ),
             ),
           for (final l in visible)
-            Material(
-              type: MaterialType.transparency,
-              child: ListTile(
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-                title: Text(
-                  '${l.material.label} · '
-                  '${formatNumber(l.material.quantity)} ${l.material.unit}',
-                ),
-                subtitle: Text(
-                  l.needed == null
-                      ? context.tr(
-                          'Needed {week} for {phase} · order {days} days '
-                          'before',
-                          {
-                            'week': week(l.neededDay),
-                            'phase': context.tr(l.phase),
-                            'days': l.leadMax,
-                          },
-                        )
-                      : context.tr(
-                          'Order by {order} · needed {needed} for {phase}',
-                          {
-                            'order': DateFormat(
-                              'MMM d',
-                              'en_US',
-                            ).format(l.orderBy!),
-                            'needed': DateFormat(
-                              'MMM d',
-                              'en_US',
-                            ).format(l.needed!),
-                            'phase': context.tr(l.phase),
-                          },
-                        ),
-                  style: tabular(theme.textTheme.bodySmall),
-                ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: Space.xs),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${l.material.label} · '
+                    '${formatNumber(l.material.quantity)} ${l.material.unit}',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  Text(
+                    l.needed == null
+                        ? context.tr(
+                            'Needed {week} for {phase} · order {days} days '
+                            'before',
+                            {
+                              'week': week(l.neededDay),
+                              'phase': context.tr(l.phase),
+                              'days': l.leadMax,
+                            },
+                          )
+                        : context.tr(
+                            'Order by {order} · needed {needed} for {phase}',
+                            {
+                              'order': DateFormat(
+                                'MMM d',
+                                'en_US',
+                              ).format(l.orderBy!),
+                              'needed': DateFormat(
+                                'MMM d',
+                                'en_US',
+                              ).format(l.needed!),
+                              'phase': context.tr(l.phase),
+                            },
+                          ),
+                    style: tabular(
+                      theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           Wrap(

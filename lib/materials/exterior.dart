@@ -656,20 +656,23 @@ final fence = MaterialSpec(
         if (plaster > 0) ResultDetail('Plaster', formatArea(roundUp(plaster))),
       ],
       companions: [
-        buy(
-          'cement_40kg',
-          area * mortar.cement + plaster * plasterCement,
-          label: plaster > 0
-              ? 'Cement for laying and plaster'
-              : 'Cement for laying',
-        ),
-        buy(
-          'sand',
-          area * mortar.sand + plaster * plasterSand,
-          label: plaster > 0
-              ? 'Sand for laying and plaster'
-              : 'Sand for laying',
-        ),
+        // Laying stays with the wall; plaster is its own work item.
+        buy('cement_40kg', area * mortar.cement, label: 'Cement for laying'),
+        buy('sand', area * mortar.sand, label: 'Sand for laying'),
+        if (plaster > 0) ...[
+          buy(
+            'cement_40kg',
+            plaster * plasterCement,
+            label: 'Cement for plaster',
+            work: Work.plaster,
+          ),
+          buy(
+            'sand',
+            plaster * plasterSand,
+            label: 'Sand for plaster',
+            work: Work.plaster,
+          ),
+        ],
         buy(
           'cement_40kg',
           footings * concreteFactor * mix.cement,

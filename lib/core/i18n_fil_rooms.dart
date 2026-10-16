@@ -56,7 +56,10 @@ const filipinoRooms = <String, String>{
       'Pader: tiles {size} hanggang {height}, pintura sa itaas',
   'Ceiling: paint': 'Kisame: pintura',
   'painted': 'may pintura',
-  '{lights} lights, {outlets} outlets': '{lights} ilaw, {outlets} outlet',
+  '1 light': '1 ilaw',
+  '{n} lights': '{n} ilaw',
+  '1 outlet': '1 outlet',
+  '{n} outlets': '{n} outlet',
   'Made from the room schedule. Its measurements are replaced when you update finishes from rooms; options and prices you set in the calculator are kept.':
       'Gawa mula sa listahan ng mga kuwarto. Napapalitan ang mga sukat nito '
       'kapag in-update mo ang finish mula sa mga kuwarto; nananatili ang mga '

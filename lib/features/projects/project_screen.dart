@@ -1368,7 +1368,10 @@ class _Expander extends StatelessWidget {
       data: theme.copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
         tilePadding: EdgeInsets.zero,
-        childrenPadding: const EdgeInsets.only(bottom: Space.md),
+        // Room above the first field's floating label.
+        childrenPadding: const EdgeInsets.only(top: Space.sm, bottom: Space.md),
+        expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
+        expandedAlignment: Alignment.centerLeft,
         title: Text(title, style: theme.textTheme.titleSmall),
         subtitle: Text(subtitle, style: theme.textTheme.bodySmall),
         children: children,

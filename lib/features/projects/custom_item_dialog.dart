@@ -174,14 +174,17 @@ class _CustomItemDialogState extends State<CustomItemDialog> {
             const SizedBox(height: Space.lg),
             Text(context.tr('Priced as'), style: theme.textTheme.labelLarge),
             const SizedBox(height: Space.sm),
-            SegmentedButton<CustomKind>(
-              showSelectedIcon: false,
-              segments: [
+            Wrap(
+              spacing: Space.sm,
+              runSpacing: Space.sm,
+              children: [
                 for (final k in CustomKind.values)
-                  ButtonSegment(value: k, label: Text(context.tr(k.label))),
+                  ChoiceChip(
+                    label: Text(context.tr(k.label)),
+                    selected: _kind == k,
+                    onSelected: (_) => setState(() => _kind = k),
+                  ),
               ],
-              selected: {_kind},
-              onSelectionChanged: (s) => setState(() => _kind = s.first),
             ),
             const SizedBox(height: Space.xs),
             Text(context.tr(_kind.description), style: muted),

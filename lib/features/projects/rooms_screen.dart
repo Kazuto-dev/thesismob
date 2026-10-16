@@ -379,10 +379,16 @@ class _RoomCard extends StatelessWidget {
               '${painted ? ', ${context.tr('painted')}' : ''}',
       },
       if (r.lights > 0 || r.outlets > 0)
-        context.tr('{lights} lights, {outlets} outlets', {
-          'lights': r.lights,
-          'outlets': r.outlets,
-        }),
+        [
+          if (r.lights > 0)
+            context.tr(r.lights == 1 ? '1 light' : '{n} lights', {
+              'n': r.lights,
+            }),
+          if (r.outlets > 0)
+            context.tr(r.outlets == 1 ? '1 outlet' : '{n} outlets', {
+              'n': r.outlets,
+            }),
+        ].join(', '),
     ].nonNulls;
     return Semantics(
       button: true,

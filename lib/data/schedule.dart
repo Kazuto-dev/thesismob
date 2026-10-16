@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import '../materials/material_spec.dart';
 import '../materials/work_items.dart';
 import 'boq.dart';
+import 'custom_items.dart';
 import 'project.dart';
 import 'unit_prices.dart';
 
@@ -200,8 +201,25 @@ int phaseOf(String workKey, MaterialCategory? trade) {
   for (final (i, p) in schedulePhases.indexed) {
     if (p.works.contains(workKey)) return i;
   }
-  return trade == MaterialCategory.architectural ? 9 : 5;
+  final finishes = _phaseNamed('Finishes and openings');
+  // Custom items go in with the work they usually follow: structural ones
+  // with the walls, services such as solar panels or a pump with the
+  // fixtures, and anything else, such as landscaping, with the finishes.
+  if (workKey == customItemId) {
+    return switch (trade) {
+      MaterialCategory.structural => _phaseNamed('Walls and rough-ins'),
+      MaterialCategory.electrical ||
+      MaterialCategory.plumbing => _phaseNamed('Fixtures'),
+      _ => finishes,
+    };
+  }
+  return trade == MaterialCategory.architectural
+      ? finishes
+      : _phaseNamed('Walls and rough-ins');
 }
+
+int _phaseNamed(String label) =>
+    schedulePhases.indexWhere((p) => p.label == label);
 
 /// The most workers of one trade, by category name, that a small house
 /// site run by one foreman holds at once. Crews the app sizes itself

@@ -218,10 +218,17 @@ void main() {
       expect(r.itemKey, 'chb_6');
       expect(r.label, 'CHB fence 6", 9 m long, 2 m high');
 
-      // Laying 21.32 × 1.018 + plaster 9 × 2 × 2 × 0.192 = 28.62 → 29.
-      expect(labelled(r, 'cement_40kg', 'Cement for laying and plaster'), 29);
-      // 21.32 × 0.0844 + 36 × 0.016 = 2.38 m³ → 2.5.
-      expect(labelled(r, 'sand', 'Sand for laying and plaster'), 2.5);
+      // Laying 21.32 × 1.018 = 21.70 → 22 bags, with the wall; plaster
+      // 9 × 2 × 2 × 0.192 = 6.91 → 7 bags, with the plaster.
+      expect(labelled(r, 'cement_40kg', 'Cement for laying'), 22);
+      expect(labelled(r, 'cement_40kg', 'Cement for plaster'), 7);
+      // 21.32 × 0.0844 = 1.80 m³ → 2; 36 × 0.016 = 0.58 m³ → 1.
+      expect(labelled(r, 'sand', 'Sand for laying'), 2);
+      expect(labelled(r, 'sand', 'Sand for plaster'), 1);
+      expect(
+        r.companions.where((c) => c.label == 'Cement for plaster').single.work,
+        Work.plaster,
+      );
       // Wall footing (9 − 4 × 0.6) × 0.6 × 0.2 = 0.792 m³, post footings
       // 4 × 0.09 = 0.36: 1.152 × 1.05 = 1.2096 m³ of Class A.
       expect(labelled(r, 'cement_40kg', 'Cement for footings'), 11);
