@@ -6,6 +6,7 @@ import '../data/contract.dart';
 import '../data/estimate.dart';
 import '../data/project.dart';
 import '../data/project_repository.dart';
+import '../data/rooms.dart';
 
 /// The user's projects and which one new estimates are added to.
 ///
@@ -119,6 +120,7 @@ class ProjectsController extends ChangeNotifier {
       items: [for (final e in source.items) e.withId(Estimate.newId(now))],
       checklist: source.checklist,
       notNeeded: source.notNeeded,
+      rooms: source.rooms,
     );
     _projects.add(copy);
     setActive(copy.id);
@@ -210,13 +212,16 @@ class ProjectsController extends ChangeNotifier {
     ),
   );
 
-  /// Copies an item, placing the copy right after it. Returns the copy.
+  /// Copies an item, placing the copy right after it. Returns the copy,
+  /// which is the user's own even when the rooms made the original.
   Estimate? duplicateItem(String estimateId, {String? projectId}) {
     final id = projectId ?? _activeId!;
     final items = byId(id)?.items ?? const <Estimate>[];
     final index = items.indexWhere((e) => e.id == estimateId);
     if (index < 0) return null;
-    final copy = items[index].withId(Estimate.newId(DateTime.now()));
+    final copy = items[index]
+        .withId(Estimate.newId(DateTime.now()))
+        .copyWith(source: '');
     _update(
       id,
       (p) => p.copyWith(items: [...p.items]..insert(index + 1, copy)),
@@ -304,6 +309,35 @@ class ProjectsController extends ChangeNotifier {
     String projectId,
     ContractData Function(ContractData) change,
   ) => _update(projectId, (p) => p.copyWith(contract: change(p.contract)));
+
+  /// Sets a project's room schedule. The project's floor area follows the
+  /// rooms' while it is empty or still the rooms' earlier total.
+  void setRooms(String projectId, List<Room> rooms) => _update(projectId, (p) {
+    final fromRooms =
+        p.floorArea == null || p.floorArea == roomTotals(p.rooms).floor;
+    return p.copyWith(
+      rooms: rooms,
+      floorArea: fromRooms ? roomTotals(rooms).floor : null,
+    );
+  });
+
+  /// Replaces the estimates made from a project's rooms with what the rooms
+  /// make now, priced with [priceOf], leaving the user's own items alone.
+  /// Returns the items before, for undo, and any finish that could not be
+  /// worked out.
+  ({List<Estimate> before, List<String> problems}) updateRoomFinishes(
+    String projectId,
+    double Function(String itemKey) priceOf,
+  ) {
+    final before = byId(projectId)?.items ?? const <Estimate>[];
+    var problems = const <String>[];
+    _update(projectId, (p) {
+      final made = roomFinishes(p.rooms, priceOf: priceOf, previous: p.items);
+      problems = made.problems;
+      return p.copyWith(items: withRoomFinishes(p.items, made.estimates));
+    });
+    return (before: before, problems: problems);
+  }
 
   /// Remembers the Google spreadsheet a project was saved to.
   void setSheetId(String projectId, String sheetId) =>

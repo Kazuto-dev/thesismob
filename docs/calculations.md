@@ -1236,6 +1236,73 @@ Price sources read in October 2026:
 [Buildmate jet pump set](https://www.shopbuildmate.com/products/powerhouse-water-jet-pump-1hp-with-24l-pressure-tank-set-for-water-transfer-supply-phco-jet24l-tnk),
 [Villman Hikvision kits](https://villman.com/Product-Detail/hikvidion_tvi-8ch4d4b-2mp).
 
+## Room schedule
+
+A project can hold a room schedule (project menu → **Room schedule**). Each
+room is entered once: its name and level (floor), its length and width, or
+its floor area and wall length when it is not a rectangle, its ceiling
+height, its doors and windows, and its finishes: floor, walls (paint, or
+tiles to a height with paint above), ceiling boards and ceiling paint, and
+optionally its light points and outlets. **Update finishes from rooms**
+turns the rooms into ordinary estimates made with the calculators above.
+The code is in [`lib/data/rooms.dart`](../lib/data/rooms.dart).
+
+**Room geometry.** For a room with wall length P (2 × (length + width) for
+a rectangle; 4 × √area when a room given by its area has no wall length),
+ceiling height H, wall tiles to height t (at most H) and openings each
+w wide and h high on a sill s (0 for doors):
+
+| Quantity | Formula |
+| --- | --- |
+| Floor and ceiling | length × width, or the area entered |
+| Openings between heights a and b | Σ count × w × max(0, min(s + h, b) − max(s, a)) |
+| Wall tiles | P × t − openings between 0 and t |
+| Wall paint | P × (H − t) − openings between t and H (t = 0 for painted walls) |
+| Skirting | P − Σ door widths, when the floor takes one and the walls are not tiled |
+
+So a window from 0.9 to 2.1 m in a kitchen tiled to 1.2 m takes 0.3 m of its
+height out of the tiles and 0.9 m out of the paint.
+
+**One estimate per finish and level.** Rooms on the same level (matched
+ignoring case and spaces) that share a finish make one estimate, named
+after the level and the part, with the rooms in its note, e.g.
+"Ground floor, floors – Tiles 60 × 60 cm. Rooms: Living, Dining, Kitchen."
+The finishes and their calculators:
+
+| Finish | Calculator | Grouped by | What the rooms give it |
+| --- | --- | --- | --- |
+| Floor tiles | Tiles | Tile size | Floor, and the skirting cut from the same tiles |
+| SPC, laminate, cement topping | Floor finishes | Finish | Floor; skirting trims and a doorway per door for planks |
+| Carpet | Carpet | – | Floor |
+| Wall tiles | Tiles | Tile size | Net tiled area as length × the highest tile height |
+| Wall paint | Paint | – | Painted band as length × the highest painted height, and the openings in it |
+| Ceiling boards | Ceiling | Board | Ceiling |
+| Ceiling paint | Paint | – | Ceiling |
+| Light points, outlets | Light bulb, Outlet | – | The count, in "Number of" mode |
+
+A single rectangular room gives a floor calculator its own length and
+width. Several rooms, or a room given by its area, are measured as one
+square of the same total area (side rounded to the millimetre), so tiles
+and boards are counted from the area and the calculator's waste allowance
+covers the cuts at each room's edges; the ceiling's wall angle is then
+measured round that square, which is shorter than round each room. Wall
+lengths are exact, since paint and wall tiles take a length and a height.
+
+**Keeping them up to date.** Estimates made from rooms are marked with a
+`source` (`rooms:<level>|<part>:<kind>`, saved with the estimate). Updating
+the finishes replaces each marked estimate with the one made now for the
+same level and finish, in the same place in the project and with the same
+id (so progress billings stay attached); finishes no longer in the rooms
+are removed and new ones are added at the end. The user's own estimates are
+never touched, and a duplicated finish becomes the user's own. Only the
+measurements come from the rooms: options (tile layout, buying by the box,
+coats, framing…), the main price and the companions' prices set on the
+estimate are kept; new estimates are priced from the price book, as when
+adding from a calculator. The project's floor area is filled in from the
+rooms while it is empty or still the rooms' earlier total. The house
+wiring (rough-in) is not made from the rooms, since it also needs the
+aircon and appliance circuits.
+
 ## Accuracy and validation
 
 ### How the tests check the formulas

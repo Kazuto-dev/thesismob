@@ -28,6 +28,7 @@ import 'material_picker.dart';
 import 'project_actions.dart';
 import 'project_items.dart';
 import 'project_picker.dart';
+import 'rooms_screen.dart';
 
 enum _Tab { items, materials, budget, contract }
 
@@ -76,7 +77,8 @@ class _ProjectScreenState extends State<ProjectScreen> {
       ],
     );
 
-    if (project.items.isEmpty && project.checklist.isNotEmpty) {
+    if (project.items.isEmpty &&
+        (project.checklist.isNotEmpty || project.rooms.isNotEmpty)) {
       return PageTitle(
         title: project.name,
         child: Scaffold(
@@ -88,7 +90,12 @@ class _ProjectScreenState extends State<ProjectScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     header,
-                    ChecklistCard(project: project),
+                    if (project.checklist.isNotEmpty)
+                      ChecklistCard(project: project),
+                    if (project.rooms.isNotEmpty) ...[
+                      const SizedBox(height: Space.lg),
+                      RoomsCard(project: project),
+                    ],
                   ],
                 ),
               ),
@@ -127,6 +134,10 @@ class _ProjectScreenState extends State<ProjectScreen> {
                           ),
                           icon: const Icon(Icons.add),
                           label: Text(context.tr('Add an estimate')),
+                        ),
+                        OutlinedButton(
+                          onPressed: () => context.go(Routes.rooms(project.id)),
+                          child: Text(context.tr('Enter rooms')),
                         ),
                         OutlinedButton(
                           onPressed: () => context.go(Routes.projects),
@@ -208,6 +219,10 @@ class _ProjectScreenState extends State<ProjectScreen> {
                   ],
                   if (project.checklist.isNotEmpty) ...[
                     ChecklistCard(project: project),
+                    const SizedBox(height: Space.lg),
+                  ],
+                  if (project.rooms.isNotEmpty) ...[
+                    RoomsCard(project: project),
                     const SizedBox(height: Space.lg),
                   ],
                   if (wide)
@@ -383,6 +398,11 @@ class _ProjectMenu extends StatelessWidget {
             ],
             child: Text(context.tr('Add a checklist')),
           ),
+        MenuItemButton(
+          leadingIcon: const Icon(Icons.meeting_room_outlined),
+          onPressed: () => context.go(Routes.rooms(project.id)),
+          child: Text(context.tr('Room schedule')),
+        ),
         const Divider(),
         MenuItemButton(
           leadingIcon: const Icon(Icons.picture_as_pdf_outlined),

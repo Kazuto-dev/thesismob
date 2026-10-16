@@ -410,7 +410,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     final projectId = widget.editProjectId;
     if (editing == null || current == null || projectId == null) return;
     _recordNow();
-    final updated = current.withId(editing.id).copyWith(note: editing.note);
+    final updated = current
+        .withId(editing.id)
+        .copyWith(note: editing.note, source: editing.source);
     _projects.updateItem(updated, projectId: projectId);
     _editing = updated;
     context.go(Routes.projectById(projectId));

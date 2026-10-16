@@ -10,6 +10,7 @@ import '../../core/widgets.dart';
 import '../../data/custom_items.dart';
 import '../../data/estimate.dart';
 import '../../data/project.dart';
+import '../../data/rooms.dart';
 import '../../data/unit_prices.dart';
 import '../../materials/catalog.dart';
 import '../../router.dart';
@@ -254,6 +255,30 @@ class _ItemDetails extends StatelessWidget {
               fontStyle: FontStyle.italic,
               color: theme.colorScheme.onSurfaceVariant,
             ),
+          ),
+        ],
+        if (e.fromRooms) ...[
+          const SizedBox(height: Space.md),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.meeting_room_outlined,
+                size: 20,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: Space.sm),
+              Expanded(
+                child: Text(
+                  context.tr(
+                    'Made from the room schedule. Its measurements are '
+                    'replaced when you update finishes from rooms; options '
+                    'and prices you set in the calculator are kept.',
+                  ),
+                  style: theme.textTheme.bodySmall,
+                ),
+              ),
+            ],
           ),
         ],
         const SizedBox(height: Space.lg),
