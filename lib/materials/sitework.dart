@@ -630,6 +630,18 @@ final stairs = MaterialSpec(
         ChoiceOption('12', '12 mm (½") marine'),
       ],
     ),
+    const ChoiceField(
+      id: 'reuse',
+      label: 'Forms used',
+      initial: '2',
+      helper: 'Stair forms are cut to fit the steps, so 2 uses is usual',
+      options: [
+        ChoiceOption('1', 'Once', 1),
+        ChoiceOption('2', '2 times', 2),
+        ChoiceOption('3', '3 times', 3),
+        ChoiceOption('4', '4 times', 4),
+      ],
+    ),
     wasteField(
       initial: '5',
       helper: 'Spillage and uneven ground',
@@ -693,7 +705,8 @@ final stairs = MaterialSpec(
     final riserFaces = height * width;
     final sides = 2 * volume / width;
     final formArea = soffit + riserFaces + sides;
-    final sheets = math.max(1, ceilCount(formArea / sheetFormArea));
+    final uses = input.choice('reuse').value;
+    final sheets = math.max(1, ceilCount(formArea / sheetFormArea / uses));
     final plywood = input.choice('plywood').id;
 
     return CalcResult(
@@ -736,6 +749,7 @@ final stairs = MaterialSpec(
           formatCount(distBars, 'bar'),
         ),
         ResultDetail('Form contact area', formatArea(roundUp(formArea))),
+        if (uses > 1) ResultDetail('Forms reused', '× ${formatNumber(uses)}'),
       ],
       companions: [
         buy('sand', mixed * mix.sand),
@@ -826,11 +840,13 @@ final stairs = MaterialSpec(
       'Forms',
       'Plywood covers the soffit, every riser face and both sides of the '
           'flight. The soffit is shored like a suspended slab: 28.8 bd ft '
-          'of coco lumber per sheet and 0.20 kg of nails per m².',
+          'of coco lumber per sheet and 0.20 kg of nails per m². Stair '
+          'forms are cut to fit the steps, so they are shared by 2 uses by '
+          'default rather than the 3 of other forms.',
       formula:
           'form area = (slope + landing) × width + height × width + '
           '2 × volume ÷ width\n'
-          'plywood = round up(form area ÷ 2.88)',
+          'plywood = round up(form area ÷ 2.88 ÷ uses)',
     ),
   ],
   references: const [

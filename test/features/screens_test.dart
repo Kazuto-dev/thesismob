@@ -70,16 +70,16 @@ void main() {
     await tester.tap(find.text('Create'));
     await tester.pumpAndSettle();
     expect(find.text('Checklist'), findsOneWidget);
-    expect(find.text('0 of 23 done · next: Footings'), findsOneWidget);
+    expect(find.text('0 of 26 done · next: Footings'), findsOneWidget);
 
     // Not every house needs everything.
     await tester.tap(find.byTooltip('Footings not needed'));
     await tester.pumpAndSettle();
-    expect(find.text('0 of 22 done · next: Columns'), findsOneWidget);
+    expect(find.text('0 of 25 done · next: Wall Footings'), findsOneWidget);
 
     await tester.tap(find.text('Estimate').first);
     await tester.pumpAndSettle();
-    expect(find.text('Column height'), findsOneWidget);
+    expect(find.text('Wall footing length'), findsOneWidget);
     expect(projectsOf(tester).active.name, 'Reyes house');
   });
 

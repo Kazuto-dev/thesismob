@@ -87,6 +87,24 @@ Several calculators share these factors, kept in
 Because lumber follows the plywood count, it is reused as many times as the
 plywood.
 
+**Uses.** Forms are bought once and shared by the pours they serve, so each
+estimate pays 1 ÷ uses of the plywood and lumber (once, 2, 3 or 4 times).
+Contractors reuse the same plywood and frame lumber 3 or 4 times on a house:
+column forms are reused for the next columns, then cut into beam sides and
+slab soffits. The defaults are 3 uses for footings, wall footings, columns,
+suspended slabs, slab and pavement edges, and lintels; 2 for beams, whose
+soffits stay shored until the slab above has cured, and for stairs, whose
+forms are cut to the steps. Nails are bought new for every use.
+
+At the default price book and crew (formwork: 0.1 foreman, 1 skilled worker
+and 1 helper at ₱1,400, ₱1,100 and ₱900 a day, 9 m² a day, ₱237.78 per m² of
+labour), a suspended slab 10 × 7 m now costs ₱524 per m² of forms (₱1,003 when
+it defaulted to a single use), beams ₱571 (2 uses, slab on both sides), stairs
+₱664 (₱1,065 when used once), footing sides ₱503 and columns ₱461. Published
+Philippine formwork rates for houses run about ₱500–800 per m² with labour;
+the reuse factor of 3–4 is the usual rule in Philippine estimating guides
+(Fajardo) and in contractors' practice, not a measured figure.
+
 ## Structural
 
 ### Concrete hollow blocks (CHB)
@@ -96,13 +114,22 @@ plywood.
 | Area | length × height − doors and windows |
 | Blocks | ⌈area × 12.5⌉ |
 | Waste | + ⌈blocks × waste⌉ [5%; none, 5, 10 or 15%] |
-| Cement | area × (mortar + faces × 0.192) bags |
-| Sand | area × (mortar sand + faces × 0.016) m³ |
+| Cement for laying | area × mortar bags |
+| Sand for laying | area × mortar sand m³ |
+| Cement for plaster | area × faces × 0.192 bags |
+| Sand for plaster | area × faces × 0.016 m³ |
 | Bars, 10 or 12 mm [10] | ⌈area × (vertical + horizontal) ÷ 6⌉ |
 | Tie wire | area ÷ vertical spacing ÷ (courses × 0.20) crossings × 0.30 m ÷ 53 m per kg |
 
 Block size is 4", 6" or 8" [4"]; it sets the mortar factor and the price.
-Plaster is none, one face or both faces [both]. Bar per m² of wall, laps
+Plaster is none, one face or both faces [both]. Laying and plaster are bought
+as separate lines, each rounded up on its own (cement to the bag, sand to the
+half m³). The laying lines stay with the wall's work item and the plaster
+lines go to `plaster`, so the unit price analysis of each carries its own
+materials: for a 6" wall 40 × 3 m less 12 m² of openings, the wall's direct
+cost went from ₱1,161 to ₱1,019 per m² and the plaster's from ₱164 (labour
+only) to ₱235 per m² of face. The septic tank and catch basins keep their
+plaster in one line, since each is one composite work item. Bar per m² of wall, laps
 included: vertical bars every 0.40, 0.60 or 0.80 m [0.60] need 2.93, 2.13 or
 1.60 m; horizontal bars every 2nd, 3rd or 4th course [3rd] need 3.30, 2.15
 or 1.72 m. Spacing must follow the plans.
@@ -123,13 +150,17 @@ Sources: Fajardo Table 2-2;
 | Bars, 10 or 12 mm [10] | stock bars for the runs each way, spliced with the chosen lap |
 | Tie wire | runs one way × runs the other way × 0.30 m ÷ 53 |
 | Gravel bed (on fill) | area × bed thickness [0.10 m; none, 0.05, 0.10 or 0.15] |
-| Forms (suspended) | plywood, lumber at 28.8 bd ft per sheet, nails; forms used once by default |
+| Forms (suspended) | soffit = length × width; plywood, lumber at 28.8 bd ft per sheet, nails |
+| Edge forms (on fill) | edge × thickness; edge = 2 × (length + width), or the edge entered; lumber at the column factor per sheet; none when "poured against beams or walls" is chosen |
+| Uses | shared by 3 uses by default [once, 2, 3 or 4] |
 
 A slab is **on fill** or **suspended**. The usual mix is Class B on fill and
 Class A suspended; any class can be picked. The usual bar spacing both ways
 is 0.40 m on fill and 0.20 m suspended; 0.15 to 0.40 m or no bars can be
-picked. Cover is 40 mm on fill and 20 mm suspended. The price field is the
-price per bag of cement.
+picked. Cover is 40 mm on fill and 20 mm suspended. A slab on fill is formed
+along its free edges, as high as it is thick; enter only the free edges where
+the slab is poured against a tie beam, a wall footing or a wall, or choose no
+edge forms. The price field is the price per bag of cement.
 
 Sources: Fajardo Table 1-2;
 [AEDO concrete mix](https://aedoconstruction.com/blog/concrete-mix-ratio-philippines/);
@@ -178,10 +209,28 @@ Sources: Fajardo Table 1-2 and forms tables; NSCP 2015 Sec. 425.3 and Table
 | Main bars | count × bars per beam [4; 4, 5, 6 or 8] pieces, each span + 2 × 12d long (a 90° hook into each column), in 12–25 mm [16] |
 | Stirrups, 10 mm | per beam ⌊span ÷ spacing⌋ + 1 [0.15 m]; each 2 × (width − 0.08) + 2 × (depth − 0.08) + 2 × 0.105 m |
 | Tie wire | count × stirrups × main bars × 0.30 m ÷ 53 |
-| Forms | contact area = count × (2 × depth + width + 0.10) × span; reused twice by default |
+| Side under a slab | depth − slab thickness [100 mm; 100, 125 or 150 mm]; slab on both sides by default [none, one side or both sides] |
+| Forms | contact area = count × (two sides + width + 0.10) × span; reused twice by default |
+| Tie beam forms | count × (2 × depth + 0.10) × span (no bottom) |
+| Tie beam excavation | count × span × (width + 2 × working space) × (depth + bed) [space 0.30 m; none, 0.30 or 0.50; bed 0.05 m; none, 0.05, 0.10 or 0.15] |
+| Tie beam gravel bed, backfill | count × span × width × bed; excavation − concrete − bed |
 
-Forms cover both sides and the bottom. Extra bars over the supports and
-shoring posts are not counted.
+Forms cover both sides and the bottom. Where a slab rests on the beam, the
+slab's soffit forms close the top of that side, so the side form only reaches
+the underside of the slab: outer beams carry the slab on one side, inner beams
+on both, roof beams on none. The concrete is still the full depth; measure the
+slab between the beams to avoid counting the overlap twice. Extra bars over the
+supports and shoring posts are not counted.
+
+A leading choice makes the beam a **tie beam at ground level** (a grade
+beam linking footings or column bases). It is cast in a trench as deep as the
+beam and its gravel bed, with working space each side, formed on both sides
+but not underneath; whatever the beam and bed do not fill is backfilled.
+Its concrete is the new `concrete_tie_beam` work item (same crew as beams,
+0.5 foreman, 1 skilled, 4 helpers, a mixer and a vibrator; 4 m³ a day like
+footings, since it is cast at grade without shoring; DPWH 900), with
+excavation, backfill and gravel bedding as works. Leave its trench out of
+Earthworks.
 
 Sources: Fajardo forms tables; NSCP 2015 Sec. 425.3 and Table 420.6.1.3.1.
 
@@ -287,7 +336,7 @@ dug by hand; blasted rock swells more (about 50–65%). The 6 m³ load of a
 | Distribution bars, 10 mm at 0.25 m | ⌊(slope + landing) ÷ 0.25⌋ + 1 bars, each width − 0.04 m |
 | Tie wire | main bars × distribution bars × 0.30 m ÷ 53 |
 | Form area | (slope + landing) × width + height × width + 2 × volume ÷ width |
-| Forms | marine plywood 6 or 12 mm [12] ⌈area ÷ 2.88⌉, used once; coco lumber 28.8 bd ft per sheet; nails 0.20 kg/m² |
+| Forms | marine plywood 6 or 12 mm [12] max(1, ⌈area ÷ 2.88 ÷ uses⌉) [2 uses; once, 2, 3 or 4]; coco lumber 28.8 bd ft per sheet; nails 0.20 kg/m² |
 
 The risers' faces add up to height × width, and each side of the flight has
 the profile area volume ÷ width. Main bars run along the slope into the
@@ -402,6 +451,129 @@ confirmed from a published source, so all are flagged as estimates.
 Reused items: cement, sand, gravel, gravel bedding, 10 and 12 mm bars, tie
 wire, marine plywood, coco lumber, nails, quick-drying enamel and paint
 thinner.
+
+### Wall footings
+
+| Step | Formula |
+| --- | --- |
+| Volume | length × width × thickness [0.20 m] × (1 + waste) [5%] |
+| Cement (main item), sand, gravel | as for slabs, Class A by default |
+| Cross bars, 10, 12 or 16 mm [12] at 0.15–0.30 m [0.20] | ⌊(length − 0.15) ÷ spacing⌋ + 1 bars, each width − 0.15 m |
+| Lengthwise bars, 10, 12 or 16 mm [10] | 3, 4, 5 or 6 bars [4], each length − 0.15 m, spliced with the chosen lap [40d] over 6 m |
+| Tie wire | cross bars × lengthwise bars × 0.30 m (0.40 m above 12 mm) ÷ 53 |
+| Side forms (optional) | 2 × length × thickness; reused 3 times by default; lumber at the column factor |
+| Excavation | length × (width + 2 × working space) × depth [space 0.30 m; none, 0.30 or 0.50] |
+| Gravel bed | length × width × bed [0.10 m; none, 0.05, 0.10 or 0.15] |
+| Wall below the ground | length × wall width × (depth − bed − thickness) [6" CHB, 0.15 m; 4" 0.10 or 8" 0.20] |
+| Backfill | excavation − gravel bed − footing below the ground − wall below the ground |
+
+A continuous strip under a wall; enter the runs of one size added up. Cover is
+75 mm against the soil, as for isolated footings. The wall on the footing is
+counted in the CHB calculator; here its part below the ground is only left out
+of the backfill. Cross and lengthwise bars of one size are bought as one line.
+Usual sizes (0.45–0.80 × 0.20–0.25 m, 12 mm cross bars at 0.20 m with 3–4
+lengthwise 10 mm bars) are typical of Philippine house plans, not a code
+requirement. The price field is the price per bag of cement.
+
+Works: footing concrete (`concrete_footing`, as isolated footings), rebar,
+formwork when chosen, gravel bedding, excavation and backfill. Leave the
+trench out of Earthworks.
+
+Sources: Fajardo Table 1-2; NSCP 2015 Table 420.6.1.3.1 (75 mm cover against
+earth); DPWH Items 103 and 104.
+
+### Lintels and stiffeners
+
+| Step | Formula |
+| --- | --- |
+| Lintels | one per door and window, each opening width [door 0.9 m, window 1.2 m] + 2 × bearing [0.20 m; 0.15 or 0.20] |
+| Sills | one per window [concrete sill, or none], as long as its lintel |
+| Stiffener columns | ⌊wall length ÷ spacing⌋ [3.0 m; none, 2.4, 3.0 or 3.6], each the wall height |
+| Volume | lintels × t × 0.20 + sills × t × 0.10 + stiffeners × t × 0.20 × height, t = 0.10, 0.15 or 0.20 m for 4", 6" or 8" blocks [4"]; × (1 + waste) [5%] |
+| Cement (main item), sand, gravel | as for slabs, Class A by default |
+| Bars, 10 or 12 mm [10] | 2 per lintel and stiffener in a 4" wall, 4 in 6" and 8" [usual; or 2 or 4]; lintels and sills their length, stiffeners height + lap; sills always 2 |
+| Ties, 10 mm | per lintel and stiffener ⌊length ÷ spacing⌋ + 1 [0.20 m; 0.15, 0.20 or 0.25]; each 2 × (t − 0.05) + 2 × (0.20 − 0.05) + 2 × 0.105 m |
+| Tie wire | ties × bars × 0.30 m ÷ 53 |
+| Forms | 2 × lintel metres × 0.20 + openings × t (soffits) + 2 × sill metres × 0.10 + 2 × stiffeners × 0.20 × height; reused 3 times by default; lumber at the column factor |
+
+A lintel is one block course (0.20 m) deep and rests 15–20 cm on the wall past
+each side of the opening; a stiffener column is block-wide and half a block
+(0.20 m) along the wall; a sill is 0.10 m thick. Cover is 25 mm, inside a
+plastered wall (the NSCP gives 20 mm for walls not exposed to weather; 25 mm
+leaves room for the 10 mm ties of a 4" wall). The stiffener count, one for
+every spacing of wall, suits walls added up from several panels between
+columns; enter each wall alone for an exact count. Blocks are counted over the
+whole wall by the CHB calculator; the few these members replace are left as an
+allowance for breakage. The section sizes, 2–4 × 10 mm bars with 10 mm ties at
+0.20 m and the 3 m stiffener spacing are common Philippine practice for house
+walls (AEDO, PH house plans), not NSCP requirements. The price field is the
+price per bag of cement.
+
+Works: the new `concrete_lintel` in m³ (0.1 foreman, 1 skilled, 2 helpers,
+hand-mixed small pours; 1 m³ a day, an estimate; DPWH 900), rebar and
+formwork.
+
+Sources: Fajardo Table 1-2; NSCP 2015 Sec. 425.3 (hooks) and Table
+420.6.1.3.1 (cover);
+[AEDO CHB rebar spacing](https://aedoconstruction.com/blog/chb-wall-rebar-spacing-philippines/).
+
+### Concrete pavement
+
+| Step | Formula |
+| --- | --- |
+| Area, volume | length × width; × thickness [100 mm; 100, 125 or 150] × (1 + waste) [5%] |
+| Cement (main item), sand, gravel | as for slabs, Class A by default |
+| Bars both ways [default], 10 or 12 mm [10] | runs each way ⌊(side − 0.08) ÷ spacing⌋ + 1 [0.30 m; 0.20, 0.25, 0.30 or 0.40], cut and spliced as in a slab on fill (40 mm cover) |
+| Welded wire mesh (instead) | ⌈area ÷ 7.90⌉ sheets of 1.5 × 6 m lapped 0.15 m each way: (1.5 − 0.15) × (6 − 0.15) = 7.90 m² |
+| Control joints | spacing s = 30 × thickness up to 4.5 m [usual; or 1.5, 2 or 3 m]; (⌈length ÷ s⌉ − 1) × width + (⌈width ÷ s⌉ − 1) × length metres |
+| Joint sealant [polyurethane; or none, tooled joints] | ⌈joints × 0.0792 L ÷ 0.6 L⌉ sausages (a 6 × 12 mm bead, + 10%) |
+| Curing [compound; or kept wet with water] | ⌈area × 0.20 L ÷ 4 L⌉ gallons |
+| Gravel base | area × base [0.10 m; none, 0.05, 0.10 or 0.15] |
+| Edge forms | edge × thickness; edge = 2 × (length + width) or the edge entered; none when poured against curbs or walls; reused 3 times by default |
+
+For a driveway, carport, sidewalk or yard; enter each rectangle of one
+thickness on its own. The joint rule follows ACI 330R (24–36 times the
+thickness, at most 4.5 m), which gives 3 m for 100 mm. The sealant bead and the
+0.20 L/m² of curing compound are typical product-sheet figures (Sika Antisol E
+gives 0.15–0.20 L/m²), not measured. Expansion joints against the house and
+curbs, and dowels across joints, are not counted. The price field is the price
+per bag of cement.
+
+Works: the new `pcc_pavement` in m² with effort thickness ÷ 0.10 (0.5
+foreman, 1 skilled, 4 helpers, a mixer and a vibrator; 40 m² a day at 100 mm,
+an estimate that adds jointing and finishing to the 60 m² a day of a slab on
+fill; DPWH 311, Portland Cement Concrete Pavement), rebar when bars are
+chosen, formwork for the edges and gravel bedding (DPWH 200) for the base.
+Mesh, sealant and curing compound go to the pavement itself.
+
+Sources: DPWH Standard Specifications, Item 311 (Portland Cement Concrete
+Pavement) and Item 200 (Aggregate Subbase Course); ACI 330R-08 (joint
+spacing); Fajardo Table 1-2.
+
+#### New price book items: pavement
+
+All prices are Metro Manila retail, VAT included, for late 2026, and none
+could be confirmed from a published source, so all are flagged as estimates.
+
+| Item | Unit | Group | Price (₱) | Source |
+| --- | --- | --- | ---: | --- |
+| Welded wire mesh 6" × 6", 4 mm, 1.5 × 6 m sheet (`wire_mesh`) | sheet | Steel | 750 | Estimate: about 12.4 kg of 4 mm wire at about ₱60/kg |
+| Polyurethane joint sealant, 600 mL sausage (`joint_sealant`) | pc | Other | 650 | Estimate (Sikaflex-class sausages, ₱550–750) |
+| Concrete curing compound, 4 L (`curing_compound`) | gallon | Other | 700 | Estimate (wax or resin curing compounds by the 4 L) |
+
+Reused items: cement, sand, gravel, gravel bedding, 10 to 16 mm bars, tie
+wire, marine plywood, coco lumber and nails.
+
+#### New work items: tie beams, lintels and pavements
+
+| Key | Description | Unit | Crew per day | Output per day | DPWH |
+| --- | --- | --- | --- | ---: | --- |
+| `concrete_tie_beam` | Structural concrete, tie beams | m³ | 0.5 foreman, 1 skilled, 4 helpers, mixer, vibrator | 4 | 900 |
+| `concrete_lintel` | Structural concrete, lintels, stiffener columns and sills | m³ | 0.1 foreman, 1 skilled, 2 helpers | 1 | 900 |
+| `pcc_pavement` | Concrete pavement, 100 mm, placed, jointed and cured | m² | 0.5 foreman, 1 skilled, 4 helpers, mixer, vibrator | 40 (× thickness ÷ 0.10) | 311 |
+
+The outputs are estimates in line with the other concrete work items; the
+project's productivity setting scales them.
 
 ## Architectural
 
@@ -1314,6 +1486,10 @@ own `calculate` function returns.
 - [`test/materials/structure_test.dart`](../test/materials/structure_test.dart):
   blocks, plywood, insulation, ceiling, bar cutting, slabs, footings, columns
   and beams.
+- [`test/materials/structure_extras_test.dart`](../test/materials/structure_extras_test.dart):
+  laying and plaster lines of block walls and their unit price analyses, slab
+  edge forms, form reuse, beam sides under a slab, tie beams, wall footings,
+  lintels and stiffeners, and pavements.
 - [`test/materials/architectural_test.dart`](../test/materials/architectural_test.dart):
   paint, tiles, roofing, carpet, wallpaper, doors and windows. It also runs
   every option of every architectural calculator and checks that each one
@@ -1331,8 +1507,11 @@ Some of the hand-worked cases:
 
 | Case | Expected |
 | --- | --- |
-| 10 × 3 m wall of 4" CHB, defaults | 394 blocks, 28 bags, 2.5 m³ sand, 22 bars of 10 mm, 1 kg tie wire |
-| Slab on fill 10 × 5 × 0.10 m | 40 bags (Class B), 3 m³ sand, 5.5 m³ gravel, 5 m³ bedding, 48 bars, 2 kg tie wire |
+| 10 × 3 m wall of 4" CHB, defaults | 394 blocks; laying 16 bags and 1.5 m³ sand, plaster 12 bags and 1 m³ sand; 22 bars of 10 mm, 1 kg tie wire |
+| Slab on fill 10 × 5 × 0.10 m | 40 bags (Class B), 3 m³ sand, 5.5 m³ gravel, 5 m³ bedding, 48 bars, 2 kg tie wire, 3 m² of edge forms (1 sheet) |
+| 20 m wall footing 0.60 × 0.20 m, 1.0 m deep | 23 bags, 8 bars of 12 mm, 15 bars of 10 mm, 24 m³ excavation, 18.3 m³ backfill |
+| 12 m 4" wall, 2 doors, 3 windows | 0.42 m³, 4 bags, 25 bars of 10 mm, 8.94 m² of forms |
+| 8 × 3 m driveway, 100 mm, defaults | 23 bags, 28 bars of 10 mm, 1 sealant, 2 gallons curing compound, 2.5 m³ gravel base |
 | 4 columns 0.30 × 0.30 × 3 m | 11 bags, 16 bars of 16 mm, 17 bars of 10 mm, 3 kg tie wire, 2 plywood sheets, 41 bd ft, 4 kg nails |
 | Latex on 10 × 3 m new masonry | 3 gallons, 2 gallons primer, 1 L neutralizer, 2 gallons putty, 4 sheets sandpaper |
 | 5 × 4 m floor, 60 × 60 cm tiles | 70 tiles (18 boxes), 4 bags adhesive, 2 packs grout, 2 packs spacers |

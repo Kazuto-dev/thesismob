@@ -121,8 +121,7 @@ final chb = MaterialSpec(
     final faces = input.choice('plaster').value;
     final count = withWaste(ceilCount(net * chbPerSquareMetre), waste);
     final mortar = chbMortar[size.id]!;
-    final cement = net * (mortar.cement + faces * plasterCement);
-    final sand = net * (mortar.sand + faces * plasterSand);
+    final plastered = net * faces;
     final vertical = input.choice('vertical');
     final horizontal = input.choice('horizontal');
     final barPerM2 =
@@ -156,26 +155,45 @@ final chb = MaterialSpec(
           formatLength(roundUp(rebar, 1)),
         ),
       ],
+      // Mortar for laying stays with the wall and plaster goes to the
+      // plaster work, each bought on its own; bars and tie wire go to the
+      // rebar.
       companions: [
         buy(
           'cement_40kg',
-          cement,
-          label: faces > 0 ? 'Cement for laying and plaster' : null,
+          net * mortar.cement,
+          label: faces > 0 ? 'Cement for laying blocks' : null,
         ),
-        buy('sand', sand),
+        buy(
+          'sand',
+          net * mortar.sand,
+          label: faces > 0 ? 'Sand for laying blocks' : null,
+        ),
+        if (faces > 0) ...[
+          buy(
+            'cement_40kg',
+            plastered * plasterCement,
+            label: 'Cement for plaster',
+            work: Work.plaster,
+          ),
+          buy(
+            'sand',
+            plastered * plasterSand,
+            label: 'Sand for plaster',
+            work: Work.plaster,
+          ),
+        ],
         buy(rebarKey(barMm), bars.toDouble()),
         buy('tie_wire', ties * tieWirePerTie(barMm) / tieWireMetresPerKg),
       ],
       note: 'Cement and sand use Class B mortar (1:3).',
-      // Cement and sand for laying and plaster are bought together, so
-      // they stay with the wall; bars and tie wire go to the rebar.
       works: [
         WorkQuantity(switch (size.id) {
           '6' => Work.chb6,
           '8' => Work.chb8,
           _ => Work.chb4,
         }, _hundredths(net)),
-        if (faces > 0) WorkQuantity(Work.plaster, _hundredths(net * faces)),
+        if (faces > 0) WorkQuantity(Work.plaster, _hundredths(plastered)),
         if (rebar > 0)
           WorkQuantity(Work.rebar, _hundredths(rebar * rebarKgPerMetre(barMm))),
       ],
@@ -239,11 +257,14 @@ final chb = MaterialSpec(
       'Cement and sand',
       'Class B mortar per m² of wall: 0.522 bags of cement and 0.0435 m³ of '
           'sand for 4" blocks, 1.018 bags and 0.0844 m³ for 6", 1.500 bags '
-          'and 0.125 m³ for 8". Plaster 16 mm thick adds 0.192 bags and '
-          '0.016 m³ per m² of each face.',
+          'and 0.125 m³ for 8". Plaster 16 mm thick takes 0.192 bags and '
+          '0.016 m³ per m² of each face. Laying and plaster are listed and '
+          'rounded up separately, so each is priced with its own work.',
       formula:
-          'cement = round up(area × (mortar + faces × 0.192))\n'
-          'sand = area × (mortar sand + faces × 0.016)',
+          'laying: cement = round up(area × mortar); sand = area × mortar '
+          'sand\n'
+          'plaster: cement = round up(area × faces × 0.192); '
+          'sand = area × faces × 0.016',
     ),
     InfoSection(
       'Reinforcing bars',

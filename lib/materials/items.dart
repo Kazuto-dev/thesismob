@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'concrete.dart' show structureExtrasItems;
 import 'items_finishes.dart';
 import 'items_mep.dart';
 import 'items_structure.dart';
@@ -89,6 +90,7 @@ const priceListSources =
 /// Every item that calculators can list, in materials-list order.
 final List<Item> allItems = [
   ...structureItems,
+  ...structureExtrasItems,
   ...finishItems,
   ...mepItems,
   ...siteworkItems,

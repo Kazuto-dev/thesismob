@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'concrete.dart' show structureExtrasWorkItems;
 import 'interiors.dart';
 import 'material_spec.dart';
 import 'sitework.dart';
@@ -539,6 +540,7 @@ const workItems = <WorkItem>[
     reference: '1203',
   ),
   ...siteworkWorkItems,
+  ...structureExtrasWorkItems,
   ...interiorsWorkItems,
   ...utilitiesWorkItems,
 ];

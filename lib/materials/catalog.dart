@@ -12,10 +12,13 @@ import 'utilities.dart';
 /// Every calculator in the app, in the order shown in each category.
 final List<MaterialSpec> allMaterials = [
   chb,
+  lintel,
   slab,
   footing,
+  wallFooting,
   column,
   beam,
+  pavement,
   plywood,
   ceiling,
   insulation,

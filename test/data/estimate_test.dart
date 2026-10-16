@@ -52,21 +52,23 @@ void main() {
       priceOf: (key) => prices[key] ?? 0,
     );
     expect(e.itemKey, 'chb_4');
+    // Laying: 16 bags and 1.5 m³; plaster: 12 bags and 1 m³.
     final cement = e.companions.firstWhere((l) => l.itemKey == 'cement_40kg');
-    expect(cement.quantity, 28);
+    expect(cement.quantity, 16);
     expect(cement.unit, 'bags');
-    expect(cement.total, 7000);
-    // Sand 2.5 m³ × 1,600; bars and tie wire have no price here.
+    expect(cement.total, 4000);
+    // Cement 28 × 250 and sand 2.5 m³ × 1,600; bars and tie wire have no
+    // price here.
     expect(e.companionsTotal, 7000 + 4000);
     expect(e.grandTotal, 9850 + 11000);
 
     expect(e.toSheetRows().first, ['CHB 4"', 394.0, 'blocks', 25.0, 9850.0]);
     expect(e.toSheetRows()[1], [
-      '  Cement for laying and plaster',
-      28.0,
+      '  Cement for laying blocks',
+      16.0,
       'bags',
       250.0,
-      7000.0,
+      4000.0,
     ]);
 
     final back = Estimate.fromJson(e.toJson());
