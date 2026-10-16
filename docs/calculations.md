@@ -1408,6 +1408,277 @@ Price sources read in October 2026:
 [Buildmate jet pump set](https://www.shopbuildmate.com/products/powerhouse-water-jet-pump-1hp-with-24l-pressure-tank-set-for-water-transfer-supply-phco-jet24l-tnk),
 [Villman Hikvision kits](https://villman.com/Product-Detail/hikvidion_tvi-8ch4d4b-2mp).
 
+## Fences, roof edges and house services
+
+Eight calculators for scope a house estimate usually needs beyond the
+building itself. Their code is in
+[`lib/materials/exterior.dart`](../lib/materials/exterior.dart) (fence,
+gate, fascia, soffit, flashing) and
+[`lib/materials/home_services.dart`](../lib/materials/home_services.dart)
+(service entrance, water heater, bathroom accessories); the tests are in
+[`test/materials/exterior_test.dart`](../test/materials/exterior_test.dart)
+and [`test/materials/home_services_test.dart`](../test/materials/home_services_test.dart).
+
+### Perimeter fence (Structural)
+
+| Step | Formula |
+| --- | --- |
+| Posts | bays = ⌈length ÷ spacing⌉ [3.0 m; 2.5, 3.0 or 3.5]; posts = bays + 1, each 0.20 × 0.20 or 0.25 × 0.25 m [0.20] |
+| Block wall | (length − posts × post) × (height + depth − 0.20) [footing depth 0.80 m; 0.60, 0.80 or 1.00] |
+| Blocks (main item), 4", 6" or 8" [6"] | ⌈wall × 12.5⌉ + ⌈5%⌉ [waste 5%; 0, 5, 10 or 15%] |
+| Laying mortar | wall × the CHB mortar factor (Fajardo Table 2-2) |
+| Plaster, 16 mm, none, one or both faces [both] | length × height × faces, above the ground, posts included: 0.192 bags and 0.016 m³ sand per m² |
+| Wall footing | (length − posts × 0.60) × width [0.60 m; 0.40 or 0.60] × 0.20 m |
+| Post footings | posts × 0.60 × 0.60 × 0.25 m |
+| Posts | posts × post² × (height + depth − 0.25) |
+| Concrete, Class A [default] | footings and posts each × 1.05 × the mix factors; cement, sand and gravel bought separately for footings and posts |
+| 10 mm bars | wall 4.28 m per m² (vertical every 0.60 m + horizontal every 3rd course, the CHB factors); 3 bars along the whole fence (40 d laps past 6 m); cross bars every 0.40 m of wall footing, each width − 0.15 m; 4 bars each way in each post footing, each 0.45 m; ties every 0.20 m, each 4 × (post − 0.08) + 2 × 0.105 m |
+| Post bars, 4 × 10 or 4 × 12 mm [12] | each post height + 0.30 m bent into the footing |
+| Tie wire | crossings × 0.30 m ÷ 53: wall area ÷ 0.36, cross bars × 3, 16 per post footing, 4 per tie |
+| Forms | 2 exposed faces per post: posts × 2 × post × post height; marine plywood 12 mm max(1, ⌈area ÷ 2.88 ÷ 3⌉), coco lumber 20.33 bd ft per sheet, nails 0.20 kg/m² |
+| Paint (none [default] or latex, shown only with plaster) | plaster area: neutralizer ÷ 85 L, primer ÷ 6.25 L × 1.10, latex × 2 coats ÷ 7.5 L × 1.10 |
+
+Works: the CHB wall of the block size (`chb_4`, `chb_6` or `chb_8`) in m²,
+plaster in m², `concrete_footing` and `concrete_column` in m³ (net, each with
+its own cement, sand and gravel), rebar in kg, formwork in m² and, with
+paint, painting in m² with effort 3. Laying and plaster materials stay with
+the wall. Digging and backfill are left to the Earthworks calculator.
+
+The post and footing details are a typical Philippine house fence (posts
+about every 3 m, 10 mm bars, Class A concrete) rather than a design: the
+plans govern. Two post faces are formed because the blocks close the other
+two; end posts have a third face, which is not counted. Forms are used three
+times along the fence, a planning value. Sources: Fajardo, *Simplified
+Construction Estimate* (concrete, mortar, plaster and forms tables); NSCP 2015
+Table 420.6.1.3.1 (75 mm cover in footings, 40 mm in posts) and Sec. 425.3
+(hooks); AEDO's CHB bar spacing; paint coverage as in the Paint calculator.
+
+### Steel gate (Architectural)
+
+| Step | Formula |
+| --- | --- |
+| Leaf | swing: the opening width, in 1 or 2 leaves [2]; sliding: width + 2 × 0.10 m overlap |
+| Area | gates [1] × leaf × height |
+| Gate (main item) | by the m² [default] (`steel_gate_m2`) or by the set (`steel_gate_set`) |
+| Swing hardware | hinges: 2 per leaf, 3 when the gate is taller than 1.5 m; a drop bolt per leaf; a latch per gate |
+| Sliding hardware | 2 V-groove wheels, 3 for a leaf over 4 m; track = 2 × leaf in 1½" angle bar, ⌈gates × track × 1.05 ÷ 6⌉ lengths; ⅜" expansion anchors ⌈track ÷ 0.60⌉ + 1 per gate; a top guide roller set, 2 stoppers and a latch per gate |
+| Steel posts (optional; default: hung on the fence's concrete posts) | 2 per gate, 4" × 4" × 3 mm tube, each height + 0.60 m, ⌈metres × 1.05 ÷ 6⌉ lengths; a 0.40 × 0.40 × 0.80 m Class A footing each, × 1.05 |
+| Paint (enamel [default] or by the fabricator) | both faces: 2 × area × 2 coats ÷ 6.25 L × 1.10; thinner ÷ 8 + 0.5 L; no primer, as gates arrive primed |
+
+Work: the new `steel_gate` in m² (1 skilled welder, 1 helper and a welding
+machine; 4 m² a day to set posts, hang or track and adjust a fabricated gate;
+our estimate) and painting with effort 2. Hardware counts are practice, not
+a published table. The per-m² price follows AEDO's ₱115–185 per kg for
+fabricated light steel at about 25–30 kg/m² of tubular gate with infill.
+
+### Fascia board (Architectural)
+
+| Step | Formula |
+| --- | --- |
+| Fascia | length × 1.05 for cuts, mitres and joints |
+| Fiber cement 9 mm [default] | strips 2.44 m long: ⌈fascia ÷ 2.44⌉; strips per 4 × 8 sheet ⌊1.22 ÷ width⌋ (8 at 6", 6 at 8" [default], 4 at 10"); sheets = ⌈strips ÷ per sheet⌉ |
+| Wood, 1" good lumber | 12 ft boards (3.66 m): ⌈fascia ÷ 3.66⌉; nails 0.05 kg per m |
+| Pre-painted metal | metres = fascia, rounded up to the cm; tek screws length × 2 ÷ 0.40 |
+| Backing (fiber cement and metal) | 2 rows of 5 m metal furring: ⌈2 × fascia ÷ 5⌉ |
+| Board screws (fiber cement) | length × 2 ÷ 0.30, in boxes of 100 |
+| Paint | face = length × width; primer + 2 coats of latex (fiber cement) or enamel with thinner (wood), as in the Paint calculator |
+
+Work: the new `fascia_board` in m (1 skilled, 1 helper and half a scaffold
+set; 15 m a day, our estimate) and painting with effort 3 for fiber cement
+and wood. The wood board prices are the price book's good lumber (₱70 per
+bd ft) × 6, 8 or 10 bd ft. The 0.05 kg of nails per metre is our estimate.
+**Not double counted:** the Roofing Sheets calculator counts no fascia.
+
+### Eaves soffit (Architectural)
+
+| Step | Formula |
+| --- | --- |
+| Area | eaves length (along the fascia) × overhang |
+| Fiber cement 4.5 mm [default] | ⌈area × 1.10 ÷ 2.977⌉ sheets; board screws area × 14, in boxes of 100; wall angle ⌈length × 1.05 ÷ 3⌉ |
+| PVC panels 0.20 × 3.0 m | strips = ⌈length ÷ 0.20⌉; panels = ⌈strips ÷ ⌊3.0 ÷ overhang⌋⌉ (or strips × ⌈overhang ÷ 3⌉ past 3 m) + ⌈5%⌉; J-trim ⌈2 × length × 1.05 ÷ 3⌉; one screw per strip per furring line |
+| Furring | lines = ⌈overhang ÷ spacing⌉ + 1 (0.40 m under fiber cement, 0.60 m under PVC); cross pieces ⌈length ÷ 1.2⌉ + 1; ⌈(lines × length + cross × overhang) × 1.05 ÷ 5⌉ pieces |
+| Paint (fiber cement) | primer + 2 coats of latex on the area |
+
+Measuring along the fascia counts each outside corner's overhang² twice,
+which is a little generous. Work: the new `eaves_soffit` in m² (1 skilled,
+1 helper and a scaffold set; 8 m² a day, below the 10 m² of an indoor
+ceiling for the narrow strips and work at the edge; our estimate) and
+painting with effort 3. The 0.40 m furring spacing and 14 screws per m² are
+the Ceiling calculator's; the 0.60 m spacing for PVC is our estimate for
+stiff interlocking panels. **Not double counted:** the Roofing Sheets
+calculator counts no soffit.
+
+### Roof flashing (Architectural)
+
+| Step | Formula |
+| --- | --- |
+| Pieces (main item) | ⌈length ÷ 2.25⌉: 2.4 m pieces lapped 0.15 m, as ridge rolls in the Roofing Sheets calculator |
+| Sealant, 300 ml | ⌈((pieces − 1) × girth + length for wall flashing) ÷ 6⌉; girth 0.30 m wall, 0.60 valley, 0.40 gable, 0.45 ridge |
+| Tek screws | rows × (⌈length ÷ 0.40⌉ + 1); 1 row on wall flashing, 2 on the others |
+| Wall plugs with screws (wall flashing) | ⌈length ÷ 0.40⌉ + 1 |
+
+Kinds: wall or apron [default], valley, gable or barge, and ridge or hip roll
+(the existing `ridge_roll`). Work: the new `roof_flashing` in m (1 skilled,
+0.5 helper; 20 m a day, our estimate). A 300 ml tube runs about 6 m of an
+8 mm bead (about 50 mm² of section). **Not double counted:** the Roofing
+Sheets calculator already buys ridge and hip rolls for the ridge and hips it
+measures, and gutters and downspouts; it counts no valley, wall or gable
+flashing. The ridge option is for roofs not estimated there, and the
+calculator says so in its help, its choice helper and its note.
+
+### Electrical service entrance (Electrical)
+
+| Step | Formula |
+| --- | --- |
+| Main breaker → service wire and pipe | 40 A: 2 × 8.0 mm² in ¾"; 60 A [default]: 2 × 14 mm² in ¾"; 100 A: 2 × 30 mm² in 1" |
+| Run | riser [3 m] + meter to panel board [5 m] |
+| Service wire (main item), THHN/THWN | ⌈2 × (run × 1.10 + 1.5)⌉ m: 1.0 m for the drip loop at the cap and 0.5 m through the meter base |
+| RSC [default] or IMC pipe, 3 m | ⌈run × 1.10 ÷ 3⌉; couplings = lengths − 1; 2 elbows; 3 locknut and bushing sets; straps ⌈run ÷ 1.5⌉ + 1; 1 entrance cap |
+| Ground wire, 8.0 mm² | ground run [3 m] × 1.10 |
+| Also | 1 meter base, 1 roll of electrical tape; a ground rod set only when chosen (the Electrical Rough-in already buys one); the utility lump sum when chosen |
+
+Wire sizes are the PEC 2017 ampacity table (Table 3.10.2.6(B)(16), which
+follows NEC Table 310.15(B)(16)) at 75 °C for copper THHN/THWN: 8.0 mm² 50 A,
+14 mm² 65 A, 30 mm² 100 A; a Philippine engineering blog gives 100 A for
+30 mm² at 75 °C. 22 mm² (85 A) is what some designers use for 100 A under the
+NEC's 83% rule for one-family dwellings (NEC 310.15(B)(7)), which the code
+writes for 120/240 V three-wire services; Philippine houses are usually fed
+at 230 V two-wire, so the app keeps 30 mm². Pipe sizes keep two wires within
+the 31% fill of Chapter 9 Table 1, using NEC Chapter 9 Tables 4 and 5
+areas (¾" RMC 0.549 in², 1" 0.887 in²; 6 AWG THHN 0.0507 in², 2 AWG
+0.1158 in²). The 8.0 mm² ground wire is the minimum of the grounding
+electrode conductor table (PEC Table 2.50.3.66, following NEC Table 250.66)
+for service wires up to 30 mm². These code values were recalled and checked
+against secondary sources, not the PEC text. Straps every 1.5 m are tighter
+than the code's 3 m to take the service drop's pull; Meralco's guide for
+customer-owned poles asks for a strap every 0.76 m on a pole.
+
+Meralco issues the meter base and asks for a bill deposit of about one
+month's estimated bill, set from the applied load and refundable; a cash
+advance applies only when new utility facilities are needed. The ₱4,000
+lump sum (`utility_connection`) is our estimate for a small house. Voltage
+drop on long runs is not checked. Work: the new `service_entrance`, 1 set
+(1 skilled electrician and 1 helper; 1 set a day, our estimate).
+
+### Water heater (Plumbing)
+
+| Step | Formula |
+| --- | --- |
+| Heaters (main item) | single-point instant [default], multi-point instant, or storage tank of 30 [default] or 50 L |
+| Connections per heater | 1 angle valve, 1 flexible hose (single-point) or 2 (others), 4 wall plugs; teflon ⌈heaters × joints ÷ 40⌉, 3 joints single-point and 4 others |
+| PPR PN20 pipe, ½" [default] or ¾" (optional run) | ⌈run × 1.10 ÷ 4⌉ pipes |
+| PPR fittings | ⌈run ÷ 2⌉ + 2 adapters per heater |
+| Foam insulation (optional) | ⌈run × 1.05 ÷ 2⌉ sleeves |
+
+Works: the new `water_heater` in sets (1 skilled plumber, 0.5 helper; 2 a
+day, our estimate) and piping in m for the run, which the pipe, fittings and
+sleeves go to. The dedicated circuit is not bought here: the help and note
+point to the Electrical Rough-in's appliance circuits. Its sizing in the
+help is current = power ÷ 230 V, × 1.25 for a continuous load (NEC 422.13
+treats storage heaters as continuous; the same margin is applied to instant
+heaters as common practice), on the PEC small-conductor limits (20 A on
+3.5 mm², 30 A on 5.5 mm²): 3.5 kW → 15.2 A → 20 A; 4.5 kW → 19.6 A → 30 A;
+6–8 kW → 26–35 A → 40 A on 8.0 mm². One fitting per 2 m and the joint counts
+are our estimates.
+
+### Bathroom accessories (Plumbing)
+
+| Step | Formula |
+| --- | --- |
+| Per bathroom [default] | sets (main item) = bathrooms, each a 4-piece set: towel bar, toilet paper holder, soap dish, robe hook |
+| Extras per bathroom | mirror [default], medicine cabinet or none; grab bars 0 [default], 1 or 2; shower curtain rod no [default] or yes |
+| By the piece | one accessory × quantity |
+| Grade | economy, standard [default] or premium: the price book item for every piece |
+| Work | pieces mounted = bathrooms × (4 + mirror + grab bars + rod), or the quantity |
+
+Work: the new `bath_accessory` in pieces (1 skilled worker; 8 a day, drilling
+tile and setting plugs; our estimate). Accessories come with their screws
+and plugs, so none are added.
+
+#### New work items: fences, roof edges and house services
+
+| Key | Description | Unit | Crew | Output a day | DPWH |
+| --- | --- | --- | --- | ---: | --- |
+| steel_gate | Steel gate, set on its posts with hinges or track | m² | 1 skilled, 1 helper, welding machine | 4 | — |
+| fascia_board | Fascia board, installed | m | 1 skilled, 1 helper, 0.5 scaffold | 15 | — |
+| eaves_soffit | Eaves soffit, boards or panels on metal furring | m² | 1 skilled, 1 helper, scaffold | 8 | — |
+| roof_flashing | Roof flashing, lapped and sealed | m | 1 skilled, 0.5 helper | 20 | — |
+| service_entrance | Service entrance: riser, entrance cap, meter base and service wires | set | 1 skilled, 1 helper | 1 | — |
+| water_heater | Water heaters, mounted, connected and tested | set | 1 skilled, 0.5 helper | 2 | — |
+| bath_accessory | Bathroom accessories, drilled and mounted | pc | 1 skilled | 8 | — |
+
+All outputs are our estimates for small jobs, set against similar items in
+the work list (ceiling 10 m², gutters 20 m, showers 3 sets a day). The fence
+uses the existing masonry, plaster, concrete, rebar, formwork and painting
+items.
+
+#### New price book items: fences, roof edges and house services
+
+Metro Manila retail, VAT included, late 2026. **Every price is our
+estimate** (`estimate: true`): searches in October 2026 found no usable
+retailer listing for most of them. Check them with your supplier.
+
+| Key | Item | Unit | Price (₱) | Basis |
+| --- | --- | --- | ---: | --- |
+| steel_gate_m2 | Steel gate leaf, tubular frame with infill, fabricated and primed | m² | 4,500 | Estimate: 25–30 kg/m² at AEDO's ₱115–185/kg fabricated; fabricators quote "a few thousand pesos per m²" |
+| steel_gate_set | Steel gate, fabricated and primed, about 3.0 × 1.8 m | set | 24,000 | 5.4 m² at the m² price |
+| gate_hinge | Gate hinge, heavy duty, weld-on | pc | 250 | Estimate |
+| drop_bolt | Drop bolt for gates, 12" | pc | 300 | Estimate |
+| gate_latch | Gate latch with padlock hasp | set | 450 | Estimate |
+| gate_wheel | Sliding gate wheel, V-groove 4", with bracket | pc | 650 | Estimate |
+| gate_guide | Sliding gate top guide rollers with bracket | set | 550 | Estimate |
+| gate_stopper | Sliding gate end stopper | pc | 150 | Estimate |
+| square_tube_4 | Square steel tube 4" × 4" × 3 mm, 6 m | length | 3,600 | Estimate: about 54 kg at ₱65/kg |
+| fiber_cement_board_9 | Fiber cement board 9 mm 4×8 | sheet | 950 | Estimate, scaled from the 4.5 mm board (₱560) |
+| lumber_1x6_12ft / lumber_1x8_12ft / lumber_1x10_12ft | Good lumber 1" × 6" / 8" / 10" × 12 ft, S4S | pc | 420 / 560 / 700 | 6, 8 and 10 bd ft at the price book's ₱70 |
+| fascia_metal_m | Fascia cover, pre-painted GI, roll-formed | m | 280 | Estimate, near the pre-painted gutter (₱300/m) |
+| pvc_soffit_panel | PVC soffit panel 200 mm × 3.0 m | pc | 180 | Estimate; AEDO puts PVC ceilings at ₱484–793/m² installed |
+| pvc_soffit_trim | PVC soffit trim (J-channel), 3.0 m | pc | 120 | Estimate |
+| flashing_wall | Wall or apron flashing, pre-painted GI, 300 mm girth, 2.4 m | pc | 350 | Estimate; one BOQ lists wall flashing at ₱357 a piece |
+| flashing_valley | Valley flashing, pre-painted GI, 600 mm girth, 2.4 m | pc | 650 | Estimate, by girth |
+| flashing_gable | Gable (barge) flashing, pre-painted GI, 400 mm girth, 2.4 m | pc | 450 | Estimate, by girth |
+| wall_plug | Plastic wall plug with screw, 6 mm | pc | 5 | Estimate |
+| meter_base | Meter base (socket), 1-phase, from the utility | pc | 1,500 | Estimate |
+| rsc_pipe_0_75 / rsc_pipe_1 | RSC pipe ¾" / 1", 3 m | length | 900 / 1,300 | Estimate |
+| imc_pipe_0_75 / imc_pipe_1 | IMC pipe ¾" / 1", 3 m | length | 650 / 950 | Estimate, about 70% of RSC |
+| entrance_cap_0_75 / entrance_cap_1 | Entrance cap (weatherhead) | pc | 250 / 320 | Estimate |
+| rsc_coupling_0_75 / rsc_coupling_1 | RSC coupling | pc | 60 / 85 | Estimate |
+| rsc_elbow_0_75 / rsc_elbow_1 | RSC elbow 90° | pc | 250 / 350 | Estimate |
+| locknut_bushing_0_75 / locknut_bushing_1 | Locknut and bushing | set | 45 / 60 | Estimate |
+| pipe_strap_0_75 / pipe_strap_1 | Two-hole pipe strap | pc | 15 / 20 | Estimate |
+| utility_connection | Utility service application and bill deposit | lot | 4,000 | Estimate: about one month's bill for a small house |
+| water_heater_single | Water heater, single-point instant, 3.5–4.5 kW | set | 5,500 | Estimate; a review lists the Joven SF7 from ₱4,299 |
+| water_heater_multi | Water heater, multi-point instant, 6–8 kW | set | 15,000 | Estimate |
+| water_heater_storage_30 / _50 | Water heater, storage tank, 30 / 50 L | set | 11,000 / 14,000 | Estimate |
+| ppr_fitting_0_5 / ppr_fitting_0_75 | PPR fitting, average of elbow, tee, coupling or adapter | pc | 45 / 70 | Estimate |
+| pipe_insulation_0_5 / pipe_insulation_0_75 | Pipe insulation, closed-cell foam, 2 m | pc | 90 / 110 | Estimate |
+| bath_set4_* | Bathroom accessory set: towel bar, paper holder, soap dish, hook | set | 900 / 2,200 / 5,500 | Estimate (economy / standard / premium) |
+| bath_towel_bar_* | Towel bar, 60 cm | pc | 350 / 800 / 2,000 | Estimate |
+| bath_paper_holder_* | Toilet paper holder | pc | 200 / 450 / 1,200 | Estimate |
+| bath_soap_dish_* | Soap dish, wall-mounted | pc | 150 / 400 / 1,000 | Estimate |
+| bath_robe_hook_* | Robe hook | pc | 100 / 250 / 700 | Estimate |
+| bath_grab_bar_* | Grab bar, stainless, 60 cm | pc | 600 / 1,200 / 3,000 | Estimate |
+| bath_mirror_* | Bathroom mirror, about 50 × 70 cm | pc | 700 / 1,500 / 4,000 | Estimate |
+| bath_cabinet_* | Medicine cabinet with mirror door | pc | 1,800 / 3,500 / 8,000 | Estimate |
+| bath_curtain_rod_* | Shower curtain rod, adjustable | pc | 300 / 700 / 1,800 | Estimate |
+
+`*` is `economy`, `standard` or `premium`. Reused items: blocks, cement,
+sand, gravel, 10 and 12 mm bars, tie wire, marine plywood, coco lumber,
+nails, neutralizer, primer, latex, enamel, thinner, 1½" angle bar, ⅜"
+expansion anchors, 4.5 mm fiber cement board, metal furring, wall angle,
+board screws, tek screws, ridge roll, sealant, THHN wire, ground rod,
+electrical tape, PPR pipe, angle valves, flexible hoses and teflon tape.
+
+Sources read in October 2026, mostly as search excerpts:
+[AEDO steel fabrication cost](https://aedoconstruction.com/blog/structural-steel-fabrication-erection-cost-per-kg-philippines/),
+[AEDO ceiling cost](https://aedoconstruction.com/blog/ceiling-installation-repair-cost-philippines/),
+[filipinoengineer.com on PEC 2017 ampacity](https://filipinoengineer.com/blog/2026/04/pec-2017-motors-motor-circuits-controllers-for-a-single-motor.html),
+[NEC ampacity chart](https://www.lapptannehill.com/resources/technical-information/ampacity-chart),
+[EC&M on the 83% dwelling rule](https://www.ecmweb.com/national-electrical-code/qa/article/20902669/stumped-by-the-code-rule-for-sizing-service-conductors-for-dwellings),
+[IAEI on grounding conductor sizes](https://iaeimagazine.org/electrical-fundamentals/sizing-of-conductors-related-to-grounding-bonding/),
+[Meralco: start or modify service](https://company.meralco.com.ph/faq-about/start-or-modify-service),
+[ProductNation water heaters](https://productnation.co/ph/appliances/small/27543/best-water-heater-philippines).
+
 ## Room schedule
 
 A project can hold a room schedule (project menu → **Room schedule**). Each
@@ -1530,7 +1801,7 @@ that a factor is right for your site.
   tool.
 - **Not counted:** cross ties in columns with 6 or more bars; extra bars over
   beam supports; shoring posts; scaffolding; hooks or anchorage of slab bars
-  into beams; kitchen-counter outlets; the electrical service entrance; pipe
+  into beams; kitchen-counter outlets; voltage drop on the service entrance; pipe
   fittings by count (an allowance is used instead); paint or varnish on doors.
 - **Bars.** Offcuts are not reused, which slightly overstates short bars. The
   40 d lap suits Grade 33–40 bars; Grade 60 bars need about 57 d in tension.

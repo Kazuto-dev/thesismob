@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 
 import 'concrete.dart' show structureExtrasItems;
+import 'exterior.dart';
+import 'home_services.dart';
 import 'items_finishes.dart';
 import 'items_mep.dart';
 import 'items_structure.dart';
@@ -96,6 +98,8 @@ final List<Item> allItems = [
   ...siteworkItems,
   ...interiorsItems,
   ...utilitiesItems,
+  ...exteriorItems,
+  ...homeServicesItems,
 ];
 
 final Map<String, Item> _byKey = {for (final i in allItems) i.key: i};

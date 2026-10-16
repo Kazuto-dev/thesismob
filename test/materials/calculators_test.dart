@@ -19,9 +19,9 @@ String? detail(CalcResult r, String label) =>
 
 void main() {
   group('catalog', () {
-    test('has 43 materials with unique ids in every category', () {
-      expect(allMaterials, hasLength(43));
-      expect(allMaterials.map((m) => m.id).toSet(), hasLength(43));
+    test('has 51 materials with unique ids in every category', () {
+      expect(allMaterials, hasLength(51));
+      expect(allMaterials.map((m) => m.id).toSet(), hasLength(51));
       for (final category in MaterialCategory.values) {
         expect(materialsIn(category), isNotEmpty, reason: category.name);
       }
