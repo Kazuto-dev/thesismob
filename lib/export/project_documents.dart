@@ -4,6 +4,7 @@ import '../core/format.dart';
 import '../data/estimate.dart';
 import '../data/project.dart';
 import '../data/boq.dart';
+import '../data/revisions.dart';
 
 export '../data/boq.dart';
 import '../materials/items.dart';
@@ -356,6 +357,7 @@ String projectCsv(Project project) {
     ['Project', project.name],
     if (project.client.isNotEmpty) ['Client', project.client],
     if (project.location.isNotEmpty) ['Location', project.location],
+    if (revisionLabel(project) case final revision?) ['Revision', revision],
     ['Date', DateTime.now().toIso8601String().substring(0, 10)],
     [],
     ['BILL OF QUANTITIES'],

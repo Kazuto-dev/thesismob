@@ -7,6 +7,8 @@ import '../materials/work_items.dart';
 import 'contract.dart';
 import 'contract_math.dart';
 import 'estimate.dart';
+import 'quotes.dart';
+import 'revisions.dart';
 import 'unit_prices.dart';
 
 double _centavos(double value) => (value * 100).roundToDouble() / 100;
@@ -636,6 +638,9 @@ class Project {
     this.checklist = const [],
     this.notNeeded = const {},
     this.contract = const ContractData(),
+    // Estimate revisions and quotes from bidders.
+    this.revisions = const [],
+    this.quotes = const [],
   });
 
   factory Project.create(String name, {DateTime? now}) {
@@ -692,6 +697,9 @@ class Project {
       contract: json['contract'] is Map<String, dynamic>
           ? ContractData.fromJson(json['contract'] as Map<String, dynamic>)
           : const ContractData(),
+      // Estimate revisions and quotes from bidders.
+      revisions: revisionsFromJson(json['revisions']),
+      quotes: quotesFromJson(json['quotes']),
     );
   }
 
@@ -721,6 +729,12 @@ class Project {
 
   /// Quotation terms, schedule, billings, changes and actual costs.
   final ContractData contract;
+
+  /// Saved copies of the estimate, oldest first; see [addRevision].
+  final List<EstimateRevision> revisions;
+
+  /// Prices from bidders and subcontractors, to compare with the estimate.
+  final List<BidQuote> quotes;
 
   /// Whether the checklist entry [materialId] has an estimate.
   bool isEstimated(String materialId) =>
@@ -757,6 +771,8 @@ class Project {
     List<String>? checklist,
     Set<String>? notNeeded,
     ContractData? contract,
+    List<EstimateRevision>? revisions,
+    List<BidQuote>? quotes,
     DateTime? updatedAt,
   }) => Project(
     id: id ?? this.id,
@@ -776,6 +792,8 @@ class Project {
     checklist: checklist ?? this.checklist,
     notNeeded: notNeeded ?? this.notNeeded,
     contract: contract ?? this.contract,
+    revisions: revisions ?? this.revisions,
+    quotes: quotes ?? this.quotes,
   );
 
   Map<String, dynamic> toJson() => {
@@ -792,5 +810,7 @@ class Project {
     if (checklist.isNotEmpty) 'checklist': checklist,
     if (notNeeded.isNotEmpty) 'notNeeded': notNeeded.toList(),
     if (!contract.isEmpty) 'contract': contract.toJson(),
+    if (revisions.isNotEmpty) 'revisions': revisionsToJson(revisions),
+    if (quotes.isNotEmpty) 'quotes': [for (final q in quotes) q.toJson()],
   };
 }

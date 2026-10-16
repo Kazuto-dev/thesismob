@@ -1,5 +1,6 @@
 import '../data/google_sheets_client.dart';
 import '../data/project.dart';
+import '../data/revisions.dart';
 import '../materials/work_items.dart';
 import 'project_documents.dart';
 
@@ -19,6 +20,7 @@ List<SheetTab> projectSheetTabs(Project project, {DateTime? date}) {
       [
         if (project.client.isNotEmpty) 'Client: ${project.client}',
         if (project.location.isNotEmpty) 'Location: ${project.location}',
+        if (revisionLabel(project) case final revision?) 'Revision: $revision',
         'Date: $day',
       ].join('   '),
     ],

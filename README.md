@@ -13,7 +13,10 @@ projects. A project builds:
 - a bill of quantities grouped by trade;
 - a single merged shopping list;
 - a budget with labour, contingency and, for bids, overhead, profit and VAT,
-  with owner, contractor and DPWH presets.
+  with owner, contractor and DPWH presets;
+- numbered estimate revisions to compare and restore, a bill of quantities
+  for bidders (whole job or one trade) and a comparison of the quotes that
+  come back.
 
 Projects export to PDF, Excel (CSV) or plain text, save to Google Sheets
 after signing in with Google on the login screen, and can be backed up to a

@@ -4,6 +4,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../core/format.dart';
 import '../data/project.dart';
+import '../data/revisions.dart';
 import 'project_documents.dart';
 
 const _ink = PdfColor.fromInt(0xFF1C1917);
@@ -269,6 +270,11 @@ Future<Uint8List> projectPdf(Project project, {DateTime? date}) async {
             if (project.location.isNotEmpty)
               pw.Text(
                 'Location: ${project.location}',
+                style: const pw.TextStyle(fontSize: 9),
+              ),
+            if (revisionLabel(project) case final revision?)
+              pw.Text(
+                'Revision: $revision',
                 style: const pw.TextStyle(fontSize: 9),
               ),
             pw.Text('Date: $today', style: const pw.TextStyle(fontSize: 9)),
