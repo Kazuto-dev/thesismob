@@ -54,4 +54,34 @@ void main() {
     expect(permits, greaterThan(840));
     expect(find.textContaining('Permits and fees set to'), findsOneWidget);
   });
+
+  testWidgets('professional fees go into the professional fees line', (
+    tester,
+  ) async {
+    await openGeneral(tester);
+    await tester.ensureVisible(find.text('Work out professional fees'));
+    await tester.tap(find.text('Work out professional fees'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Project cost'),
+      '3700000',
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(formatMoney(222000)), findsOneWidget);
+
+    final put = find.textContaining('in professional fees');
+    await tester.scrollUntilVisible(
+      put,
+      300,
+      scrollable: find
+          .descendant(
+            of: find.byType(ListView),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.tap(put);
+    await tester.pumpAndSettle();
+    expect(projectsOf(tester).active.costs.general['professional'], 370000);
+  });
 }

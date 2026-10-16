@@ -1166,6 +1166,11 @@ class _BudgetEditor extends StatelessWidget {
                       icon: const Icon(Icons.approval_outlined, size: 18),
                       label: Text(context.tr('Work out permit fees')),
                     ),
+                    TextButton.icon(
+                      onPressed: () => showProfessionalFees(context, project),
+                      icon: const Icon(Icons.architecture, size: 18),
+                      label: Text(context.tr('Work out professional fees')),
+                    ),
                   ],
                 ),
                 Text(

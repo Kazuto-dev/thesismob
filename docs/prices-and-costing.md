@@ -622,6 +622,62 @@ and [Palanan's zoning fees](https://www.palanan.gov.ph/wp-content/uploads/Zoning
 [BFP citizen's charter, FSEC](https://bfp.gov.ph/wp-content/uploads/2013/11/New-BFP-Citizen-Charter-FSEC.pdf);
 [BFP MC 2021-020 on fire code fees](https://bfp.gov.ph/wp-content/uploads/2022/06/MC-2021-020-SUPPLEMENTAL-GUIDELINES-ASSESSMENT-COLLECTION-OF-FIRE-CODE-FEES-REL.-TO-THE-IMPLEMENTATION-OF-RA-9514-OTHERWISE-KNOWN-AS-THE-FIRE-CODE-OF-THE-PHILIPPINES-OF-2008-ITS-REVISED-IRR-OF-2019.pdf).
 
+### Professional fees
+
+**Work out professional fees** opens a worksheet of design and
+supervision fees as a percentage of the project cost
+([`lib/data/professional_fees.dart`](../lib/data/professional_fees.dart)).
+Tick the services the owner pays for and change any percentage; **Put …
+in professional fees** writes the total into the general requirement
+*Professional fees: plans, design and signing*. The project cost starts
+from the project total without its permits and professional fees lines.
+
+UAP Doc 202 sets the architect's minimum basic fee (MBF) as a percentage
+of the project construction cost by building group:
+
+| Group | Examples | MBF |
+| --- | --- | ---: |
+| 1, simple | Warehouses, factories, farm buildings, markets | 6% |
+| 2, moderately complex | Schools, offices, stores, fire stations | 7% |
+| 3, complex | Hospitals, hotels, stadiums | 8% |
+| 4, residences | Houses, duplexes, small apartment houses, townhouses | 10% |
+| 5, monumental | Monuments and landmarks | 12% |
+
+In UAP practice the residential 10% pays for the architect and the usual
+engineering on the design team. The worksheet splits the MBF between the
+four design services, so ticking all four gives UAP's figure and
+unticking one (say the owner hires the structural engineer directly)
+leaves it out:
+
+| Service | Share of the MBF | House (Group 4) | Basis |
+| --- | ---: | ---: | --- |
+| Architectural design | 60% | 6% | Our estimate, in line with the 6% often quoted for architecture alone against 10% with structural, electrical and plumbing design |
+| Structural design (civil or structural engineer; ASEP/PICE) | 20% | 2% | Our estimate |
+| Electrical design (professional electrical engineer; IIEE) | 10% | 1% | Our estimate |
+| Sanitary and plumbing design | 10% | 1% | Our estimate |
+| Mechanical design (PSME), ticked by default except for houses | 5%, on top | 0.5% | Our estimate |
+| Full-time construction supervision, not ticked by default | – | 1.5% | UAP SPP 204-A: 1–1.5% of the project construction cost; we use the top for small jobs |
+
+ASEP, IIEE, PSME and the sanitary engineers' groups do publish their own
+schedules, but we could not read them; one structural fee guide quotes
+₱120–480 per m² of floor by building size. Fees are minimums, before
+VAT, and are agreed with each professional.
+
+For a ₱3.7M house: architectural ₱222,000, structural ₱74,000,
+electrical ₱37,000 and plumbing ₱37,000, **₱370,000** in all (10%); with
+full-time supervision (₱55,500), ₱425,500.
+[`test/data/professional_fees_test.dart`](../test/data/professional_fees_test.dart)
+checks it.
+
+Sources (search-result excerpts, October 2026):
+[UAP Doc 202 (Scribd copy)](https://www.scribd.com/document/348049076/UAP-DOC-202-pdf),
+[UAP standards of professional practice](https://pdfcoffee.com/uap-standards-of-professional-practice-pdf-free.html),
+[2010 SPP for Philippine architects, PRBoA](https://www.architectureboard.com.ph/wp-content/uploads/2019/09/1.4-2010-SPP-for-PH-Architects.pdf),
+[Arch Juana's residential fee example](https://archjuana.com/how-to-compute-for-architectural-fee-in-the-philippines-for-architectural-and-engineering-design-services-for-a-residential-building-and-how-to-tell-if-the-fee-is-overpriced/),
+[architect fees for a building permit (6% and 10%)](https://www.scribd.com/document/521331312/Construction-Cost-Estimates),
+[SPP 204-A construction services](https://philarchitecturenotes.weebly.com/spp-204a--b-construction-services.html),
+[minimum fees for structural designers](https://www.scribd.com/document/689094176/Minimum-Fee-for-Structural-Designers-in-Philippines).
+
 ### Price escalation
 
 Prices rise between the estimate and the purchase. **Price escalation**
@@ -747,8 +803,9 @@ job would be ₱2,016,000.
   calculators don't measure.
 - Under DPWH rules, general requirements are not marked up with OCM or
   profit; the app marks them up with the rest of the direct cost.
-- Professional fees, land, utility connections and the electrical service
-  entrance.
+- Land, utility connections and the electrical service entrance.
+  Professional fees and permits are only in the budget when you enter or
+  work them out under General requirements.
 - DPWH's own engineering and administrative overhead (DO 7 s.2025), which is
   deducted from the appropriation and is not part of a contractor's price.
 

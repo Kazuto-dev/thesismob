@@ -56,4 +56,50 @@ const filipinoFees = <String, String>{
   'Put {amount} in permits': 'Ilagay ang {amount} sa permit',
   'Permits and fees set to {amount}.':
       'Itinakda sa {amount} ang mga permit at bayarin.',
+
+  // Professional fees
+  'Work out professional fees': 'Kuwentahin ang bayad sa propesyonal',
+  'Professional fees': 'Bayad sa propesyonal',
+  'Design fees as a percentage of the project cost. UAP Doc 202 sets the architect\'s minimum basic fee by building group; tick the services the owner pays for.':
+      'Bayad sa disenyo bilang porsiyento ng halaga ng proyekto. Itinatakda '
+      'ng UAP Doc 202 ang minimum basic fee ng arkitekto ayon sa uri ng '
+      'gusali; i-tsek ang mga serbisyong babayaran ng may-ari.',
+  'Building group': 'Uri ng gusali',
+  'Group 1: simple buildings': 'Group 1: simpleng gusali',
+  'Group 2: moderately complex buildings':
+      'Group 2: medyo masalimuot na gusali',
+  'Group 3: complex buildings': 'Group 3: masalimuot na gusali',
+  'Group 4: residences': 'Group 4: tirahan',
+  'Group 5: monumental buildings': 'Group 5: monumental na gusali',
+  'Warehouses, factories, farm buildings, markets':
+      'Bodega, pabrika, gusali sa bukid, palengke',
+  'Schools, offices, stores, fire stations':
+      'Paaralan, opisina, tindahan, istasyon ng bumbero',
+  'Hospitals, hotels, stadiums': 'Ospital, hotel, istadyum',
+  'Houses, duplexes, small apartment houses and townhouses':
+      'Bahay, duplex, maliit na apartment at townhouse',
+  'Monuments and landmarks': 'Monumento at landmark',
+  'Architectural design': 'Disenyong arkitektural',
+  'Structural design': 'Disenyong istruktural',
+  'Electrical design': 'Disenyong elektrikal',
+  'Sanitary and plumbing design': 'Disenyo ng sanitary at tubero',
+  'Mechanical design': 'Disenyong mekanikal',
+  'Construction supervision, full time':
+      'Full-time na superbisyon sa konstruksiyon',
+  'Architect (UAP Doc 202)': 'Arkitekto (UAP Doc 202)',
+  'Civil or structural engineer': 'Civil o structural engineer',
+  'Professional electrical engineer': 'Professional electrical engineer',
+  'Sanitary engineer or master plumber': 'Sanitary engineer o master plumber',
+  'Professional mechanical engineer': 'Professional mechanical engineer',
+  'Architect or engineer on site': 'Arkitekto o engineer sa site',
+  'Architectural, structural, electrical and plumbing design together make up the minimum basic fee of {pct}% for this group; the split between them is our estimate. Full-time supervision is 1–1.5% under UAP practice. Fees are minimums before VAT and are agreed with each professional.':
+      'Ang disenyong arkitektural, istruktural, elektrikal at tubero ang '
+      'bumubuo sa minimum basic fee na {pct}% para sa uring ito; tantiya '
+      'namin ang hatian nila. Ang full-time na superbisyon ay 1–1.5% ayon '
+      'sa UAP. Minimum ang mga bayad, bago ang VAT, at pinagkakasunduan sa '
+      'bawat propesyonal.',
+  'Put {amount} in professional fees':
+      'Ilagay ang {amount} sa bayad sa propesyonal',
+  'Professional fees set to {amount}.':
+      'Itinakda sa {amount} ang bayad sa propesyonal.',
 };
