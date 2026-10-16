@@ -819,6 +819,42 @@ The schedule is still a planning guide: it does not know which storey
 each column is on, it spreads rain evenly instead of by season, and it
 assumes materials arrive on time (see the purchase schedule below).
 
+### Cash flow
+
+The **Cash flow** card ([`lib/data/job_plan.dart`](../lib/data/job_plan.dart))
+plans the money out and in month by month, a month being 26 working days of
+the schedule. Amounts are **before VAT**, which the contractor collects
+for the BIR and passes on.
+
+```
+money out (month)  = materials of the tasks that start this month
+                   + labour, tools and equipment of the work done this month
+                   + general requirements and hauling ÷ the job's months
+                   all × (direct + escalation + contingency) ÷ direct
+billed (month)     = price before VAT × S-curve progress gained this month
+money in (signing) = price before VAT × downpayment %
+money in (month)   = billed × (1 − downpayment % − retention % − income tax withheld %),
+                     paid ⌈payment days ÷ 30.44⌉ months after it is billed
+retention          = price before VAT × retention %, paid as long after the finish
+running total      = Σ (money in − money out)
+peak cash need     = the lowest running total, as a positive amount
+```
+
+The **peak cash need** is the working capital the contractor must have
+ready, its own money or a credit line, at the worst point of the job. A
+larger downpayment, shorter payment days or smaller retention lower it.
+The days the client takes to pay are a quotation term (30 by default).
+The income tax a company or government withholds is a credit against the
+contractor's income tax, recovered only when it files, so the cash flow
+counts it as not received; the VAT or percentage tax government withholds
+is credited against the tax the contractor remits and does not change a
+cash flow before VAT.
+
+For the sample house (₱3.40 million before VAT, ₱2.85 million of cost,
+30% down, 10% retention, paid in 30 days) the running total is lowest in
+month 3, at about −₱347,000: that is its peak cash need. **Download cash
+flow** makes a PDF with the summary, the table and these assumptions.
+
 ### Progress billing
 
 Each billing records how far each contract line is done, as a cumulative

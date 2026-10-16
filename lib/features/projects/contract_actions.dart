@@ -59,6 +59,15 @@ Future<void> downloadBilling(BuildContext context, Project project, int index) {
   );
 }
 
+/// Downloads the month-by-month cash flow.
+Future<void> downloadCashFlow(BuildContext context, Project project) {
+  final profile = context.read<ProfileController>().profile;
+  return _save(context, '${fileSlug(project, 'cash-flow')}.pdf', () async {
+    await contract_pdf.loadLibrary();
+    return contract_pdf.cashFlowPdf(project, profile);
+  }, 'Downloaded the cash flow.');
+}
+
 /// Opens progress billing [index] for editing, or a new one after the
 /// last when [index] is null.
 Future<void> editBilling(BuildContext context, Project project, int? index) =>

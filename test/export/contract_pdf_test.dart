@@ -80,5 +80,8 @@ void main() {
     expect(latin1.decode(govQuote.sublist(0, 5)), '%PDF-');
     final govBilling = await billingPdf(government, profile, 0);
     expect(latin1.decode(govBilling.sublist(0, 5)), '%PDF-');
+
+    final flow = await cashFlowPdf(government, profile);
+    expect(latin1.decode(flow.sublist(0, 5)), '%PDF-');
   });
 }

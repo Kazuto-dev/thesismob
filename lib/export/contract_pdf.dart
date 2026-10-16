@@ -5,6 +5,7 @@ import 'package:pdf/widgets.dart' as pw;
 import '../core/format.dart';
 import '../data/boq.dart';
 import '../data/contract_math.dart';
+import '../data/job_plan.dart';
 import '../data/project.dart';
 import '../state/profile_controller.dart';
 
@@ -690,6 +691,134 @@ Future<Uint8List> billingPdf(
             _signature('Received by', project.client),
           ],
         ),
+      ],
+    ),
+  );
+  return doc.save();
+}
+
+/// A table of [rows] under [headings]: the first column as wide as it can
+/// be, the others [width] wide and right-aligned, rows in [strong] bold.
+pw.Widget _grid(
+  List<String> headings,
+  List<List<String>> rows, {
+  double width = 66,
+  Set<int> strong = const {},
+}) => pw.Table(
+  columnWidths: {
+    0: const pw.FlexColumnWidth(),
+    for (var i = 1; i < headings.length; i++) i: pw.FixedColumnWidth(width),
+  },
+  border: const pw.TableBorder(
+    horizontalInside: pw.BorderSide(color: _line, width: 0.5),
+  ),
+  children: [
+    pw.TableRow(
+      decoration: const pw.BoxDecoration(color: _band),
+      children: [for (final (i, h) in headings.indexed) _head(h, right: i > 0)],
+    ),
+    for (final (r, row) in rows.indexed)
+      pw.TableRow(
+        children: [
+          for (final (i, c) in row.indexed)
+            _cell(c, right: i > 0, strong: strong.contains(r)),
+        ],
+      ),
+  ],
+);
+
+/// `Nov 2, 2026`, for narrow tables.
+String _shortDate(DateTime d) => formatDate(d).split(', ').skip(1).join(', ');
+
+/// The month-by-month cash flow of a job, before VAT, with the peak cash
+/// need and the assumptions behind it.
+Future<Uint8List> cashFlowPdf(
+  Project project,
+  BusinessProfile profile, {
+  DateTime? date,
+}) async {
+  final doc = await _document('${project.name} cash flow');
+  final flow = cashFlow(project);
+  final b = project.breakdown;
+  final t = project.contract.terms;
+  final rates = withholding(project);
+  final today = date ?? DateTime.now();
+  final peak = flow.peakMonth;
+  doc.addPage(
+    pw.MultiPage(
+      pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.fromLTRB(36, 36, 36, 40),
+      footer: _footer,
+      build: (context) => [
+        _letterhead(profile, 'CASH FLOW', formatDate(today)),
+        pw.Text(
+          _pdfText(project.name),
+          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+        ),
+        if (project.client.isNotEmpty) _small('Client: ${project.client}'),
+        _heading('Summary'),
+        _grid(
+          ['', 'Amount'],
+          [
+            ['Contract price before VAT', formatMoney(b.subtotal)],
+            [
+              'Cost: direct cost, escalation and contingency',
+              formatMoney(b.direct + b.escalation + b.contingency),
+            ],
+            [
+              'Downpayment on signing, ${formatNumber(t.downpaymentPct)}%',
+              formatMoney(b.subtotal * t.downpaymentPct / 100),
+            ],
+            [
+              peak == null
+                  ? 'Peak cash need: none'
+                  : 'Peak cash need (working capital), month $peak',
+              formatMoney(flow.peakNeed),
+            ],
+          ],
+          width: 110,
+          strong: {3},
+        ),
+        _heading('By month'),
+        _grid(
+          ['Month', 'From', 'Money out', 'Billed', 'Money in', 'Running total'],
+          [
+            for (final m in flow.months)
+              [
+                m.month == 0 ? 'Signing' : '${m.month}',
+                m.from == null ? '' : _shortDate(m.from!),
+                _money(m.costs),
+                _money(m.billed),
+                _money(m.received),
+                _money(m.cumulative),
+              ],
+          ],
+          width: 72,
+          strong: {?peak},
+        ),
+        _heading('Assumptions'),
+        for (final note in [
+          'Amounts are before VAT, which is collected for the BIR and passed '
+              'on.',
+          'A month is $workDaysPerMonth working days of the schedule, Monday '
+              'to Saturday.',
+          'Materials are bought when each task starts; labour, tools and '
+              'equipment are paid as the work is done; general requirements '
+              'and hauling are spread over the job; escalation and '
+              'contingency are spent in proportion.',
+          'The work done each month, from the planned S-curve, is billed at '
+              'the end of the month and paid ${formatNumber(t.paymentDays)} '
+              'days later, less ${formatNumber(t.downpaymentPct)}% '
+              'downpayment recouped and ${formatNumber(t.retentionPct)}% '
+              'retention'
+              '${rates.incomeTax > 0 ? ' and ${formatNumber(rates.incomeTax)}% income tax withheld' : ''}.',
+          'The retention is paid that long after the work is finished and '
+              'accepted.',
+        ])
+          pw.Bullet(
+            text: _pdfText(note),
+            style: const pw.TextStyle(fontSize: 9),
+          ),
       ],
     ),
   );

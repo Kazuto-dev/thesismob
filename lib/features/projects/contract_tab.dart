@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart' show DateFormat, NumberFormat;
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +9,7 @@ import '../../core/theme.dart';
 import '../../core/widgets.dart';
 import '../../data/contract.dart';
 import '../../data/contract_math.dart';
+import '../../data/job_plan.dart';
 import '../../data/project.dart';
 import '../../materials/material_spec.dart';
 import '../../state/projects_controller.dart';
@@ -27,6 +29,8 @@ class ContractTab extends StatelessWidget {
       _QuotationCard(project: project),
       const SizedBox(height: Space.lg),
       _ScheduleCard(project: project),
+      const SizedBox(height: Space.lg),
+      _CashFlowCard(project: project),
       const SizedBox(height: Space.lg),
       _BillingCard(project: project),
       const SizedBox(height: Space.lg),
@@ -856,6 +860,131 @@ class _CurvePainter extends CustomPainter {
   @override
   bool shouldRepaint(_CurvePainter old) =>
       old.points != points || old.line != line;
+}
+
+final _pesos = NumberFormat('#,##0', 'en_US');
+
+/// [value] in whole pesos, `₱1,234` or `−₱1,234`, for narrow tables.
+String _wholePesos(double value) =>
+    '${value < -0.5 ? '−' : ''}₱${_pesos.format(value.abs().round())}';
+
+/// The name of cash-flow month [m]: the signing, or "Month 3 · Jan 4".
+String _monthName(BuildContext context, CashFlowMonth m) {
+  if (m.month == 0) return context.tr('Signing');
+  final name = context.tr('Month {n}', {'n': m.month});
+  final from = m.from;
+  return from == null
+      ? name
+      : '$name · ${DateFormat('MMM d', 'en_US').format(from)}';
+}
+
+class _CashFlowCard extends StatelessWidget {
+  const _CashFlowCard({required this.project});
+
+  final Project project;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final flow = cashFlow(project);
+    final terms = project.contract.terms;
+    final small = tabular(theme.textTheme.bodySmall);
+    final head = theme.textTheme.labelMedium;
+    Widget cell(String text, {TextStyle? style, bool right = true}) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Text(
+        text,
+        textAlign: right ? TextAlign.right : TextAlign.left,
+        style: style ?? small,
+      ),
+    );
+    return _Panel(
+      icon: Icons.savings_outlined,
+      title: context.tr('Cash flow'),
+      subtitle: context.tr(
+        'Money out and in month by month, before VAT: materials bought as '
+        'each task starts, labour as the work is done and site costs every '
+        'month, against the downpayment and the monthly billings, paid '
+        '{days} days later less the downpayment recouped, the retention '
+        'and the tax withheld.',
+        {'days': formatNumber(terms.paymentDays)},
+      ),
+      children: [
+        if (flow.months.isEmpty)
+          Text(context.tr('Add estimates to see a cash flow.'))
+        else ...[
+          KeyValueLine(
+            context.tr('Peak cash need (working capital)'),
+            formatMoney(flow.peakNeed),
+            emphasize: true,
+            padding: const EdgeInsets.symmetric(vertical: 4),
+          ),
+          Text(
+            flow.peakMonth == null
+                ? context.tr(
+                    'The downpayment and billings cover the costs all along.',
+                  )
+                : context.tr(
+                    'Lowest in month {n}: have this much ready, or ask for a '
+                    'larger downpayment or faster payment.',
+                    {'n': flow.peakMonth!},
+                  ),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          Semantics(
+            label: context.tr('Cash flow by month'),
+            child: Table(
+              columnWidths: const {
+                0: FlexColumnWidth(),
+                1: FixedColumnWidth(80),
+                2: FixedColumnWidth(80),
+                3: FixedColumnWidth(84),
+              },
+              children: [
+                TableRow(
+                  children: [
+                    cell(context.tr('Month'), style: head, right: false),
+                    cell(context.tr('Out'), style: head),
+                    cell(context.tr('In'), style: head),
+                    cell(context.tr('Running total'), style: head),
+                  ],
+                ),
+                for (final m in flow.months)
+                  TableRow(
+                    children: [
+                      cell(_monthName(context, m), right: false),
+                      cell(_wholePesos(m.costs)),
+                      cell(_wholePesos(m.received)),
+                      cell(
+                        _wholePesos(m.cumulative),
+                        style: small?.copyWith(
+                          color: m.cumulative < 0
+                              ? theme.colorScheme.error
+                              : null,
+                          fontWeight: m.month == flow.peakMonth
+                              ? FontWeight.w700
+                              : null,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: () => downloadCashFlow(context, project),
+              icon: const Icon(Icons.picture_as_pdf_outlined),
+              label: Text(context.tr('Download cash flow')),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
 }
 
 class _BillingCard extends StatelessWidget {

@@ -72,4 +72,31 @@ const filipinoContract = <String, String>{
   '{pct}% complete · net due {amount} · you receive {received} after {taxes} withheld':
       '{pct}% tapos · babayaran {amount} · matatanggap ninyo ang {received} '
       'matapos ikaltas ang {taxes}',
+
+  // Cash flow
+  'Cash flow': 'Daloy ng pera',
+  'Money out and in month by month, before VAT: materials bought as each task starts, labour as the work is done and site costs every month, against the downpayment and the monthly billings, paid {days} days later less the downpayment recouped, the retention and the tax withheld.':
+      'Labas at pasok ng pera bawat buwan, bago ang VAT: materyales na '
+      'binibili sa simula ng bawat gawain, labor habang ginagawa at gastos '
+      'sa site bawat buwan, laban sa downpayment at buwanang billing na '
+      'binabayaran makalipas ang {days} araw, bawas ang naibalik na '
+      'downpayment, retention at buwis na ikinaltas.',
+  'Add estimates to see a cash flow.':
+      'Magdagdag ng estimate para makita ang daloy ng pera.',
+  'Peak cash need (working capital)':
+      'Pinakamalaking kailangang pera (working capital)',
+  'The downpayment and billings cover the costs all along.':
+      'Sapat ang downpayment at billing sa gastos sa buong trabaho.',
+  'Lowest in month {n}: have this much ready, or ask for a larger downpayment or faster payment.':
+      'Pinakamababa sa buwan {n}: ihanda ang ganitong halaga, o humingi ng '
+      'mas malaking downpayment o mas mabilis na bayad.',
+  'Cash flow by month': 'Daloy ng pera bawat buwan',
+  'Month': 'Buwan',
+  'Month {n}': 'Buwan {n}',
+  'Signing': 'Pirmahan',
+  'Out': 'Labas',
+  'In': 'Pasok',
+  'Running total': 'Kabuuan',
+  'Download cash flow': 'I-download ang daloy ng pera',
+  'Downloaded the cash flow.': 'Na-download ang daloy ng pera.',
 };
