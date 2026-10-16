@@ -538,6 +538,90 @@ health; the project signboard; and clean-up and disposal of debris.
 them to your own. They are part of the direct cost, so contingency,
 overhead and profit apply to them as to hauling.
 
+### Permit fees
+
+**Work out permit fees**, next to **Suggest amounts**, opens a worksheet
+of the building permit and its ancillary fees
+([`lib/data/permit_fees.dart`](../lib/data/permit_fees.dart)). **Put … in
+permits** writes the total into the general requirement *Permits,
+clearances and fees*.
+
+Inputs, with what they start from:
+
+| Input | Starts from |
+| --- | --- |
+| Use | House for one family (Division A-1), or apartments, shops, offices, factories and warehouses (Groups B, E–I) |
+| Total floor area | The project's floor area |
+| Storeys | 2 when the floor area is over 100 m², else 1 |
+| Project cost | The project total without its permits and professional fees lines |
+| Street frontage | 10 m (our guess; enter the lot's) |
+| Excavation | The excavation the project's estimates measured, or 0.5 m³ per m² of footprint (floor area ÷ storeys; our guess) |
+| Connected load | 24 VA per m² of floor for lighting plus 4.5 kVA for two small-appliance circuits and a laundry circuit, rounded up (Philippine Electrical Code dwelling loads), before air-conditioners |
+| Bathrooms | One a storey, or one for every 70 m², whichever is more |
+| Air-conditioners, fence, other LGU fees | None |
+
+Until you type them yourself, the connected load, bathrooms and
+excavation follow the floor area and storeys. Plumbing fixtures come from
+the bathrooms: per bathroom a water closet, lavatory, shower and floor
+drain, plus a kitchen sink, a laundry sink, a laundry floor drain and a
+faucet per sink and one outside.
+
+The fees:
+
+| Fee | How it is worked out | Source | Status |
+| --- | --- | --- | --- |
+| Building fee, house (A-1) | Whole floor area × one rate by bracket: up to 20 m² ₱2.00, 20–50 ₱3.40, 50–100 ₱4.80, 100–150 ₱6.00, over 150 ₱7.20 a m² | Revised IRR of PD 1096, reissued as Annex A of NBCDO MC 03 s.2016; DPWH's own sample: 75 m² × ₱4.80 = ₱360 | Rates in DPWH and LGU copies. Some LGUs (San Fernando City's charter) split the area by bracket instead, which gives less. |
+| Building fee, Groups B, E–I | Each band of area at its rate: first 500 m² ₱23.00, then ₱22.00, ₱20.50, ₱19.50, ₱18.00 and ₱17.00 for each next 100 m² to 1,000 m², ₱16.00 to 1,500, ₱15.00 to 2,000, ₱14.00 to 3,000, ₱12.00 above | Same schedule, as reproduced by San Antonio (Zambales), Alaminos (Laguna) and TIEZA, which show "first 500 m² @ ₱23 = ₱11,500, next 100 m² @ ₱22 = ₱2,200" | LGU copies. Schools and hospitals (C, D), duplexes (A-2) and accessory structures (J) have other tables, not included. |
+| Line and grade | ₱24 for the first 10 m of street frontage, ₱2.40 for each metre or fraction after | Alaminos copy of the schedule | LGU copy |
+| Excavation | ₱3 per m³ or fraction | Guiguinto, Bulacan 2026 citizen's charter | LGU copy; basements are ₱4/m³, not modelled |
+| Fencing | Per metre or fraction: ₱3 masonry, concrete or metal up to 1.80 m; ₱4 above 1.80 m; ₱2.40 wire or light materials | Fee schedule copies and Guiguinto | LGU copies |
+| Electrical | On the total connected load in whole kVA: up to 5 kVA ₱200; to 50 kVA ₱200 + ₱20 per kVA over 5; to 300 kVA ₱1,100 + ₱10 per kVA over 50; to 1,500 kVA ₱3,600 + ₱5; to 6,000 kVA ₱9,600 + ₱2.50; above, ₱20,850 + ₱1.25 | Fee schedule copies; Puerto Princesa's worked example (6 kVA: ₱220) | First three tiers seen in sources; the tiers above 300 kVA are our reading of the IRR table, continuous with them. Meter, pole and wiring-permit charges (tens of pesos) are left out. |
+| Mechanical | ₱40 per air-conditioner | The schedule's window-type rate | LGU copies show ₱40 or ₱60; we apply it to split units too. Packaged systems, elevators and pumps are not modelled. |
+| Plumbing | ₱24 for the first "unit" (1 water closet, 2 floor drains, 1 lavatory, 1 sink, 3 faucets, 1 shower head; part of a unit counts whole), then ₱7 per water closet, ₱3 per floor drain, ₱7 per lavatory, ₱3 per sink, ₱2 per faucet and ₱2 per shower head | VIZCODE's copy of the schedule (unit, water closet and floor drain rates) | The lavatory, sink, faucet and shower rates are our reading of the IRR table; water meters and septic tanks are left out |
+| Zoning (locational) clearance, house only | Up to ₱100,000: ₱288; to ₱200,000: ₱576; above: ₱720 + 0.1% of the cost over ₱200,000 | HLURB Resolution 912 s.2013, as adopted by LGUs (Palanan, San Gabriel) | LGUs set their own; other uses are left to *Other LGU fees* |
+| Fire safety evaluation clearance (BFP) | 0.10% of the project cost, at most ₱50,000 | RA 9514 (Fire Code) Sec. 12; BFP citizen's charter for the FSEC | The ₱50,000 cap is from the law as summarised by secondary sources |
+| Certificate of occupancy | On a cost of floor area × ₱10,000 (Table II.G.1 of MC 03 s.2016). House: ₱100 to ₱150,000, ₱200 to ₱400,000, ₱400 to ₱850,000, ₱800 to ₱1.2M and ₱800 for each further million or part. Groups B, E–I: ₱200, ₱400, ₱800, ₱1,000 and ₱1,000 a million | Fee schedule copies, TIEZA | House tiers seen in sources. For B, E–I, only ₱800 (₱400,000–850,000) was seen; the other tiers are our reading, and copies disagree between ₱900 and ₱1,000 above ₱850,000. |
+| Fire safety inspection for occupancy (BFP) | 15% of the occupancy fee, at least ₱500 | 2019 Revised IRR of RA 9514; BFP MC 2021-020 | The 10% in older guides is the 2009 IRR |
+| Other LGU fees | Your own figure | – | Filing and processing fees, barangay clearance, documentary stamps |
+
+A 140 m² two-storey house costing ₱3.7M (10 m frontage, 35 m³ of
+excavation, 8 kVA, two bathrooms, no fence or air-conditioners):
+
+| Fee | Amount |
+| --- | ---: |
+| Building fee, 140 m² × ₱6.00 | ₱840.00 |
+| Line and grade | ₱24.00 |
+| Excavation, 35 m³ × ₱3 | ₱105.00 |
+| Electrical, 8 kVA | ₱260.00 |
+| Plumbing, one unit + ₱26 of extra fixtures | ₱50.00 |
+| Zoning clearance, ₱720 + 0.1% of ₱3.5M | ₱4,220.00 |
+| Fire safety evaluation clearance, 0.1% of ₱3.7M | ₱3,700.00 |
+| Certificate of occupancy, on ₱1.4M | ₱1,600.00 |
+| Fire safety inspection, at least | ₱500.00 |
+| **Permits and fees** | **₱11,299.00** |
+
+[`test/data/permit_fees_test.dart`](../test/data/permit_fees_test.dart)
+checks it to the peso. Real assessments run higher: cities add filing
+and processing fees, inspection fees and clearances, and some multiply the
+national rates under their revenue codes; 2026 guides quote ₱20,000–80,000
+for a house's permits depending on the city. Treat the worksheet as the
+national floor and ask your building official for the assessment.
+
+Sources (read from search-result excerpts in October 2026, because the
+sites could not be opened directly):
+[DPWH, NBCDO MC 03 s.2016 Annex A](https://www.dpwh.gov.ph/DPWH/files/nbc/NEW.pdf);
+[Alaminos, Laguna fee schedule](https://alaminoslaguna.com/wp-content/uploads/2020/08/NBC_FEES_AND_CHARGES.pdf);
+[San Antonio, Zambales](https://www.sanantoniozambales.gov.ph/downloadable%20files/Engineering/Schedule%20of%20Fees%20and%20Other%20Charges.pdf);
+[TIEZA consolidated fees](https://tieza.gov.ph/wp-content/uploads/2019/11/TIEZA-fees-fines-and-penalties-consolidated.pdf);
+[Puerto Princesa OCBO assessment](https://ocbo.puertoprincesa.ph/wp-content/uploads/2022/08/Assessment-of-Fees.pdf);
+[Guiguinto, Bulacan 2026 charter](https://www.guiguinto.gov.ph/wp-content/uploads/2026/03/ENGR-ARTA-CC-LATEST-2026.xlsx-rev.03.17.2026.pdf);
+[VIZCODE, PD 1096](https://vizcodeph.com/code-library/pd-1096-national-building-code-of-the-philippines/);
+[Respicio, how building permit fees are computed](https://www.respicio.ph/commentaries/how-building-permit-fees-are-computed-in-the-philippines);
+[HLURB Resolution 912 s.2013](https://dhsud.gov.ph/wp-content/uploads/Laws_Issuances/00_Archive/HLURB/Board_Resolutions/R-912%20s.%202013.pdf)
+and [Palanan's zoning fees](https://www.palanan.gov.ph/wp-content/uploads/ZoningLocational-Clearance-Fee.pdf);
+[BFP citizen's charter, FSEC](https://bfp.gov.ph/wp-content/uploads/2013/11/New-BFP-Citizen-Charter-FSEC.pdf);
+[BFP MC 2021-020 on fire code fees](https://bfp.gov.ph/wp-content/uploads/2022/06/MC-2021-020-SUPPLEMENTAL-GUIDELINES-ASSESSMENT-COLLECTION-OF-FIRE-CODE-FEES-REL.-TO-THE-IMPLEMENTATION-OF-RA-9514-OTHERWISE-KNOWN-AS-THE-FIRE-CODE-OF-THE-PHILIPPINES-OF-2008-ITS-REVISED-IRR-OF-2019.pdf).
+
 ### Price escalation
 
 Prices rise between the estimate and the purchase. **Price escalation**
