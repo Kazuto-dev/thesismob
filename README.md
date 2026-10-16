@@ -129,7 +129,7 @@ lib/
   data/                    Estimate and Project models, cost build-up,
                            storage, legacy import, Sheets client
   state/                   history, projects, price book, sheet settings
-  materials/               the 40 calculators as data (MaterialSpec), the
+  materials/               the 51 calculators as data (MaterialSpec), the
                            price-book items and shared estimating factors
   export/                  bill of quantities as PDF, CSV, text; backups
   features/                screens: home, category, calculator, history,

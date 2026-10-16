@@ -1,6 +1,6 @@
 # How BuildQuantify calculates
 
-BuildQuantify has 40 calculators in four groups. Each one follows common
+BuildQuantify has 51 calculators in four groups. Each one follows common
 Philippine estimating practice and the sizes sold in Philippine hardware
 stores. Quantities are planning estimates: confirm them with your supplier
 and engineer before buying.

@@ -40,7 +40,7 @@ source.
 ### Every calculator, every option
 
 Shared tests ([`test/materials/calculators_test.dart`](../test/materials/calculators_test.dart))
-run all 40 calculators and check that:
+run all 51 calculators and check that:
 
 - each one calculates with plain inputs, and its total is quantity × price;
 - exactly one price field shows for any combination of options;

@@ -19,8 +19,8 @@ const filipino = <String, String>{
   'Planning estimates. Confirm quantities and prices with your engineer and supplier before buying.':
       'Pang-plano lamang ang mga estimate. Kumpirmahin ang dami at presyo sa '
       'inyong engineer at supplier bago bumili.',
-  '40 calculators, from earthworks and rebar to wiring and plumbing':
-      '40 calculator, mula paghuhukay at bakal hanggang wiring at tubo',
+  '51 calculators, from earthworks and rebar to wiring and plumbing':
+      '51 calculator, mula paghuhukay at bakal hanggang wiring at tubo',
   'Every material priced from a 2026 Philippine price book':
       'May presyo ang bawat materyales mula sa 2026 price book ng Pilipinas',
   'Projects with a bill of quantities, a budget, PDF and Google Sheets':
