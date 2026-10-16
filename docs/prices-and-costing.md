@@ -702,30 +702,120 @@ follow as VO-1, VO-2…
 
 ### Schedule
 
-The schedule is worked out from the crew-days of each work item:
+The schedule ([`lib/data/schedule.dart`](../lib/data/schedule.dart)) is
+worked out from the crew-days of each work item, the crews working at once
+and how the phases of building a house follow each other:
 
 ```
-lane days   = Σ crew-days of a trade's work in a phase ÷ crews in that trade
-phase days  = the longest lane in the phase (rounded up to half days)
-start       = the end of the phase before
+lane          = one trade's work in one phase, e.g. structural work in Foundations
+lane days     = Σ crew-days of the lane ÷ crews in the lane (rounded up to half days)
+                + 7 days of curing when it holds a suspended slab
+phase days    = the longest lane in the phase
+phase start   = the latest of its links (table below)
+working days  = the last phase's finish × (1 + rain allowance %)
+months        = (working days + regular holidays on the way) ÷ 26
 ```
 
-Work is grouped into phases in building order: site preparation and
-earthworks; foundations; columns and ground slab; beams, upper slabs and
-stairs; walls and rough-ins; roofing; plastering, ceilings and
-waterproofing; finishes and openings; fixtures, testing and turnover.
-Bars and forms follow their element (a beam's rebar is with the beams).
+Bars and forms go with their element (a beam's rebar is with the beams).
 Trades in the same phase work side by side, so electrical and plumbing
-rough-ins run alongside the walls. Six working days a week, Monday to
-Saturday; the finish date skips Sundays. Items priced as a share of
-materials take their labour ÷ (skilled + helper rate) as crew-days.
+rough-ins run alongside the walls. Items priced as a share of materials
+take their labour ÷ (skilled + helper rate) as crew-days.
+
+**Phases and links.** Each phase may start once an earlier one is part or
+all of the way through, plus a lag in working days for curing or setting.
+When it overlaps the earlier phase it also finishes no sooner than a set
+number of days after it, since its last piece of work follows the earlier
+phase's last (start-to-start and finish-to-finish links).
+
+| Phase | Waits for |
+| --- | --- |
+| Mobilization and layout | Nothing; 5 days for clearing, staking, batter boards and the bodega |
+| Site preparation and earthworks | Mobilization |
+| Foundations | Earthworks half done; finishes 1 day after the last pit |
+| Columns and ground slab (with backfill and gravel bedding) | Foundations + 3 days of curing |
+| Beams, upper slabs and stairs | Columns + 3 days: the frame goes up floor by floor; a suspended slab adds 7 days of curing before the floor above |
+| Walls and rough-ins | Ground slab + 2 days; the upper walls finish 3 days after the upper slab |
+| Roof framing and roofing | Beams and upper slabs + 7 days of curing, and half the walls |
+| Plastering and waterproofing | A third of the walls + 2 days; finishes 3 days after the last wall |
+| Ceilings | The roof, and half the plaster |
+| Finishes and openings | Half the plaster + 14 days, so it can be painted; finishes 14 days after the last plaster and 2 days after the ceilings |
+| Fixtures | Three quarters of the finishes; finishes 2 days after them |
+| Testing, punch list and turnover | Everything; 6 days |
+
+A phase with no work in the project is skipped, and phases after it wait
+for what it waited for. The **critical phases** are the chain of links
+that sets the finish date: a day's delay in one of them delays the job.
+The Gantt chart outlines their bars and the quotation prints them in bold.
+
+**Crews.** A trade left on **Auto** gets its crews phase by phase: enough
+for about three weeks of work (`autoLaneDays`, 18 working days), at least
+one, and no more than a small site run by one foreman holds:
+
+| Trade | Most workers at once |
+| --- | ---: |
+| Structural (diggers, masons, carpenters, steelmen, concrete gang) | 8 |
+| Architectural (roofing, tiles, paint, doors and windows) | 4 |
+| Electrical | 2 |
+| Plumbing | 2 |
+| Other works | 3 |
+
+Crews in a lane = ⌈lane crew-days ÷ 18⌉, capped at ⌊workers ÷ workers in
+one crew⌋, where the crew is the work item's (a digger is one helper, a
+mason one mason and a helper, a concrete gang about five and a half people
+with a mixer). So excavation gets several diggers while the concrete of
+the footings gets one gang. Typing a number for a trade fixes its crews in
+every phase; clearing it goes back to Auto, shown as "Auto · up to n".
+
+**Finish-by target.** Enter the working weeks the job should take, or a
+date to finish by (with a start date, counted in working days). The app
+then shortens the three-week aim half a day at a time, so trades on Auto
+get more crews, until the schedule fits. When even the site's limits are
+not enough it shows the fastest schedule it can make and says so; add
+crews by hand or move the date. A target longer than the usual schedule
+changes nothing.
+
+**Rain and unworkable days.** The working days are stretched by an
+allowance, 10% by default, spread over every phase so the S-curve and cash
+flow stay even. Philippine public works contracts include a number of
+"predetermined unworkable days" in the contract time and grant extensions
+only for rain beyond it: ordinary bad weather is not grounds for an
+extension (IRR of RA 9184, Annex E, sec. 10; DPWH DO 39 s. 2024 and DO 42
+s. 2020 on monthly time suspension reports). For example, a DPWH
+flood-control contract in Cebu gave 330 calendar days including 35
+predetermined unworkable days and 35 Sundays, about 12% of its working
+days. Use 10–15% for a job mostly in the dry season and 15–25% for one
+through the rainy months (June to November on the western side of the
+country, November to February on the eastern side).
+
+**Holidays.** Finish dates skip Sundays and the regular holidays (Labor
+Code art. 94, as amended by EO 203 and RA 9492): New Year's Day, Araw ng
+Kagitingan (9 April), Labor Day, Independence Day (12 June), Bonifacio Day
+(30 November), Christmas and Rizal Day (30 December) on their fixed dates;
+Maundy Thursday and Good Friday from Easter; and National Heroes Day on the
+last Monday of August. They match Proclamation No. 1006 s. 2025 for 2026.
+Eid'l Fitr and Eid'l Adha are not skipped because their dates are
+proclaimed each year, nor are special non-working days such as 1 November
+and 24 and 31 December, when sites may work at premium pay; the rain
+allowance covers them. Without a start date, 9 holidays a year are
+assumed. The job's months, which price the time-related general
+requirements, include them.
+
+**Example.** The two-storey house of about 140 m² in the tests
+([`test/data/sample_house.dart`](../test/data/sample_house.dart)): with
+one crew per trade and phases strictly one after another it took 355
+working days (13.7 months), excavation alone 47 days with one helper. Now
+it takes about 145 working days, 5.7 months with the rain allowance and
+holidays: four to five diggers for two and a half weeks of earthworks,
+two to four structural crews on the frame, and the frame, roof, ceilings,
+finishes and fixtures on the critical path.
 
 The **S-curve** is the planned cumulative value of the work week by week:
 each lane's direct cost spread evenly over its days, with general
 requirements and hauling spread over the whole job.
 
-The schedule is a planning guide: it has no weather, holidays, material
-lead times or curing waits, and phases do not overlap.
+The schedule is still a planning guide: it does not know which storey
+each column is on, it spreads rain evenly instead of by season, and it
+assumes materials arrive on time (see the purchase schedule below).
 
 ### Progress billing
 

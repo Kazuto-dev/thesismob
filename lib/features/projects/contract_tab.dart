@@ -320,32 +320,71 @@ class _ScheduleCard extends StatelessWidget {
     }
   }
 
+  Future<void> _pickFinishBy(BuildContext context, DateTime start) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate:
+          project.contract.finishBy ?? start.add(const Duration(days: 7 * 26)),
+      firstDate: start.add(const Duration(days: 1)),
+      lastDate: DateTime(start.year + 5),
+    );
+    if (picked != null && context.mounted) {
+      _update(context, project, (c) => c.withTarget(date: picked));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    final contract = project.contract;
     final schedule = Schedule.of(project);
-    final start = project.contract.startDate;
+    final start = contract.startDate;
     final finish = start == null
         ? null
         : Schedule.addWorkingDays(start, schedule.days);
     final weeks = schedule.weeks.ceil();
+    final trades = [
+      for (final trade in MaterialCategory.values) tradeKey(trade),
+      if (schedule.crewsFor('other') != null) 'other',
+    ];
+    String tradeName(String key) =>
+        MaterialCategory.byId(key)?.label ?? 'Other works';
+    final target = schedule.target;
     return _Panel(
       icon: Icons.calendar_month_outlined,
       title: context.tr('Schedule'),
       subtitle: context.tr(
-        'Worked out from each item\'s crew-days and the crews working at '
-        'once, six working days a week. A planning guide, not a promise.',
+        'Worked out from each item\'s crew-days, the crews working at once '
+        'and how the phases overlap, six working days a week, with an '
+        'allowance for rain and the regular holidays skipped. A planning '
+        'guide, not a promise.',
       ),
       children: [
         Text(
           schedule.days <= 0
               ? context.tr('Add estimates to see a schedule.')
-              : context.tr('About {weeks} weeks ({days} working days)', {
-                  'weeks': weeks,
-                  'days': formatNumber(schedule.days),
-                }),
+              : context.tr(
+                  'About {weeks} weeks ({days} working days), about {months} '
+                  'months',
+                  {
+                    'weeks': weeks,
+                    'days': formatNumber(schedule.days),
+                    'months': formatNumber((schedule.months * 10).round() / 10),
+                  },
+                ),
           style: theme.textTheme.titleSmall,
         ),
+        if (schedule.days > 0 && schedule.allowanceDays > 0)
+          Text(
+            context.tr(
+              'Includes {days} working days for rain and unworkable days.',
+              {'days': formatNumber(schedule.allowanceDays)},
+            ),
+            style: muted,
+          ),
         Wrap(
           spacing: Space.sm,
           runSpacing: Space.sm,
@@ -369,33 +408,134 @@ class _ScheduleCard extends StatelessWidget {
               ),
           ],
         ),
+        Wrap(
+          spacing: Space.md,
+          runSpacing: Space.md,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            SizedBox(
+              width: 190,
+              child: _NumberField(
+                label: context.tr('Rain and unworkable days'),
+                suffix: '%',
+                value: contract.rainPct,
+                max: 50,
+                onChanged: (v) =>
+                    _update(context, project, (c) => c.copyWith(rainPct: v)),
+              ),
+            ),
+            SizedBox(
+              width: 190,
+              child: _OptionalNumberField(
+                key: ValueKey(contract.finishBy),
+                label: context.tr('Finish within'),
+                suffix: context.tr('weeks'),
+                hint: context.tr('No target'),
+                value: contract.finishBy == null ? contract.targetWeeks : null,
+                max: 520,
+                onChanged: (v) =>
+                    _update(context, project, (c) => c.withTarget(weeks: v)),
+              ),
+            ),
+            OutlinedButton.icon(
+              onPressed: start == null
+                  ? null
+                  : () => _pickFinishBy(context, start),
+              icon: const Icon(Icons.flag_outlined, size: 18),
+              label: Text(
+                contract.finishBy == null
+                    ? context.tr('Finish by a date')
+                    : context.tr('Finish by {date}', {
+                        'date': formatDate(contract.finishBy!),
+                      }),
+              ),
+            ),
+            if (contract.targetWeeks != null || contract.finishBy != null)
+              IconButton(
+                tooltip: context.tr('Clear the target'),
+                icon: const Icon(Icons.close),
+                onPressed: () =>
+                    _update(context, project, (c) => c.withTarget()),
+              ),
+          ],
+        ),
+        if (contract.finishBy != null && start == null)
+          Text(
+            context.tr('Set a start date to use the finish-by date.'),
+            style: muted,
+          )
+        else if (target != null && schedule.meetsTarget != null)
+          Text(
+            schedule.meetsTarget!
+                ? context.tr(
+                    'Meets the target of {weeks} weeks with the crews below.',
+                    {'weeks': formatNumber((target / 6 * 10).round() / 10)},
+                  )
+                : context.tr(
+                    "Can't finish within {weeks} weeks with a small site's "
+                    'limits; the fastest is about {fastest} weeks. Add crews '
+                    'by hand, or move the date.',
+                    {
+                      'weeks': formatNumber((target / 6 * 10).round() / 10),
+                      'fastest': weeks,
+                    },
+                  ),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: schedule.meetsTarget!
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.error,
+            ),
+          ),
         Text(
           context.tr('Crews working at once'),
           style: theme.textTheme.labelLarge,
+        ),
+        Text(
+          context.tr(
+            'Leave a trade on Auto and the app sizes its crews phase by '
+            'phase, about three weeks of work each, within a small site\'s '
+            'limits.',
+          ),
+          style: muted,
         ),
         Wrap(
           spacing: Space.md,
           runSpacing: Space.md,
           children: [
-            for (final trade in MaterialCategory.values)
+            for (final trade in trades)
               SizedBox(
                 width: 150,
-                child: _NumberField(
-                  label: context.tr(trade.label),
-                  value: project.contract.crewsFor(trade.name),
+                child: _OptionalNumberField(
+                  label: context.tr(tradeName(trade)),
+                  hint: schedule.crewsFor(trade) == null
+                      ? context.tr('Auto')
+                      : context.tr('Auto · up to {n}', {
+                          'n': formatNumber(schedule.crewsFor(trade)!),
+                        }),
+                  value: contract.crews[trade],
+                  min: 1,
                   max: 20,
-                  onChanged: (v) {
-                    if (v < 1) return;
-                    _update(
-                      context,
-                      project,
-                      (c) => c.copyWith(crews: {...c.crews, trade.name: v}),
-                    );
-                  },
+                  onChanged: (v) => _update(
+                    context,
+                    project,
+                    (c) => c.copyWith(
+                      crews: v == null
+                          ? ({...c.crews}..remove(trade))
+                          : {...c.crews, trade: v},
+                    ),
+                  ),
                 ),
               ),
           ],
         ),
+        if (schedule.critical.isNotEmpty)
+          Text(
+            context.tr('Critical phases: {phases}', {
+              'phases': [for (final p in schedule.critical) context.tr(p)]
+                  .join(' → '),
+            }),
+            style: theme.textTheme.bodyMedium,
+          ),
         if (schedule.tasks.isNotEmpty) ...[
           _Gantt(schedule: schedule),
           _SCurve(points: schedule.sCurve),
@@ -403,6 +543,71 @@ class _ScheduleCard extends StatelessWidget {
       ],
     );
   }
+}
+
+/// A number that may be left empty, saved as the user types: null when
+/// empty.
+class _OptionalNumberField extends StatefulWidget {
+  const _OptionalNumberField({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.hint,
+    this.suffix,
+    this.min = 0,
+    this.max = 100,
+  });
+
+  final String label;
+  final String? hint;
+  final double? value;
+  final String? suffix;
+  final double min;
+  final double max;
+  final ValueChanged<double?> onChanged;
+
+  @override
+  State<_OptionalNumberField> createState() => _OptionalNumberFieldState();
+}
+
+class _OptionalNumberFieldState extends State<_OptionalNumberField> {
+  late final _controller = TextEditingController(
+    text: widget.value == null
+        ? ''
+        : formatNumber(widget.value!).replaceAll(',', ''),
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => TextField(
+    controller: _controller,
+    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+    inputFormatters: [
+      const DecimalInputFormatter(),
+      LengthLimitingTextInputFormatter(6),
+    ],
+    style: tabular(Theme.of(context).textTheme.bodyLarge),
+    decoration: InputDecoration(
+      labelText: widget.label,
+      hintText: widget.hint,
+      floatingLabelBehavior: FloatingLabelBehavior.always,
+      suffixText: widget.suffix,
+      isDense: true,
+    ),
+    onChanged: (raw) {
+      if (raw.trim().isEmpty) return widget.onChanged(null);
+      final v = double.tryParse(raw.trim());
+      if (v != null && v >= widget.min && v <= widget.max) {
+        widget.onChanged(v);
+      }
+    },
+  );
 }
 
 /// The schedule as bars along the working days.
@@ -428,10 +633,21 @@ class _Gantt extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${context.tr(t.label)} · '
-                    '${context.tr(t.trade?.label ?? 'Other')} · '
-                    '${formatNumber(t.days)} ${context.tr('days')}',
-                    style: theme.textTheme.bodySmall,
+                    [
+                      context.tr(t.label),
+                      if (t.crewDays > 0) context.tr(t.trade?.label ?? 'Other'),
+                      '${formatNumber(t.days)} ${context.tr('days')}',
+                      if (t.crewDays > 0)
+                        t.crews == 1
+                            ? context.tr('1 crew')
+                            : context.tr('{n} crews', {
+                                'n': formatNumber(t.crews),
+                              }),
+                      if (t.critical) context.tr('critical'),
+                    ].join(' · '),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: t.critical ? FontWeight.w700 : null,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   LayoutBuilder(
@@ -454,8 +670,16 @@ class _Gantt extends StatelessWidget {
                           bottom: 0,
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              color: palette.category(t.trade).chart,
+                              color: t.crewDays > 0
+                                  ? palette.category(t.trade).chart
+                                  : theme.colorScheme.outline,
                               borderRadius: BorderRadius.circular(Radii.sm),
+                              border: t.critical
+                                  ? Border.all(
+                                      color: theme.colorScheme.onSurface,
+                                      width: 1.5,
+                                    )
+                                  : null,
                             ),
                           ),
                         ),

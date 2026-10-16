@@ -378,15 +378,19 @@ Future<Uint8List> quotationPdf(
           _small(
             'About ${schedule.weeks.ceil()} weeks '
             '(${formatNumber(schedule.days)} working days, Monday to Saturday)'
-            '${start == null ? ' from the start of work' : ', from ${formatDate(start)} to about ${formatDate(Schedule.addWorkingDays(start, schedule.days))}'}.',
+            '${start == null ? ' from the start of work' : ', from ${formatDate(start)} to about ${formatDate(Schedule.addWorkingDays(start, schedule.days))}'}. '
+            'This allows ${formatNumber(schedule.allowanceDays)} working days '
+            'for rain and unworkable days and skips Sundays and regular '
+            'holidays.',
           ),
           pw.SizedBox(height: 4),
           pw.Table(
             columnWidths: const {
               0: pw.FlexColumnWidth(),
-              1: pw.FixedColumnWidth(90),
-              2: pw.FixedColumnWidth(60),
-              3: pw.FixedColumnWidth(60),
+              1: pw.FixedColumnWidth(80),
+              2: pw.FixedColumnWidth(40),
+              3: pw.FixedColumnWidth(50),
+              4: pw.FixedColumnWidth(40),
             },
             border: const pw.TableBorder(
               horizontalInside: pw.BorderSide(color: _line, width: 0.5),
@@ -397,6 +401,7 @@ Future<Uint8List> quotationPdf(
                 children: [
                   _head('Phase'),
                   _head('Trade'),
+                  _head('Crews', right: true),
                   _head('From day', right: true),
                   _head('Days', right: true),
                 ],
@@ -404,13 +409,24 @@ Future<Uint8List> quotationPdf(
               for (final task in schedule.tasks)
                 pw.TableRow(
                   children: [
-                    _cell(task.label),
-                    _cell(task.trade?.label ?? 'Other'),
+                    _cell(task.label, strong: task.critical),
+                    _cell(
+                      task.crewDays > 0 ? task.trade?.label ?? 'Other' : '',
+                    ),
+                    _cell(
+                      task.crewDays > 0 ? formatNumber(task.crews) : '',
+                      right: true,
+                    ),
                     _cell(formatNumber(task.start + 1), right: true),
                     _cell(formatNumber(task.days), right: true),
                   ],
                 ),
             ],
+          ),
+          pw.SizedBox(height: 2),
+          pw.Text(
+            'Phases in bold set the finish date.',
+            style: const pw.TextStyle(fontSize: 8, color: _muted),
           ),
         ],
         if (inclusions.isNotEmpty) ...[

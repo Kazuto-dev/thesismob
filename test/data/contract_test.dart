@@ -129,6 +129,8 @@ void main() {
   test('the schedule follows the building order', () {
     final schedule = Schedule.of(house());
     final phases = [for (final t in schedule.tasks) t.label];
+    expect(phases.first, 'Mobilization and layout');
+    expect(phases.last, 'Testing, punch list and turnover');
     expect(
       phases.indexOf('Foundations'),
       lessThan(phases.indexOf('Walls and rough-ins')),
@@ -139,8 +141,8 @@ void main() {
     );
     for (var i = 1; i < schedule.tasks.length; i++) {
       expect(
-        schedule.tasks[i].start,
-        greaterThanOrEqualTo(schedule.tasks[i - 1].start),
+        schedule.tasks[i].phase,
+        greaterThanOrEqualTo(schedule.tasks[i - 1].phase),
       );
     }
     final curve = schedule.sCurve;
@@ -150,9 +152,10 @@ void main() {
       expect(curve[i], greaterThanOrEqualTo(curve[i - 1]));
     }
 
-    // Two masonry crews halve the walls.
+    // Three masonry crews instead of the one the app picks for so small a
+    // wall finish it sooner.
     final faster = Schedule.of(
-      house(contract: const ContractData(crews: {'structural': 2})),
+      house(contract: const ContractData(crews: {'structural': 3})),
     );
     expect(faster.days, lessThan(schedule.days));
   });
@@ -163,5 +166,32 @@ void main() {
       Schedule.addWorkingDays(DateTime(2026, 11, 7), 2),
       DateTime(2026, 11, 10),
     );
+  });
+
+  test('new contract settings are saved, and old saves read', () {
+    final c = ContractData(
+      terms: const QuoteTerms(client: ClientType.government, paymentDays: 45),
+      rainPct: 15,
+      targetWeeks: 24,
+      finishBy: DateTime(2027, 5, 31),
+    );
+    final back = ContractData.fromJson(c.toJson());
+    expect(back.terms.client, ClientType.government);
+    expect(back.terms.paymentDays, 45);
+    expect(back.rainPct, 15);
+    expect(back.targetWeeks, 24);
+    expect(back.finishBy, DateTime(2027, 5, 31));
+    expect(back.withTarget().targetWeeks, isNull);
+    expect(back.withTarget().finishBy, isNull);
+
+    final old = ContractData.fromJson({
+      'terms': {'downpaymentPct': 20},
+    });
+    expect(old.terms.client, ClientType.individual);
+    expect(old.terms.paymentDays, 30);
+    expect(old.rainPct, ContractData.defaultRainPct);
+    expect(old.targetWeeks, isNull);
+    expect(const ContractData().isEmpty, isTrue);
+    expect(const ContractData(rainPct: 5).isEmpty, isFalse);
   });
 }
