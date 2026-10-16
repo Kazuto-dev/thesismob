@@ -38,14 +38,16 @@ class UnitPriceCard extends StatelessWidget {
       child: Text(text, style: tabular(muted)),
     );
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(Radii.md),
-      ),
+    // A Material, not a coloured box, so the tile's tap highlight shows.
+    return Material(
+      color: scheme.surfaceContainer,
+      borderRadius: BorderRadius.circular(Radii.md),
+      clipBehavior: Clip.antiAlias,
       child: Theme(
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
+          expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
+          expandedAlignment: Alignment.centerLeft,
           tilePadding: const EdgeInsets.symmetric(horizontal: Space.md),
           childrenPadding: const EdgeInsets.fromLTRB(
             Space.md,

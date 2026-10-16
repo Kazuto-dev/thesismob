@@ -4,6 +4,9 @@ import 'package:material_ui/material_ui.dart';
 import 'package:thesismob/core/format.dart';
 import 'package:thesismob/data/google_sheets_client.dart';
 import 'package:thesismob/data/project.dart';
+import 'package:thesismob/materials/catalog.dart';
+import 'package:thesismob/data/estimate.dart';
+import 'package:thesismob/features/common/tiles.dart';
 import 'package:thesismob/features/projects/boq_grid.dart';
 import 'package:thesismob/state/google_account_controller.dart';
 
@@ -244,6 +247,41 @@ void main() {
       expect(billing.progress.values, everyElement(50));
       expect(find.textContaining('Billing 1 ·'), findsOneWidget);
       expect(find.textContaining('50% complete · net due'), findsOneWidget);
+    });
+
+    testWidgets('an item shows the unit price analysis of its work', (
+      tester,
+    ) async {
+      final spec = materialById('footing')!;
+      const inputs = {
+        'count': 4.0,
+        'length': 1.2,
+        'width': 1.2,
+        'thickness': 0.25,
+        'price': 240.0,
+      };
+      final footing = Estimate.fromResult(
+        materialId: 'footing',
+        result: spec.calculate(inputs, spec.initialChoices),
+        inputs: inputs,
+        choices: spec.initialChoices,
+      );
+      await pumpApp(
+        tester,
+        location: '/project',
+        size: const Size(400, 1400),
+        prefs: projectPrefs([footing]),
+      );
+      await tester.tap(find.byType(EstimateTile).first);
+      await tester.pumpAndSettle();
+      expect(find.text('Unit price analysis'), findsOneWidget);
+      await tester.tap(find.text('Structural concrete, footings'));
+      await tester.pumpAndSettle();
+      expect(find.text('Direct cost per m³'), findsOneWidget);
+      expect(
+        find.text('Reinforcing steel, cut, bent and tied in place'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('desktops show the budget beside the items', (tester) async {
