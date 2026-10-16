@@ -25,6 +25,7 @@ import 'checklist_card.dart';
 import 'checks_card.dart';
 import 'contract_tab.dart';
 import 'fee_dialogs.dart';
+import 'labour_region_picker.dart';
 import 'material_picker.dart';
 import 'project_actions.dart';
 import 'project_items.dart';
@@ -994,6 +995,14 @@ class _BudgetEditor extends StatelessWidget {
                   },
                 ),
                 children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: () => pickLabourRegion(context, project),
+                      icon: const Icon(Icons.place_outlined, size: 18),
+                      label: Text(context.tr('Rates for region')),
+                    ),
+                  ),
                   for (final key in DailyRates.defaults.keys) ...[
                     _NumberSetting(
                       label: context.tr(DailyRates.labels[key]!),

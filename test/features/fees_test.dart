@@ -84,4 +84,48 @@ void main() {
     await tester.pumpAndSettle();
     expect(projectsOf(tester).active.costs.general['professional'], 370000);
   });
+
+  testWidgets('a region fills in the labour rates', (tester) async {
+    await pumpApp(
+      tester,
+      location: '/project',
+      size: const Size(400, 1400),
+      prefs: projectPrefs(items),
+    );
+    await tester.tap(find.text('Budget'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Daily rates'));
+    await tester.tap(find.text('Daily rates'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Rates for region'));
+    await tester.tap(find.text('Rates for region'));
+    await tester.pumpAndSettle();
+
+    // The price book is set to Metro Manila, so NCR is chosen.
+    final ncr = find.ancestor(
+      of: find.text('Metro Manila (NCR)'),
+      matching: find.byType(ListTile),
+    );
+    expect(tester.widget<ListTile>(ncr).selected, isTrue);
+
+    final visayas = find.text('Central Visayas (VII)');
+    await tester.scrollUntilVisible(
+      visayas,
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(AlertDialog),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.tap(visayas);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Use these rates'));
+    await tester.pumpAndSettle();
+    final rates = projectsOf(tester).active.costs.dailyRates;
+    expect(rates['skilled'], 850);
+    expect(rates['helper'], 700);
+    expect(rates['mixer'], 1800, reason: 'equipment is kept');
+  });
 }

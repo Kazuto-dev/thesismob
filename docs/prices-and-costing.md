@@ -501,8 +501,92 @@ default rates below.
 Labour rates are for Metro Manila in late 2026: the minimum wage is ₱755 a
 day from 26 September 2026, and the rates add the employer's share of
 13th-month pay and SSS, PhilHealth and Pag-IBIG contributions, as DPWH's
-labour cost factor does. Provincial minimum wages are lower; enter what you
-pay under Budget → Daily rates. Equipment rates are typical day rentals.
+labour cost factor does. Provincial minimum wages are lower: **Rates for
+region** under Budget → Daily rates fills in another region's rates (see
+below), or enter what you pay. Equipment rates are typical day rentals.
+
+#### Daily rates by region
+
+**Rates for region** lists the 18 wage regions with their minimum wage
+and the market rates the app derives from it
+([`lib/data/labour_regions.dart`](../lib/data/labour_regions.dart)).
+Choosing one sets the foreman, skilled worker and helper rates of the
+project; equipment rates stay as they are. The picker starts on the
+region whose rates the project already pays; when several regions share
+those rates (CAR and Ilocos, for example) it prefers the price book's
+region. Only **Metro Manila and nearby** in the price book maps onto a
+wage region (NCR); its other regions are island groups, each with several
+wage regions.
+
+The method, the same one that gives the Metro Manila defaults:
+
+```
+rate = minimum wage × trade premium × labour cost factor, rounded to ₱50
+
+trade premium       helper 1.0, skilled worker 1.2, foreman 1.5
+labour cost factor  1.22 = 1 + 13th-month pay 8.3% + SSS employer share
+                    10% (plus EC) + PhilHealth 2.5% + Pag-IBIG about 1%
+```
+
+The premiums are our estimate of what the market pays above the minimum
+wage, set so that NCR's ₱755 gives the existing ₱900, ₱1,100 and ₱1,400.
+The contribution rates are the 2026 ones: SSS 15% of the monthly salary
+credit (employer 10%), PhilHealth 5% shared equally, Pag-IBIG 2% of up to
+₱10,000. Service incentive leave, overtime and meals are left out.
+
+Minimum daily wages for non-agriculture work, as of 16 October 2026: the
+highest band in each region, which covers its cities and larger
+establishments. Smaller towns, retail and service establishments with few
+workers and agriculture can be lower.
+
+| Region | Minimum | Wage order, effective | Next step set by the order | Foreman | Skilled | Helper |
+| --- | ---: | --- | --- | ---: | ---: | ---: |
+| NCR | ₱755 | NCR-28, 26 Sep 2026 | None. NCR-27's ₱780 from January 2027 is held up in court. | ₱1,400 | ₱1,100 | ₱900 |
+| CAR | ₱505 | CAR-24, 30 Dec 2025 | – | ₱900 | ₱750 | ₱600 |
+| I, Ilocos | ₱505 | RB I-24, 19 Nov 2025 (10 or more workers) | – | ₱900 | ₱750 | ₱600 |
+| II, Cagayan Valley | ₱500 | RTWPB II-24, 5 Nov 2025 | – | ₱900 | ₱750 | ₱600 |
+| III, Central Luzon | ₱600 | RBIII-26, 16 Apr 2026 (Aurora ₱560) | – | ₱1,100 | ₱900 | ₱750 |
+| IV-A, CALABARZON | ₱600 | IVA-22, component cities and growth areas, 5 Oct 2025 | IVA-23 adds up to ₱45 from 26 Oct 2026; its schedule by area was not yet published, so ₱645 is the top band if it gets the full ₱45 | ₱1,100 | ₱900 | ₱750 |
+| IV-B, MIMAROPA | ₱455 | RB-MIMAROPA-13, 1 Jan 2026 | – | ₱850 | ₱650 | ₱550 |
+| V, Bicol | ₱455 | RBV-23, 8 Apr 2026 | ₱480 on 1 Dec 2026 | ₱850 | ₱650 | ₱550 |
+| VI, Western Visayas | ₱550 | RBVI-29, 19 Nov 2025 (more than 10 workers) | – | ₱1,000 | ₱800 | ₱650 |
+| NIR, Negros Island | ₱550 | No wage board yet: Negros Occidental follows Region VI (₱550), Negros Oriental and Siquijor Region VII (Class B, ₱542) | – | ₱1,000 | ₱800 | ₱650 |
+| VII, Central Visayas | ₱582 | The ₱42 order affirmed by the NWPC in September 2026 (Class A, Metro Cebu; Class B ₱542), 14 Oct 2026 | – | ₱1,050 | ₱850 | ₱700 |
+| VIII, Eastern Visayas | ₱470 | RB VIII-25, 1 Jun 2026 | – | ₱850 | ₱700 | ₱550 |
+| IX, Zamboanga Peninsula | ₱464 | RIX-24, 1 Jun 2026 (10 or more workers) | – | ₱850 | ₱700 | ₱550 |
+| X, Northern Mindanao | ₱500 | RX-24, 1 May 2026 (Category I cities) | – | ₱900 | ₱750 | ₱600 |
+| XI, Davao | ₱540 | RB XI-24, 1 Sep 2026 | – | ₱1,000 | ₱800 | ₱650 |
+| XII, SOCCSKSARGEN | ₱460 | RB XII-25, 15 Dec 2025 | – | ₱850 | ₱650 | ₱550 |
+| XIII, Caraga | ₱475 | RXIII-20, 1 May 2026 | – | ₱850 | ₱700 | ₱600 |
+| BARMM | ₱436 | BARMM-06, July 2026 (Cotabato, Marawi and Lamitan cities; provinces ₱411) | ₱461 on 1 Dec 2026 | ₱800 | ₱650 | ₱550 |
+
+The rates use the minimum in force today, not the next step; raise them
+when a scheduled increase takes effect. The NWPC's own tables could not be
+opened from here, so the figures come from news reports of DOLE and wage
+board announcements and from wage-tracking sites, read in October 2026:
+[NCR-28 (Philstar)](https://philstarlife.com/news-and-views/933783-p60-wage-hike-in-ncr-takes-effect),
+[NCR-28 (Daily Tribune)](https://tribune.net.ph/2026/09/26/11-million-ncr-workers-to-get-p60-wage-hike),
+[CAR-24 (Emerhub)](https://emerhub.com/news/new-daily-minimum-wage-for-cordillera-region/),
+[Region I (WageIndicator)](https://wageindicator.org/ai/work/minimum-wage/countries/philippines/2601-i-ilocos/),
+[Region II (Manila Bulletin)](https://mb.com.ph/2025/10/21/dole-higher-wages-set-for-cagayan-valley-workers-kasambahay-starting-nov-5),
+[Region III (SunStar)](https://www.sunstar.com.ph/pampanga/another-p40-wage-hike-in-cl-starts-on-april-16),
+[CALABARZON IVA-23 (GMA)](https://www.gmanetwork.com/news/money/economy/1005445/dole-calabarzon-minimum-wage-up-by-p45-on-oct-26-2026/story/)
+and [IVA-22 (WageIndicator)](https://wageindicator.org/work/minimum-wage/countries/philippines/2613-iv-a-calabarzon),
+[MIMAROPA (WageIndicator)](https://wageindicator.org/ai/work/minimum-wage/countries/philippines/55357-iv-b-southwestern-tagalog-regionmimaropa/),
+[Bicol (WageIndicator)](https://wageindicator.org/work/minimum-wage/updates/2026/minimum-wage-revised-in-v-bicol-region-philippines-from-08-april-2026-april-07-2026),
+[Western Visayas (Visayan Daily Star)](https://visayandailystar.com/new-minimum-wage-rates-take-effect-in-western-visayas/),
+[Negros Island Region (SunStar)](https://www.sunstar.com.ph/manila/status-quo-remains-for-negros-island-region-wages),
+[Central Visayas (Philstar)](https://www.philstar.com/business/2026/09/28/2559493/p42-wage-hike-okd),
+[Eastern Visayas (WageIndicator)](https://wageindicator.org/ai/work/minimum-wage/updates/2026/minimum-wage-revised-in-viii-eastern-visayas-philippines-from-01-june-2026/),
+[Zamboanga Peninsula (WageIndicator)](https://wageindicator.org/ai/work/minimum-wage/updates/2026/minimum-wage-revised-in-ix-zamboanga-peninsula-philippines-from-01-june-2026-june-04-2026/),
+[Northern Mindanao (WageIndicator)](https://wageindicator.org/ai/work/minimum-wage/updates/2026/minimum-wage-revised-in-x-northern-mindanao-philippines-from-01-may-2026-may-01-2026/),
+[Davao (People Matters)](https://sea.peoplemattersglobal.com/news/compensation-benefits/davao-region-minimum-wage-workers-receive-second-tranche-of-pay-hike-51884),
+[SOCCSKSARGEN (Payroll Solutions)](https://www.payrollsolutions.ph/articles/146),
+[Caraga (Payroll Solutions)](https://www.payrollsolutions.ph/articles/170),
+[BARMM (Philstar)](https://www.philstar.com/nation/2026/07/17/2542779/barmm-workers-get-p50-daily-wage-increase/amp/),
+and for contributions [KAMI Workforce's 2026 tables](https://kamiworkforce.com/ph/blog/sss-philhealth-pagibig-contribution-tables-2026/).
+Check the regional wage board's order for your town before you rely on a
+figure.
 
 ### Unit price analysis
 
@@ -796,9 +880,10 @@ job would be ₱2,016,000.
 
 ### What the model leaves out
 
-- Regional labour cost factors. DO 125 s.2025 sets DPWH labour rates from
-  the regional minimum wage times a labour cost factor; the app uses one
-  set of rates per project, which you can change.
+- DPWH's own labour rates. DO 125 s.2025 sets them from the regional
+  minimum wage times a labour cost factor; the app's **Rates for region**
+  works the same way but with market premiums for skilled workers and
+  foremen, one set of rates per project.
 - Heavy equipment such as backhoes and cranes, and equipment for work the
   calculators don't measure.
 - Under DPWH rules, general requirements are not marked up with OCM or

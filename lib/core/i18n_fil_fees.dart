@@ -102,4 +102,19 @@ const filipinoFees = <String, String>{
       'Ilagay ang {amount} sa bayad sa propesyonal',
   'Professional fees set to {amount}.':
       'Itinakda sa {amount} ang bayad sa propesyonal.',
+
+  // Labour rates by region
+  'Rates for region': 'Rate ayon sa rehiyon',
+  'Market rates from each region\'s minimum wage for non-agriculture work, with 13th-month pay and SSS, PhilHealth and Pag-IBIG. Equipment rates stay as they are.':
+      'Rate sa merkado mula sa minimum na sahod ng bawat rehiyon para sa '
+      'hindi agrikultura, kasama ang 13th-month pay at SSS, PhilHealth at '
+      'Pag-IBIG. Hindi binabago ang rate ng kagamitan.',
+  'Use these rates': 'Gamitin ang mga rate na ito',
+  'Labour rates set for {region}.':
+      'Itinakda ang rate ng trabahador para sa {region}.',
+  'Minimum {wage} from {date} ({order})':
+      'Minimum na {wage} mula {date} ({order})',
+  'rises to {wage} on {date}': 'tataas sa {wage} sa {date}',
+  'Foreman {foreman}, skilled {skilled}, helper {helper}':
+      'Foreman {foreman}, skilled {skilled}, helper {helper}',
 };
