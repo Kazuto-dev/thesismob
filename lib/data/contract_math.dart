@@ -39,28 +39,14 @@ List<ContractLine> contractLines(Project project) {
       ));
     }
   }
-  final c = project.costs;
-  var n = 0;
-  for (final MapEntry(:key, :value) in generalRequirements.entries) {
-    final amount = c.general[key] ?? 0;
-    if (amount <= 0) continue;
+  for (final (i, g) in generalLines(project).indexed) {
     lines.add((
-      key: 'general|$key',
-      number: 'F.${++n}',
-      description: value,
-      quantity: 1,
-      unit: 'lot',
-      amount: _centavos(amount * factor),
-    ));
-  }
-  if (c.hauling > 0) {
-    lines.add((
-      key: 'general|hauling',
-      number: 'F.${++n}',
-      description: 'Hauling and delivery of materials',
-      quantity: 1,
-      unit: 'lot',
-      amount: _centavos(c.hauling * factor),
+      key: 'general|${g.key}',
+      number: 'F.${i + 1}',
+      description: g.description,
+      quantity: g.quantity,
+      unit: g.unit,
+      amount: _centavos(g.amount * factor),
     ));
   }
   // Put the rounding difference on the largest line, so the lines add up
@@ -247,6 +233,9 @@ int _phaseOf(String workKey, MaterialCategory? trade) {
 /// Working days in a week: Monday to Saturday.
 const workDaysPerWeek = 6;
 
+/// Working days in an average month of six-day weeks.
+const workDaysPerMonth = 26;
+
 /// One bar of the schedule: one trade's work in one phase.
 typedef ScheduleTask = ({
   int phase,
@@ -317,7 +306,8 @@ class Schedule {
       start += longest;
     }
     // General requirements run for the whole job.
-    final general = c.generalTotal + c.hauling;
+    final general =
+        c.generalTotal + c.hauling + c.monthlyTotal * start / workDaysPerMonth;
     return Schedule._(tasks, start, general);
   }
 
@@ -331,6 +321,9 @@ class Schedule {
   final double costs;
 
   double get weeks => days / workDaysPerWeek;
+
+  /// How long the job runs in months, for costs paid by the month.
+  double get months => days / workDaysPerMonth;
 
   /// The planned cumulative percent of the work's value done by the end
   /// of each week, for an S-curve.

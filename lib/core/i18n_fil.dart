@@ -376,9 +376,6 @@ const filipino = <String, String>{
   'Project signboard': 'Signboard ng proyekto',
   'Clean-up and disposal of debris': 'Paglilinis at pagtapon ng debris',
   'Suggest amounts': 'Magmungkahi ng halaga',
-  'Suggestions are about 4–6% of the direct cost in all, spread as small builders usually spend it.':
-      'Mga 4–6% ng direktang gastos ang kabuuang mungkahi, hinati gaya ng '
-      'karaniwang gastos ng maliliit na builder.',
   'Unit price analysis': 'Unit price analysis',
   'Each work item with its materials, crew and equipment. Tap one to see how its unit cost is built up.':
       'Bawat trabaho kasama ang materyales, grupo at kagamitan. I-tap para '

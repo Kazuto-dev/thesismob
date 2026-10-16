@@ -1,8 +1,34 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'i18n_fil.dart';
-
+import 'i18n_fil_bids.dart';
+import 'i18n_fil_contract.dart';
+import 'i18n_fil_costs.dart';
+import 'i18n_fil_exterior.dart';
+import 'i18n_fil_fees.dart';
 import 'i18n_fil_materials.dart';
+import 'i18n_fil_rooms.dart';
+import 'i18n_fil_structure.dart';
+
+/// Every Filipino table, looked up in order.
+const filipinoTables = [
+  filipino,
+  filipinoMaterials,
+  filipinoCosts,
+  filipinoStructure,
+  filipinoExterior,
+  filipinoContract,
+  filipinoFees,
+  filipinoBids,
+  filipinoRooms,
+];
+
+String? _filipino(String english) {
+  for (final table in filipinoTables) {
+    if (table[english] case final text?) return text;
+  }
+  return null;
+}
 
 /// The languages the app is shown in. Calculations, documents and the
 /// definitions behind each calculator stay in English.
@@ -46,8 +72,7 @@ String translate(
 ]) {
   var text = switch (language) {
     AppLanguage.english => english,
-    AppLanguage.filipino =>
-      filipino[english] ?? filipinoMaterials[english] ?? english,
+    AppLanguage.filipino => _filipino(english) ?? english,
   };
   for (final MapEntry(:key, :value) in args.entries) {
     text = text.replaceAll('{$key}', '$value');

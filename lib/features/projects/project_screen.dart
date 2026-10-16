@@ -1080,8 +1080,8 @@ class _BudgetEditor extends StatelessWidget {
             ),
             _Expander(
               title: context.tr('General requirements'),
-              subtitle: c.generalTotal > 0
-                  ? formatMoney(c.generalTotal)
+              subtitle: b.general > 0
+                  ? formatMoney(b.general)
                   : context.tr('Mobilization, temporary facilities, permits…'),
               children: [
                 for (final MapEntry(:key, :value)
@@ -1104,24 +1104,69 @@ class _BudgetEditor extends StatelessWidget {
                   ),
                   const SizedBox(height: Space.md),
                 ],
+                Text(
+                  b.months > 0
+                      ? context.tr('Per month, for {months} months', {
+                          'months': formatNumber(b.months),
+                        })
+                      : context.tr('Per month'),
+                  style: theme.textTheme.labelLarge,
+                ),
+                const SizedBox(height: Space.xs),
+                Text(
+                  context.tr(
+                    'These run as long as the job does: the schedule in the '
+                    'Contract tab sets the months, so more crews cost less here.',
+                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: Space.md),
+                for (final MapEntry(:key, :value)
+                    in timeRelatedRequirements.entries) ...[
+                  _NumberSetting(
+                    label: context.tr(value),
+                    prefix: '₱ ',
+                    suffix: context.tr('a month'),
+                    value: c.monthly[key],
+                    max: 10000000,
+                    clearable: true,
+                    onChanged: (v) {
+                      final monthly = {...c.monthly};
+                      if (v == null || v == 0) {
+                        monthly.remove(key);
+                      } else {
+                        monthly[key] = v;
+                      }
+                      update(c.copyWith(monthly: monthly));
+                    },
+                  ),
+                  const SizedBox(height: Space.md),
+                ],
                 Align(
                   alignment: Alignment.centerLeft,
                   child: TextButton.icon(
-                    onPressed: () => update(
-                      c.copyWith(
-                        general: suggestGeneralRequirements(
-                          b.materials + b.labour + b.tools + b.equipment,
+                    onPressed: () {
+                      final work =
+                          b.materials + b.labour + b.tools + b.equipment;
+                      update(
+                        c.copyWith(
+                          general: suggestGeneralRequirements(work),
+                          monthly: suggestMonthlyRequirements(work),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                     icon: const Icon(Icons.auto_fix_high, size: 18),
                     label: Text(context.tr('Suggest amounts')),
                   ),
                 ),
                 Text(
                   context.tr(
-                    'Suggestions are about 4–6% of the direct cost in all, '
-                    'spread as small builders usually spend it.',
+                    'Suggestions are about 4% of the direct cost once, plus '
+                    'a share of an engineer, a watchman, utilities and '
+                    'transport each month, as small builders usually spend '
+                    'it. Professional fees are the owner\'s and left blank.',
                   ),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,

@@ -121,23 +121,18 @@ List<BoqRow> workBoqRows(Project project) {
       ),
     );
   }
-  final c = project.costs;
-  final general = [
-    for (final MapEntry(:key, :value) in generalRequirements.entries)
-      if ((c.general[key] ?? 0) > 0) (value, c.general[key]!),
-    if (c.hauling > 0) ('Hauling and delivery of materials', c.hauling),
-  ];
+  final general = generalLines(project);
   if (general.isNotEmpty) {
     rows.add(_row('F', 'GENERAL REQUIREMENTS', heading: true));
-    for (final (i, (label, amount)) in general.indexed) {
+    for (final (i, g) in general.indexed) {
       rows.add(
         _row(
           'F.${i + 1}',
-          label,
-          quantity: 1,
-          unit: 'lot',
-          unitPrice: amount,
-          amount: amount,
+          g.description,
+          quantity: g.quantity,
+          unit: g.unit,
+          unitPrice: g.unitPrice,
+          amount: g.amount,
         ),
       );
     }
@@ -145,7 +140,10 @@ List<BoqRow> workBoqRows(Project project) {
       _row(
         '',
         'Subtotal, general requirements',
-        amount: general.fold<double>(0, (s, g) => s + g.$2),
+        amount:
+            (general.fold<double>(0, (s, g) => s + g.amount) * 100)
+                .roundToDouble() /
+            100,
         subtotal: true,
       ),
     );

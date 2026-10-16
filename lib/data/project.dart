@@ -5,6 +5,7 @@ import '../materials/items.dart';
 import '../materials/material_spec.dart';
 import '../materials/work_items.dart';
 import 'contract.dart';
+import 'contract_math.dart';
 import 'estimate.dart';
 import 'unit_prices.dart';
 
@@ -20,22 +21,55 @@ const generalRequirements = <String, String>{
   'mobilization': 'Mobilization and demobilization',
   'temporary': 'Temporary facilities: bodega, toilet, power and water',
   'permits': 'Permits, clearances and fees',
+  'professional': 'Professional fees: plans, design and signing',
+  'insurance': 'Contractor\'s all-risk insurance and bonds',
   'safety': 'Occupational safety and health',
   'signboard': 'Project signboard',
   'cleanup': 'Clean-up and disposal of debris',
 };
 
-/// Typical general requirements for a small building with [direct] cost
-/// of work, rounded to ₱500: about 5% in all plus a signboard.
+/// General requirements that cost so much a month for as long as the job
+/// runs, so a longer schedule costs more.
+const timeRelatedRequirements = <String, String>{
+  'supervision': 'Site engineer and supervision',
+  'security': 'Watchman or security guard',
+  'utilities': 'Power and water bills',
+  'transport': 'Transport, phone and site office supplies',
+};
+
+double _toNearest500(double v) => (v / 500).ceilToDouble() * 500;
+
+/// Typical one-time general requirements for a small building with
+/// [direct] cost of work, rounded to ₱500: about 4% in all plus a
+/// signboard. Professional fees are the owner's and left out.
 Map<String, double> suggestGeneralRequirements(double direct) {
-  double share(double pct) => ((direct * pct / 100) / 500).ceilToDouble() * 500;
+  double share(double pct) => _toNearest500(direct * pct / 100);
   return {
-    'mobilization': share(1),
-    'temporary': share(1.5),
+    'mobilization': share(0.75),
+    'temporary': share(1),
     'permits': share(1),
-    'safety': share(1),
+    'insurance': share(0.3),
+    'safety': share(0.5),
     'signboard': direct > 0 ? 5000 : 0,
     'cleanup': share(0.5),
+  }..removeWhere((_, v) => v <= 0);
+}
+
+/// Typical monthly site costs for a job with [direct] cost of work: a
+/// share of an engineer's time on small jobs and a full-time one on large
+/// ones, a watchman, utilities and transport.
+Map<String, double> suggestMonthlyRequirements(double direct) {
+  if (direct <= 0) return const {};
+  final scale = switch (direct) {
+    < 3000000 => 1.0,
+    < 10000000 => 2.0,
+    _ => 3.5,
+  };
+  return {
+    'supervision': _toNearest500(8000 * scale),
+    'security': direct < 1000000 ? 0 : _toNearest500(8000 * scale.clamp(1, 2)),
+    'utilities': _toNearest500(2000 * scale),
+    'transport': _toNearest500(2000 * scale),
   }..removeWhere((_, v) => v <= 0);
 }
 
@@ -56,6 +90,7 @@ class CostSettings {
     this.rates = const {},
     this.productivityPct = 100,
     this.general = const {},
+    this.monthly = const {},
     this.escalationPct = 0,
   });
 
@@ -93,6 +128,7 @@ class CostSettings {
       rates: from?.rates ?? const {},
       productivityPct: from?.productivityPct ?? 100,
       general: from?.general ?? const {},
+      monthly: from?.monthly ?? const {},
       escalationPct: from?.escalationPct ?? 0,
     );
   }
@@ -116,6 +152,7 @@ class CostSettings {
     rates: job.rates,
     productivityPct: job.productivityPct,
     general: job.general,
+    monthly: job.monthly,
     escalationPct: job.escalationPct,
   );
 
@@ -143,6 +180,7 @@ class CostSettings {
       rates: amounts('rates'),
       productivityPct: pct('productivityPct', 100),
       general: amounts('general'),
+      monthly: amounts('monthly'),
       escalationPct: pct('escalationPct', 0),
       labourPct: pct('labourPct', 40),
       labourByTrade: {
@@ -195,6 +233,10 @@ class CostSettings {
   /// General requirements in pesos, by [generalRequirements] key.
   final Map<String, double> general;
 
+  /// Time-related general requirements in pesos a month, by
+  /// [timeRelatedRequirements] key.
+  final Map<String, double> monthly;
+
   /// Expected rise in prices before the work is bought, as a percentage of
   /// the direct cost.
   final double escalationPct;
@@ -202,8 +244,11 @@ class CostSettings {
   /// Every daily rate, the project's own where set.
   Map<String, double> get dailyRates => {...DailyRates.defaults, ...rates};
 
-  /// The general requirements together.
+  /// The one-time general requirements together.
   double get generalTotal => general.values.fold(0, (sum, v) => sum + v);
+
+  /// The time-related general requirements for one month.
+  double get monthlyTotal => monthly.values.fold(0, (sum, v) => sum + v);
 
   double labourFor(MaterialCategory? trade) =>
       (trade == null ? null : labourByTrade[trade.name]) ?? labourPct;
@@ -223,6 +268,7 @@ class CostSettings {
     Map<String, double>? rates,
     double? productivityPct,
     Map<String, double>? general,
+    Map<String, double>? monthly,
     double? escalationPct,
   }) => CostSettings(
     labourPct: labourPct ?? this.labourPct,
@@ -237,6 +283,7 @@ class CostSettings {
     rates: rates ?? this.rates,
     productivityPct: productivityPct ?? this.productivityPct,
     general: general ?? this.general,
+    monthly: monthly ?? this.monthly,
     escalationPct: escalationPct ?? this.escalationPct,
   );
 
@@ -253,6 +300,7 @@ class CostSettings {
     if (rates.isNotEmpty) 'rates': rates,
     if (productivityPct != 100) 'productivityPct': productivityPct,
     if (general.isNotEmpty) 'general': general,
+    if (monthly.isNotEmpty) 'monthly': monthly,
     if (escalationPct != 0) 'escalationPct': escalationPct,
   };
 
@@ -271,6 +319,7 @@ class CostSettings {
       mapEquals(other.rates, rates) &&
       other.productivityPct == productivityPct &&
       mapEquals(other.general, general) &&
+      mapEquals(other.monthly, monthly) &&
       other.escalationPct == escalationPct;
 
   @override
@@ -287,6 +336,7 @@ class CostSettings {
     Object.hashAllUnordered(rates.entries.map((e) => e.toString())),
     productivityPct,
     Object.hashAllUnordered(general.entries.map((e) => e.toString())),
+    Object.hashAllUnordered(monthly.entries.map((e) => e.toString())),
     escalationPct,
   );
 }
@@ -302,6 +352,8 @@ class CostBreakdown {
     required this.hauling,
     this.equipment = 0,
     this.general = 0,
+    this.timeRelated = 0,
+    this.months = 0,
     this.crewDays = 0,
     this.escalation = 0,
     required this.contingency,
@@ -310,7 +362,13 @@ class CostBreakdown {
     required this.vat,
   });
 
-  factory CostBreakdown.of(List<Estimate> items, CostSettings s) {
+  /// [months] is how long the job runs, for the time-related general
+  /// requirements.
+  factory CostBreakdown.of(
+    List<Estimate> items,
+    CostSettings s, {
+    double months = 0,
+  }) {
     final byTrade = <MaterialCategory?, double>{};
     for (final e in items) {
       final trade = materialById(e.materialId)?.category;
@@ -331,7 +389,8 @@ class CostBreakdown {
     final labour = _centavos(labourSum);
     final equipment = _centavos(equipmentSum);
     final tools = _centavos(labour * s.toolsPct / 100);
-    final general = _centavos(s.generalTotal);
+    final timeRelated = _centavos(s.monthlyTotal * months);
+    final general = _centavos(s.generalTotal + timeRelated);
     final direct = materials + labour + tools + equipment + s.hauling + general;
     return CostBreakdown(
       materials: materials,
@@ -342,6 +401,8 @@ class CostBreakdown {
       tools: tools,
       equipment: equipment,
       general: general,
+      timeRelated: timeRelated,
+      months: months,
       crewDays: days,
       hauling: _centavos(s.hauling),
       escalation: _centavos(direct * s.escalationPct / 100),
@@ -371,8 +432,15 @@ class CostBreakdown {
   /// Rented equipment such as concrete mixers, from the crews.
   final double equipment;
 
-  /// General requirements: mobilization, temporary facilities and the like.
+  /// General requirements: mobilization, temporary facilities and the
+  /// like, the time-related ones included.
   final double general;
+
+  /// The part of [general] that costs so much a month.
+  final double timeRelated;
+
+  /// How long the job runs, in months, for [timeRelated].
+  final double months;
 
   /// Crew-days of work, when labour is priced by crews.
   final double crewDays;
@@ -497,6 +565,60 @@ List<MaterialLine> consolidate(List<Estimate> items) {
   return result;
 }
 
+// A project never changes, so its schedule and costs are worked out once.
+final _months = Expando<double>();
+final _breakdowns = Expando<CostBreakdown>();
+
+/// A line of general requirements in a bill of quantities: a lump sum, a
+/// monthly cost over the job's months, or hauling.
+typedef GeneralLine = ({
+  String key,
+  String description,
+  double quantity,
+  String unit,
+  double unitPrice,
+  double amount,
+});
+
+/// The project's general requirements, line by line, adding up to its
+/// [CostBreakdown.general] plus hauling.
+List<GeneralLine> generalLines(Project project) {
+  final c = project.costs;
+  final months = project.breakdown.months;
+  return [
+    for (final MapEntry(:key, :value) in generalRequirements.entries)
+      if ((c.general[key] ?? 0) > 0)
+        (
+          key: key,
+          description: value,
+          quantity: 1,
+          unit: 'lot',
+          unitPrice: c.general[key]!,
+          amount: _centavos(c.general[key]!),
+        ),
+    if (months > 0)
+      for (final MapEntry(:key, :value) in timeRelatedRequirements.entries)
+        if ((c.monthly[key] ?? 0) > 0)
+          (
+            key: key,
+            description: value,
+            quantity: (months * 100).roundToDouble() / 100,
+            unit: 'month',
+            unitPrice: c.monthly[key]!,
+            amount: _centavos(c.monthly[key]! * months),
+          ),
+    if (c.hauling > 0)
+      (
+        key: 'hauling',
+        description: 'Hauling and delivery of materials',
+        quantity: 1,
+        unit: 'lot',
+        unitPrice: c.hauling,
+        amount: _centavos(c.hauling),
+      ),
+  ];
+}
+
 /// A job being estimated: a house, a renovation, a client's building.
 @immutable
 class Project {
@@ -614,7 +736,12 @@ class Project {
   double get materialsTotal =>
       _centavos(items.fold<double>(0, (sum, e) => sum + e.grandTotal));
 
-  CostBreakdown get breakdown => CostBreakdown.of(items, costs);
+  /// How long the job runs, in months, from its schedule.
+  double get months =>
+      _months[this] ??= (Schedule.of(this).months * 100).roundToDouble() / 100;
+
+  CostBreakdown get breakdown =>
+      _breakdowns[this] ??= CostBreakdown.of(items, costs, months: months);
 
   List<MaterialLine> get materials => consolidate(items);
 

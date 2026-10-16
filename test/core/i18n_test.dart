@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:thesismob/core/i18n.dart';
-import 'package:thesismob/core/i18n_fil.dart';
 import 'package:thesismob/core/i18n_fil_materials.dart';
 import 'package:thesismob/materials/catalog.dart';
 import 'package:thesismob/materials/material_spec.dart';
@@ -12,8 +11,7 @@ void main() {
       for (final m in placeholder.allMatches(s)) m[0]!,
     };
     for (final MapEntry(:key, :value) in {
-      ...filipino,
-      ...filipinoMaterials,
+      for (final table in filipinoTables) ...table,
     }.entries) {
       expect(names(value), names(key), reason: key);
     }
