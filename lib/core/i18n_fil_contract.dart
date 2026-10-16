@@ -52,4 +52,24 @@ const filipinoContract = <String, String>{
   '1 crew': '1 grupo',
   '{n} crews': '{n} grupo',
   'critical': 'kritikal',
+
+  // Withholding taxes
+  'Client': 'Kliyente',
+  'Individual or household': 'Indibidwal o pamilya',
+  'Private company': 'Pribadong kumpanya',
+  'Government': 'Gobyerno',
+  'Client pays within': 'Magbabayad ang kliyente sa loob ng',
+  'The client withholds {pct}% creditable income tax from each billing, before VAT, and gives you BIR Form 2307 to credit it.':
+      'Ikakaltas ng kliyente ang {pct}% creditable income tax sa bawat '
+      'billing, bago ang VAT, at bibigyan kayo ng BIR Form 2307 para '
+      'maikredito ito.',
+  'The client withholds {pct}% creditable income tax and {tax}% {name} from each billing, before VAT, and gives you BIR Form 2307 to credit them.':
+      'Ikakaltas ng kliyente ang {pct}% creditable income tax at {tax}% '
+      '{name} sa bawat billing, bago ang VAT, at bibigyan kayo ng BIR Form '
+      '2307 para maikredito ang mga ito.',
+  'VAT': 'VAT',
+  'percentage tax': 'percentage tax',
+  '{pct}% complete · net due {amount} · you receive {received} after {taxes} withheld':
+      '{pct}% tapos · babayaran {amount} · matatanggap ninyo ang {received} '
+      'matapos ikaltas ang {taxes}',
 };

@@ -207,6 +207,43 @@ class _QuotationCard extends StatelessWidget {
             onChanged: (v) => terms((x) => x.copyWith(retentionPct: v)),
           ),
         ),
+        pair(
+          DropdownButtonFormField<ClientType>(
+            initialValue: t.client,
+            isExpanded: true,
+            decoration: InputDecoration(
+              labelText: context.tr('Client'),
+              isDense: true,
+            ),
+            items: [
+              for (final c in ClientType.values)
+                DropdownMenuItem(
+                  value: c,
+                  child: Text(
+                    context.tr(c.label),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+            onChanged: (c) {
+              if (c != null) terms((x) => x.copyWith(client: c));
+            },
+          ),
+          _NumberField(
+            label: context.tr('Client pays within'),
+            suffix: context.tr('days'),
+            value: t.paymentDays,
+            max: 180,
+            onChanged: (v) => terms((x) => x.copyWith(paymentDays: v)),
+          ),
+        ),
+        if (t.client != ClientType.individual)
+          Text(
+            _withholdingNote(context, project),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         _TextArea(
           label: context.tr('Inclusions'),
           hint: context.tr('One per line, e.g. Supply of materials and labour'),
@@ -243,6 +280,28 @@ class _QuotationCard extends StatelessWidget {
       ],
     );
   }
+}
+
+/// What [project]'s client withholds from each billing, in a sentence.
+String _withholdingNote(BuildContext context, Project project) {
+  final rates = withholding(project);
+  if (rates.businessTax <= 0) {
+    return context.tr(
+      'The client withholds {pct}% creditable income tax from each billing, '
+      'before VAT, and gives you BIR Form 2307 to credit it.',
+      {'pct': formatNumber(rates.incomeTax)},
+    );
+  }
+  return context.tr(
+    'The client withholds {pct}% creditable income tax and {tax}% {name} '
+    'from each billing, before VAT, and gives you BIR Form 2307 to credit '
+    'them.',
+    {
+      'pct': formatNumber(rates.incomeTax),
+      'tax': formatNumber(rates.businessTax),
+      'name': context.tr(businessTaxName(project)),
+    },
+  );
 }
 
 /// Multi-line text that saves as the user types.
@@ -843,10 +902,25 @@ class _BillingCard extends StatelessWidget {
                 }),
               ),
               subtitle: Text(
-                context.tr('{pct}% complete · net due {amount}', {
-                  'pct': formatNumber((s.percentComplete * 10).round() / 10),
-                  'amount': formatMoney(s.netDue),
-                }),
+                s.withholding > 0
+                    ? context.tr(
+                        '{pct}% complete · net due {amount} · you receive '
+                        '{received} after {taxes} withheld',
+                        {
+                          'pct': formatNumber(
+                            (s.percentComplete * 10).round() / 10,
+                          ),
+                          'amount': formatMoney(s.netDue),
+                          'received': formatMoney(s.received),
+                          'taxes': formatMoney(s.withholding),
+                        },
+                      )
+                    : context.tr('{pct}% complete · net due {amount}', {
+                        'pct': formatNumber(
+                          (s.percentComplete * 10).round() / 10,
+                        ),
+                        'amount': formatMoney(s.netDue),
+                      }),
                 style: tabular(theme.textTheme.bodySmall),
               ),
               trailing: Wrap(

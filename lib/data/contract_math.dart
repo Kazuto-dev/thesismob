@@ -87,7 +87,8 @@ double contractPrice(Project project) =>
     _centavos(project.breakdown.total + project.contract.variationsTotal);
 
 /// One progress billing worked out: what was accomplished, less what was
-/// billed before, the downpayment recouped and the retention held.
+/// billed before, the downpayment recouped and the retention held, and
+/// what the contractor receives once the client withholds its taxes.
 typedef BillingStatement = ({
   int number,
   DateTime date,
@@ -98,6 +99,20 @@ typedef BillingStatement = ({
   double recoupment,
   double retention,
   double netDue,
+
+  /// Creditable income tax the client withholds, on this billing before
+  /// VAT.
+  double incomeTax,
+
+  /// VAT, or percentage tax, the government withholds, on this billing
+  /// before VAT.
+  double businessTax,
+
+  /// All the taxes withheld: [incomeTax] and [businessTax].
+  double withholding,
+
+  /// What the contractor receives: [netDue] less [withholding].
+  double received,
 });
 
 /// The value of the work done by [billing], over [lines].
@@ -113,6 +128,8 @@ List<BillingStatement> billingStatements(Project project) {
   final lines = contractLines(project);
   final price = contractPrice(project);
   final terms = project.contract.terms;
+  final rates = withholding(project);
+  final vat = project.costs.vatPct;
   var previous = 0.0;
   final out = <BillingStatement>[];
   for (final (i, b) in project.contract.billings.indexed) {
@@ -120,6 +137,10 @@ List<BillingStatement> billingStatements(Project project) {
     final period = _centavos(toDate - previous);
     final recoupment = _centavos(period * terms.downpaymentPct / 100);
     final retention = _centavos(period * terms.retentionPct / 100);
+    final netDue = _centavos(period - recoupment - retention);
+    final base = period / (1 + vat / 100);
+    final incomeTax = _centavos(base * rates.incomeTax / 100);
+    final businessTax = _centavos(base * rates.businessTax / 100);
     out.add((
       number: i + 1,
       date: b.date,
@@ -129,12 +150,28 @@ List<BillingStatement> billingStatements(Project project) {
       thisPeriod: period,
       recoupment: recoupment,
       retention: retention,
-      netDue: _centavos(period - recoupment - retention),
+      netDue: netDue,
+      incomeTax: incomeTax,
+      businessTax: businessTax,
+      withholding: _centavos(incomeTax + businessTax),
+      received: _centavos(netDue - incomeTax - businessTax),
     ));
     previous = toDate;
   }
   return out;
 }
+
+/// The taxes [project]'s client withholds from each billing, by the
+/// client type in its quotation terms and whether its price carries VAT.
+WithholdingRates withholding(Project project) => withholdingRates(
+  project.contract.terms.client,
+  vatRegistered: project.costs.vatPct > 0,
+);
+
+/// The name of the business tax [project]'s client withholds: VAT from a
+/// VAT-registered contractor, percentage tax from one that is not.
+String businessTaxName(Project project) =>
+    project.costs.vatPct > 0 ? 'VAT' : 'percentage tax';
 
 /// The downpayment billed on signing.
 double downpayment(Project project) => _centavos(

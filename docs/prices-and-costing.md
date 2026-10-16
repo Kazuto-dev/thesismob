@@ -693,7 +693,9 @@ follow as VO-1, VO-2…
   amount in words ("One Million … Pesos Only");
 - the payment terms: downpayment (30% by default, recouped from billings),
   progress billings, retention (10% by default, released on acceptance or
-  at the end of the warranty) and the warranty (12 months by default);
+  at the end of the warranty), the warranty (12 months by default), the
+  days the client takes to pay (30 by default) and, for a company or
+  government client, the taxes it withholds (see below);
 - the schedule by phase, and the inclusions and exclusions as typed
   (**Use common exclusions** fills in permits and fees, utility
   connections, furniture and unlisted work);
@@ -835,6 +837,39 @@ by 100% complete it has all been recouped. **Download billing** makes a PDF
 with the statement, the amount due in words and each line's previous and
 current percent. New billings start from the last one's percentages; the
 "All 25/50/75/100%" buttons raise every line to at least that.
+
+**Taxes withheld.** Clients in business and government withhold taxes
+from what they pay a contractor and give a BIR Form 2307 so the contractor
+can credit them against its own taxes. The quotation terms set the
+**client**:
+
+| Client | Withheld from each billing, on the amount before VAT |
+| --- | --- |
+| Individual or household | Nothing: a person not in business is not a withholding agent |
+| Private company | 2% creditable income tax (expanded withholding tax on contractors) |
+| Government | 2% creditable income tax, plus 5% VAT from a VAT-registered contractor or 3% percentage tax from one that is not |
+
+```
+before VAT   = this billing ÷ (1 + VAT %)
+income tax   = before VAT × 2%
+business tax = before VAT × 5% VAT, or × 3% percentage tax (government only)
+received     = amount due − income tax − business tax
+```
+
+Sources: RR 2-98 sec. 2.57.2(E), as amended by RR 11-2018, for the 2% on
+payments to general engineering, building and specialty contractors; NIRC
+sec. 114(C), as amended by the TRAIN law (RA 10963, sec. 37), for the 5%
+VAT withheld by government, which since 1 January 2021 is **creditable**
+rather than final (RMC 36-2021); and NIRC sec. 116 for the 3% percentage
+tax, back at 3%
+since 1 July 2023 after CREATE's temporary 1%. The Ease of Paying Taxes
+Act (RA 11976, RR 3-2024 and RR 4-2024) changed when VAT on services is
+due, to the invoice rather than the collection, but not these rates.
+Taxes are withheld on the work billed, so the downpayment is paid in full
+and the recouped part is taxed when billed; a client that withholds on
+the downpayment instead takes the same total earlier. The billing PDF
+lists each tax and the **net amount received**, and the billing list in
+the app shows it.
 
 ### Variation orders
 

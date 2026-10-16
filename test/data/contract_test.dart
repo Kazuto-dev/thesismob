@@ -160,6 +160,52 @@ void main() {
     expect(faster.days, lessThan(schedule.days));
   });
 
+  test('billings show the taxes the client withholds', () {
+    final base = house();
+    final keys = [for (final l in contractLines(base)) l.key];
+    Project withClient(ClientType client, {double vat = 12}) => base.copyWith(
+      costs: base.costs.copyWith(vatPct: vat),
+      contract: ContractData(
+        terms: QuoteTerms(client: client),
+        billings: [
+          Billing(
+            id: 'b1',
+            date: DateTime(2026, 12, 1),
+            progress: {for (final k in keys) k: 50},
+          ),
+        ],
+      ),
+    );
+
+    // A homeowner withholds nothing.
+    final home = billingStatements(withClient(ClientType.individual)).single;
+    expect(home.withholding, 0);
+    expect(home.received, home.netDue);
+
+    // A company withholds 2% of the billing before VAT.
+    final company = billingStatements(withClient(ClientType.company)).single;
+    final beforeVat = company.thisPeriod / 1.12;
+    expect(company.incomeTax, closeTo(beforeVat * 0.02, 0.01));
+    expect(company.businessTax, 0);
+    expect(company.received, closeTo(company.netDue - company.incomeTax, 0.01));
+
+    // Government also withholds 5% VAT, or 3% percentage tax from a
+    // contractor without VAT.
+    final gov = billingStatements(withClient(ClientType.government)).single;
+    expect(gov.incomeTax, closeTo(beforeVat * 0.02, 0.01));
+    expect(gov.businessTax, closeTo(beforeVat * 0.05, 0.01));
+    expect(gov.withholding, closeTo(gov.incomeTax + gov.businessTax, 0.001));
+    expect(gov.received, closeTo(gov.netDue - gov.withholding, 0.01));
+    final nonVat = withClient(ClientType.government, vat: 0);
+    final s = billingStatements(nonVat).single;
+    expect(s.businessTax, closeTo(s.thisPeriod * 0.03, 0.01));
+    expect(businessTaxName(nonVat), 'percentage tax');
+    expect(withholdingRates(ClientType.government, vatRegistered: true), (
+      incomeTax: 2.0,
+      businessTax: 5.0,
+    ));
+  });
+
   test('working days skip Sundays', () {
     // Saturday 7 November 2026 + 2 working days = Tuesday the 10th.
     expect(

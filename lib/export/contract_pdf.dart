@@ -368,6 +368,14 @@ Future<Uint8List> quotationPdf(
           if (t.warrantyMonths > 0)
             'Workmanship warranty of ${formatNumber(t.warrantyMonths)} months '
                 'from turnover.',
+          'Payment within ${formatNumber(t.paymentDays)} days of each '
+              'billing.',
+          if (withholding(project) case final r when r.incomeTax > 0)
+            'The client withholds ${formatNumber(r.incomeTax)}% creditable '
+                'income tax'
+                '${r.businessTax > 0 ? ' and ${formatNumber(r.businessTax)}% ${businessTaxName(project)}' : ''}'
+                ' from each payment, on the amount before VAT, and issues '
+                'BIR Form 2307 for it.',
         ])
           pw.Bullet(
             text: _pdfText(term),
@@ -540,6 +548,7 @@ Future<Uint8List> billingPdf(
   final t = project.contract.terms;
   final original = project.breakdown.total;
   final variations = project.contract.variationsTotal;
+  final rates = withholding(project);
 
   pw.TableRow money(String label, double amount, {bool strong = false}) =>
       pw.TableRow(
@@ -601,6 +610,20 @@ Future<Uint8List> billingPdf(
                 -s.retention,
               ),
             money('Amount due', s.netDue, strong: true),
+            if (s.incomeTax > 0)
+              money(
+                'Less creditable income tax withheld, '
+                '${formatNumber(rates.incomeTax)}%',
+                -s.incomeTax,
+              ),
+            if (s.businessTax > 0)
+              money(
+                'Less ${businessTaxName(project)} withheld, '
+                '${formatNumber(rates.businessTax)}%',
+                -s.businessTax,
+              ),
+            if (s.withholding > 0)
+              money('Net amount received', s.received, strong: true),
           ],
         ),
         pw.SizedBox(height: 4),
@@ -608,6 +631,15 @@ Future<Uint8List> billingPdf(
           _pdfText(pesosInWords(s.netDue)),
           style: pw.TextStyle(fontSize: 9, fontStyle: pw.FontStyle.italic),
         ),
+        if (s.withholding > 0) ...[
+          pw.SizedBox(height: 4),
+          _small(
+            'Taxes are withheld on this billing before '
+            '${project.costs.vatPct > 0 ? 'VAT' : 'tax'} '
+            '(${formatMoney(s.thisPeriod / (1 + project.costs.vatPct / 100))}). '
+            'Please issue BIR Form 2307 for the amounts withheld.',
+          ),
+        ],
         _heading('Accomplishment'),
         pw.Table(
           columnWidths: const {
