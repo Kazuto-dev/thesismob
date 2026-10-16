@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../core/format.dart';
 import '../data/estimate.dart';
+import '../data/price_quote.dart';
 import '../data/project.dart';
 import '../data/boq.dart';
 
@@ -350,8 +351,11 @@ String _csvCell(Object? value) {
 }
 
 /// The project as CSV for Excel or Google Sheets: bill of quantities by
-/// work item, unit price analyses, materials list and cost summary.
-String projectCsv(Project project) {
+/// work item, unit price analyses, materials list and cost summary. The
+/// materials list names the [suppliers] of the user's prices, by item key.
+String projectCsv(Project project, {Map<String, String> suppliers = const {}}) {
+  final materials = project.materials;
+  final bySupplier = materials.any((m) => suppliers.containsKey(m.key));
   final lines = <List<Object?>>[
     ['Project', project.name],
     if (project.client.isNotEmpty) ['Client', project.client],
@@ -383,9 +387,18 @@ String projectCsv(Project project) {
       'Unit',
       'Unit cost (PHP)',
       'Amount (PHP)',
+      if (bySupplier) 'Supplier',
     ],
-    for (final m in project.materials)
-      [m.group.label, m.label, m.quantity, m.unit, m.unitPrice, m.amount],
+    for (final m in materials)
+      [
+        m.group.label,
+        m.label,
+        m.quantity,
+        m.unit,
+        m.unitPrice,
+        m.amount,
+        if (bySupplier) suppliers[m.key] ?? '',
+      ],
     [],
     ['COST SUMMARY'],
     for (final (label, amount, strong: _) in costLines(project))
@@ -428,17 +441,23 @@ String projectText(Project project) {
   return b.toString();
 }
 
-/// Everything the user has made, for a backup file.
+/// Everything the user has made, for a backup file. [quotes] are the
+/// suppliers and quote dates of the user's prices.
 String backupJson({
   required List<Project> projects,
   required Map<String, double> prices,
   required List<Estimate> history,
+  Map<String, PriceQuote> quotes = const {},
 }) => const JsonEncoder.withIndent(' ').convert({
   'app': 'BuildQuantify',
   'version': 1,
   'exportedAt': DateTime.now().toIso8601String(),
   'projects': [for (final p in projects) p.toJson()],
   'prices': prices,
+  if (quotes.isNotEmpty)
+    'priceQuotes': {
+      for (final MapEntry(:key, :value) in quotes.entries) key: value.toJson(),
+    },
   'history': [for (final e in history) e.toJson()],
 });
 
@@ -446,6 +465,7 @@ String backupJson({
 typedef Backup = ({
   List<Project> projects,
   Map<String, double> prices,
+  Map<String, PriceQuote> quotes,
   List<Estimate> history,
 });
 
@@ -490,6 +510,11 @@ Backup parseBackup(String text) {
             e.value is num &&
             (e.value as num) >= 0)
           e.key as String: (e.value as num).toDouble(),
+    },
+    quotes: {
+      for (final e in (json['priceQuotes'] as Map? ?? const {}).entries)
+        if (PriceQuote.fromJson(e.value) case final q? when e.key is String)
+          e.key as String: q,
     },
     history: history,
   );

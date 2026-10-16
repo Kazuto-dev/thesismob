@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../materials/catalog.dart';
 import '../materials/material_spec.dart';
 import '../materials/work_items.dart';
+import 'price_quote.dart';
 import 'project.dart';
 import 'unit_prices.dart';
 
@@ -76,8 +77,13 @@ String _peso(double v) {
 /// Checks a project's numbers against what is usual for houses, to catch
 /// a wrong input before the estimate goes out: cost per m², steel per m³
 /// of concrete, formwork, the labour share, missing prices and old
-/// prices.
-List<ProjectCheck> checkProject(Project project, {DateTime? today}) {
+/// prices. A line priced at one of the user's [datedPrices] is as old as
+/// its quote; other lines are as old as their estimate.
+List<ProjectCheck> checkProject(
+  Project project, {
+  DateTime? today,
+  Map<String, DatedPrice> datedPrices = const {},
+}) {
   final checks = <ProjectCheck>[];
   if (project.items.isEmpty) return checks;
   final b = project.breakdown;
@@ -188,11 +194,24 @@ List<ProjectCheck> checkProject(Project project, {DateTime? today}) {
     );
   }
 
-  // Old prices.
-  final oldest = project.items
-      .map((e) => e.createdAt)
-      .where((d) => d.year > 2000)
-      .fold<DateTime?>(null, (a, d) => a == null || d.isBefore(a) ? d : a);
+  // Old prices, by the quote date when the line uses the quoted price.
+  DateTime pricedOn(String? key, double price, DateTime made) {
+    final quoted = key == null ? null : datedPrices[key];
+    return quoted != null && (quoted.price - price).abs() < 0.005
+        ? quoted.date
+        : made;
+  }
+
+  final oldest =
+      [
+            for (final e in project.items) ...[
+              pricedOn(e.itemKey, e.unitPrice, e.createdAt),
+              for (final l in e.companions)
+                pricedOn(l.itemKey, l.unitPrice, e.createdAt),
+            ],
+          ]
+          .where((d) => d.year > 2000)
+          .fold<DateTime?>(null, (a, d) => a == null || d.isBefore(a) ? d : a);
   if (oldest != null) {
     final months = (now.difference(oldest).inDays / 30.4).floor();
     if (months >= 6) {

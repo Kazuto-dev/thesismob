@@ -1,9 +1,11 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/i18n.dart';
 import '../../core/theme.dart';
 import '../../data/checks.dart';
 import '../../data/project.dart';
+import '../../state/price_book_controller.dart';
 
 /// The project's numbers checked against what is usual for houses.
 class ChecksCard extends StatelessWidget {
@@ -13,7 +15,10 @@ class ChecksCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final checks = checkProject(project);
+    final checks = checkProject(
+      project,
+      datedPrices: context.watch<PriceBookController>().datedPrices,
+    );
     if (checks.isEmpty) return const SizedBox.shrink();
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;

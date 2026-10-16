@@ -10,8 +10,13 @@ String _percent(double value) =>
     '${value == value.roundToDouble() ? value.toInt() : value}%';
 
 /// The project as Google Sheets tabs: the bill of quantities, the unit
-/// price analyses, the materials to buy and the budget.
-List<SheetTab> projectSheetTabs(Project project, {DateTime? date}) {
+/// price analyses, the materials to buy (with the [suppliers] of the
+/// user's prices, by item key) and the budget.
+List<SheetTab> projectSheetTabs(
+  Project project, {
+  DateTime? date,
+  Map<String, String> suppliers = const {},
+}) {
   final day = (date ?? DateTime.now()).toIso8601String().substring(0, 10);
   final heading = <List<Object?>>[
     [project.name],
@@ -83,14 +88,31 @@ List<SheetTab> projectSheetTabs(Project project, {DateTime? date}) {
   );
 
   final materials = project.materials;
+  final bySupplier = materials.any((m) => suppliers.containsKey(m.key));
   final materialsHeader = heading.length;
   final materialsTab = (
     title: 'Materials',
     rows: <List<Object?>>[
       ...heading,
-      ['Group', 'Material', 'Quantity', 'Unit', 'Unit cost (₱)', 'Amount (₱)'],
+      [
+        'Group',
+        'Material',
+        'Quantity',
+        'Unit',
+        'Unit cost (₱)',
+        'Amount (₱)',
+        if (bySupplier) 'Supplier',
+      ],
       for (final m in materials)
-        [m.group.label, m.label, m.quantity, m.unit, m.unitPrice, m.amount],
+        [
+          m.group.label,
+          m.label,
+          m.quantity,
+          m.unit,
+          m.unitPrice,
+          m.amount,
+          if (bySupplier) suppliers[m.key] ?? '',
+        ],
       [],
       ['', 'Total', null, null, null, project.breakdown.materials],
     ],

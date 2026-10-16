@@ -117,4 +117,9 @@ const filipinoFees = <String, String>{
   'rises to {wage} on {date}': 'tataas sa {wage} sa {date}',
   'Foreman {foreman}, skilled {skilled}, helper {helper}':
       'Foreman {foreman}, skilled {skilled}, helper {helper}',
+
+  // Suppliers and quote dates
+  'Supplier': 'Supplier',
+  'Optional': 'Opsyonal',
+  'Quoted {date}': 'Presyo noong {date}',
 };

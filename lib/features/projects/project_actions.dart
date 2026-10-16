@@ -15,6 +15,7 @@ import '../../export/project_documents.dart';
 import '../../export/project_pdf.dart' deferred as pdf;
 import '../../router.dart';
 import '../../state/google_account_controller.dart';
+import '../../state/price_book_controller.dart';
 import '../../state/projects_controller.dart';
 
 /// Downloads the project's bill of quantities as a PDF.
@@ -44,7 +45,14 @@ Future<void> downloadProjectPdf(BuildContext context, Project project) async {
 Future<void> downloadProjectCsv(BuildContext context, Project project) async {
   final saved = await saveFile(
     '${fileSlug(project, 'boq')}.csv',
-    Uint8List.fromList(utf8.encode(projectCsv(project))),
+    Uint8List.fromList(
+      utf8.encode(
+        projectCsv(
+          project,
+          suppliers: context.read<PriceBookController>().suppliers,
+        ),
+      ),
+    ),
     'text/csv',
   );
   if (!context.mounted) return;
@@ -71,6 +79,7 @@ Future<void> saveProjectToSheets(BuildContext context, Project project) async {
   final projects = context.read<ProjectsController>();
   final result = await context.read<GoogleAccountController>().saveProject(
     project,
+    suppliers: context.read<PriceBookController>().suppliers,
   );
   final sheet = result.sheet;
   if (sheet != null) projects.setSheetId(project.id, sheet.id);

@@ -6,6 +6,7 @@ import '../../core/format.dart';
 import '../../core/layout.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
+import '../../data/price_quote.dart';
 import '../../materials/items.dart';
 import '../../state/price_book_controller.dart';
 import '../common/price_dialog.dart';
@@ -32,7 +33,7 @@ class _PriceBookScreenState extends State<PriceBookScreen> {
   Future<void> _edit(Item item) async {
     final book = context.read<PriceBookController>();
     final suggested = book.defaultPriceOf(item.key);
-    final price = await showPriceDialog(
+    final quoted = await showQuoteDialog(
       context,
       title: item.name,
       unit: item.unit,
@@ -40,20 +41,28 @@ class _PriceBookScreenState extends State<PriceBookScreen> {
       suggested: suggested > 0
           ? 'Suggested ${formatMoney(suggested)} (${book.region.label})'
           : null,
+      quote: book.quoteOf(item.key),
     );
-    if (price != null) book.setPrice(item.key, price);
+    if (quoted == null) return;
+    book.setPrice(
+      item.key,
+      quoted.price,
+      supplier: quoted.supplier,
+      quotedOn: quoted.date,
+    );
   }
 
   Future<void> _resetAll() async {
     final book = context.read<PriceBookController>();
     final saved = book.custom;
+    final quotes = book.quotes;
     book.resetAll();
     showMessage(
       context,
       context.tr('Your prices were cleared.'),
       action: SnackBarAction(
         label: context.tr('Undo'),
-        onPressed: () => book.restore(saved),
+        onPressed: () => book.restore(saved, quotes: quotes),
       ),
     );
   }
@@ -204,6 +213,7 @@ class _PriceBookScreenState extends State<PriceBookScreen> {
                             item: item,
                             price: book.priceOf(item.key),
                             custom: book.isCustom(item.key),
+                            quote: book.quoteOf(item.key),
                             onTap: () => _edit(item),
                             onReset: () => book.reset(item.key),
                           ),
@@ -228,11 +238,15 @@ class _PriceRow extends StatelessWidget {
     required this.custom,
     required this.onTap,
     required this.onReset,
+    this.quote,
   });
 
   final Item item;
   final double price;
   final bool custom;
+
+  /// The supplier and quote date of the user's price.
+  final PriceQuote? quote;
   final VoidCallback onTap;
   final VoidCallback onReset;
 
@@ -241,6 +255,7 @@ class _PriceRow extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final palette = AppPalette.of(context);
+    final quoted = quote == null || quote!.isEmpty ? '' : quoteLabel(quote!);
     final tag = custom
         ? ('Your price', palette.success)
         : item.estimate
@@ -275,6 +290,13 @@ class _PriceRow extends StatelessWidget {
                         tag.$1,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: tag.$2,
+                        ),
+                      ),
+                    if (custom && quoted.isNotEmpty)
+                      Text(
+                        quoted,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
                         ),
                       ),
                   ],

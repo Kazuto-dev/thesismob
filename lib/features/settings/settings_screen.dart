@@ -474,6 +474,7 @@ class _BackupSection extends StatelessWidget {
     final text = backupJson(
       projects: projects,
       prices: context.read<PriceBookController>().custom,
+      quotes: context.read<PriceBookController>().quotes,
       history: context.read<EstimatesController>().history,
     );
     final date = DateTime.now().toIso8601String().substring(0, 10);
@@ -495,6 +496,7 @@ class _BackupSection extends StatelessWidget {
   String _json(BuildContext context) => backupJson(
     projects: context.read<ProjectsController>().projects,
     prices: context.read<PriceBookController>().custom,
+    quotes: context.read<PriceBookController>().quotes,
     history: context.read<EstimatesController>().history,
   );
 
@@ -556,7 +558,14 @@ class _BackupSection extends StatelessWidget {
     if (ok != true || !context.mounted) return;
     final added = context.read<ProjectsController>().import(backup.projects);
     final book = context.read<PriceBookController>();
-    book.restore({...book.custom, ...backup.prices});
+    book.restore(
+      {...book.custom, ...backup.prices},
+      quotes: {
+        for (final MapEntry(:key, :value) in book.quotes.entries)
+          if (!backup.prices.containsKey(key)) key: value,
+        ...backup.quotes,
+      },
+    );
     context.read<EstimatesController>().importHistory(backup.history);
     showMessage(
       context,

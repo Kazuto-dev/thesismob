@@ -23,6 +23,8 @@ exports. For how quantities are worked out, see
   ([`PriceBookController`](../lib/state/price_book_controller.dart)).
 - **Your own price** replaces the suggested one. It is used as you typed it,
   in every region.
+- Each of your prices can carry the **supplier** and the **date of the
+  quote** (see below).
 - Each calculator fills its price field from the price book entry that
   matches the options you chose, such as a 6" block, an 8 ft corrugated
   sheet or a box of 3.5 mm² wire (`priceRef` in each spec). Typing a
@@ -85,6 +87,33 @@ retailer sites could not be opened directly. Prices drift: DTI's prevailing
 cement price in NCR rose from about ₱180–245 in 2025 to ₱210–265 in June to
 August 2026, and PSA's construction materials retail price index for NCR was up
 1.2–1.3% year on year in early 2026.
+
+### Suppliers and quote dates
+
+The bundled prices carry no dates of their own: the whole list is dated by
+its label, *Metro Manila, Aug–Oct 2026* (`priceListLabel`). Your own
+prices now carry a date too, and optionally a supplier
+([`PriceQuote`](../lib/data/price_quote.dart)):
+
+- In the price book, tapping a material asks for the price, the
+  **supplier** (optional) and the day it was **quoted** (today unless you
+  pick another day). Under *Your price* the line then reads *Wilcon Depot
+  · quoted Oct 3, 2026*.
+- A price you set elsewhere (a calculator's companion line, or a line in a
+  project's **To buy** list) is dated the day you set it and keeps the
+  supplier it had.
+- Clearing a price clears its supplier and date. **Clear my prices** can be
+  undone with them.
+- They are saved apart from the prices (`price_quotes_v1`), so prices
+  saved by earlier versions still load, without a date.
+- The CSV and Google Sheets materials lists add a **Supplier** column when
+  any line's material has one in your price book. The PDF and the plain
+  text are unchanged.
+- The **age of the prices** check dates a line by its quote when the line
+  uses your quoted price for that material, and otherwise by when the
+  estimate was made. A fresh estimate priced from a quote you got in
+  January therefore shows as nine months old in October, and re-pricing a
+  line under To buy makes it current.
 
 ### Regional factors
 
@@ -783,7 +812,7 @@ houses, to catch a wrong input before the estimate goes out
 | Formwork per m³ of concrete | Above 15 m²/m³ | 4–12 m²/m³ |
 | Labour as a share of materials | Below 15% or above 90% | 30–60% |
 | Materials without a price | Any | – |
-| Age of the prices | Six months or more since the oldest item was priced | – |
+| Age of the prices | Six months or more since the oldest line was priced: its quote date when it uses your quoted price, else when its estimate was made | – |
 | Scope that usually goes together | Concrete but no walls; walls but no paint; no electrical work | – |
 
 The last group are notes, not warnings: a job may rightly leave them out.
@@ -1073,7 +1102,8 @@ A comma-separated file (`<project>-boq.csv`) for Excel or Google Sheets:
 - A `BILL OF QUANTITIES` block: Item, Description, Quantity, Unit, Unit cost
   (PHP), Amount (PHP).
 - A `MATERIALS LIST` block: Group, Material, Quantity, Unit, Unit cost (PHP),
-  Amount (PHP).
+  Amount (PHP), and Supplier when any material has one in your price
+  book.
 - A `COST SUMMARY` block: label and amount.
 - Numbers are plain: whole numbers without decimals, others with two. Cells
   with commas, quotes or line breaks are quoted, with quotes doubled.
@@ -1089,7 +1119,7 @@ with "Planning estimate made with BuildQuantify."
 After signing in with Google, a project is saved as a spreadsheet in your
 own Google Drive, "BuildQuantify – project name", with three formatted tabs:
 the bill of quantities, the materials list and the budget, the same content
-as the PDF. Saving again updates the same spreadsheet. See
+as the PDF. The materials tab adds a Supplier column like the CSV. Saving again updates the same spreadsheet. See
 [Saving to Google Sheets](google-sheets.md) for how it works and how to set
 up the Google client ID.
 
@@ -1104,6 +1134,7 @@ up the Google client ID.
  "exportedAt": "2026-10-15T09:30:00.000",
  "projects": [ … ],
  "prices": { "cement_40kg": 255 },
+ "priceQuotes": { "cement_40kg": { "supplier": "Wilcon Depot", "date": "2026-10-03" } },
  "history": [ … ]
 }
 ```
@@ -1112,6 +1143,8 @@ up the Google client ID.
   prices they were made with) and cost settings.
 - `prices` holds only the prices you set yourself, by item key. The region
   is not saved.
+- `priceQuotes` holds the supplier and quote date of those prices, when
+  there are any. Older backups without it restore as before.
 - `history` holds the calculator history.
 
 Restoring adds projects and history entries that are not already there,
