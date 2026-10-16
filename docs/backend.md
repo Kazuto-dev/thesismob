@@ -146,6 +146,18 @@ and SSH access.
    to Pay As You Go stops that; the Always Free resources still cost
    nothing.
 
+7. **Build the app for the server.** Build the web app with the API's
+   address and the same Google client ID:
+   ```sh
+   flutter build web --release --no-web-resources-cdn \
+     --dart-define=API_URL=https://api.yourdomain.com \
+     --dart-define=GOOGLE_CLIENT_ID=<your web client ID>
+   ```
+   Then host `build/web` where you host the app now, or copy it into
+   `deploy/site/` to serve it from this server at `APP_DOMAIN`. Settings
+   then shows the Plan card: sign in, start the trial, enter a code,
+   compare the plans and ask about Enterprise.
+
 Until a domain is set, the server can be tried on its IP address only
 over plain HTTP, with `API_DOMAIN=http://<public-ip>`. Browsers will not
 let the app call it from an HTTPS page, so use this only for testing
@@ -234,6 +246,20 @@ The same actions are in the API for an admin screen in the app.
   `DELETE /v1/me` removes an account and its projects, for the Data
   Privacy Act right to erasure. Mention the server in the app's privacy
   policy.
+
+## In the app
+
+- [`lib/data/api_client.dart`](../lib/data/api_client.dart) talks to the
+  API.
+- [`lib/state/account_controller.dart`](../lib/state/account_controller.dart)
+  keeps the session and the last plan on the device, so the plan holds
+  offline and ends on its date even without a connection.
+- [`lib/features/settings/plan_section.dart`](../lib/features/settings/plan_section.dart)
+  is the Plan card in Settings.
+- `context.watch<AccountController>().plan` gives the plan in force:
+  `AppPlan.free`, `business` or `enterprise`.
+- Business features are not yet locked in the app; the plan is read but
+  not enforced on the device. Cloud projects are limited by the server.
 
 ## Development and tests
 

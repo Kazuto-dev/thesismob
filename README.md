@@ -71,7 +71,8 @@ flutter run -d chrome
 
 ```sh
 flutter build web --release --no-web-resources-cdn \
-  --dart-define=GOOGLE_CLIENT_ID=1234567890-abc.apps.googleusercontent.com
+  --dart-define=GOOGLE_CLIENT_ID=1234567890-abc.apps.googleusercontent.com \
+  --dart-define=API_URL=https://api.example.com
 ```
 
 - `--no-web-resources-cdn` serves the CanvasKit renderer and fallback fonts
@@ -81,6 +82,10 @@ flutter build web --release --no-web-resources-cdn \
   Google and save projects to Google Sheets; see
   [docs/google-sheets.md](docs/google-sheets.md). Without it, everything
   else works and Settings explains that Google sign-in isn't set up.
+- `API_URL` is the address of the BuildQuantify server
+  ([docs/backend.md](docs/backend.md)), for accounts, plans, the free trial
+  and activation codes. Without it, the app works on its own on the free
+  plan and Settings shows no plan card.
 - `web/sw.js` is a service worker that caches the app as it loads, so after
   one visit it starts without a connection. It is skipped on `localhost`
   unless the URL has `?offline`, so debug builds are never served stale.

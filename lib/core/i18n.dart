@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'i18n_fil.dart';
+import 'i18n_fil_account.dart';
 import 'i18n_fil_bids.dart';
 import 'i18n_fil_contract.dart';
 import 'i18n_fil_costs.dart';
@@ -21,6 +22,7 @@ const filipinoTables = [
   filipinoFees,
   filipinoBids,
   filipinoRooms,
+  filipinoAccount,
 ];
 
 String? _filipino(String english) {

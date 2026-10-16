@@ -7,12 +7,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/i18n.dart';
 import 'core/theme.dart';
+import 'data/api_client.dart';
 import 'data/estimate_repository.dart';
 import 'data/google_auth.dart';
 import 'data/google_sheets_client.dart';
 import 'router.dart';
 import 'data/project_repository.dart';
 import 'export/project_documents.dart';
+import 'state/account_controller.dart';
 import 'state/appearance_controller.dart';
 import 'state/estimates_controller.dart';
 import 'state/price_book_controller.dart';
@@ -27,6 +29,7 @@ class BuildQuantifyApp extends StatefulWidget {
     required this.prefs,
     this.googleAuth,
     this.sheetsClient,
+    this.apiClient,
     this.initialLocation = Routes.home,
   });
 
@@ -36,6 +39,9 @@ class BuildQuantifyApp extends StatefulWidget {
   /// from the build config, and Google's APIs.
   final GoogleAuth? googleAuth;
   final GoogleSheetsClient? sheetsClient;
+
+  /// The BuildQuantify server; by default the one set at build time.
+  final ApiClient? apiClient;
   final String initialLocation;
 
   @override
@@ -51,6 +57,10 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
   late final _estimates = EstimatesController(EstimateRepository(widget.prefs));
   late final _projects = ProjectsController(ProjectRepository(widget.prefs));
   late final _prices = PriceBookController(widget.prefs);
+  late final _account = AccountController(
+    widget.prefs,
+    widget.apiClient ?? ApiClient(),
+  );
   late final GoRouter _router = createRouter(
     initialLocation: widget.initialLocation,
     account: _google,
@@ -64,6 +74,7 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
     super.initState();
     _projects.addListener(_scheduleBackup);
     _prices.addListener(_scheduleBackup);
+    unawaited(_account.refresh());
   }
 
   /// Backs up to Google Drive a little after the user stops changing
@@ -95,6 +106,7 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
     _estimates.dispose();
     _projects.dispose();
     _prices.dispose();
+    _account.dispose();
     super.dispose();
   }
 
@@ -111,6 +123,7 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
         ChangeNotifierProvider(create: (_) => TipsController(widget.prefs)),
         ChangeNotifierProvider(create: (_) => ProfileController(widget.prefs)),
         ChangeNotifierProvider.value(value: _google),
+        ChangeNotifierProvider.value(value: _account),
       ],
       child: Builder(
         builder: (context) => MaterialApp.router(

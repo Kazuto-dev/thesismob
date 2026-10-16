@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thesismob/app.dart';
+import 'package:thesismob/data/api_client.dart';
 import 'package:thesismob/data/estimate.dart';
 import 'package:thesismob/data/google_auth.dart';
 import 'package:thesismob/data/google_sheets_client.dart';
@@ -26,6 +27,7 @@ Future<void> pumpApp(
   Map<String, Object> prefs = const {},
   GoogleAuth? googleAuth,
   GoogleSheetsClient? sheetsClient,
+  ApiClient? apiClient,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -38,6 +40,7 @@ Future<void> pumpApp(
       initialLocation: location,
       googleAuth: googleAuth ?? FakeGoogleAuth(configured: false),
       sheetsClient: sheetsClient ?? GoogleSheetsClient(client: _offline),
+      apiClient: apiClient ?? ApiClient(baseUrl: ''),
     ),
   );
   await tester.pumpAndSettle();

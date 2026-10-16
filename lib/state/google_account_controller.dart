@@ -208,6 +208,16 @@ class GoogleAccountController extends ChangeNotifier {
     return (ok: true, message: 'Signed in as ${_account!.email}.', sheet: null);
   });
 
+  /// Signs in with Google and passes the access token to [use], such as
+  /// to sign in to the BuildQuantify account. Call it straight from a
+  /// button press.
+  Future<GoogleResult> withToken(
+    Future<GoogleResult> Function(String token) use,
+  ) => _run((token) async {
+    await _identify(token);
+    return use(token);
+  });
+
   Future<void> signOut() async {
     _account = null;
     _skipped = false;

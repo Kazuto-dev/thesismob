@@ -13,6 +13,7 @@ import '../../core/widgets.dart';
 import '../../export/files.dart';
 import '../../export/project_documents.dart';
 import '../../router.dart';
+import '../../state/account_controller.dart';
 import '../../state/appearance_controller.dart';
 import '../../state/estimates_controller.dart';
 import '../../state/google_account_controller.dart';
@@ -20,6 +21,7 @@ import '../../state/price_book_controller.dart';
 import '../../state/profile_controller.dart';
 import '../../state/projects_controller.dart';
 import '../common/google_button.dart';
+import 'plan_section.dart';
 
 /// Google Sheets connection, appearance, help and app information.
 class SettingsScreen extends StatelessWidget {
@@ -45,6 +47,7 @@ class SettingsScreen extends StatelessWidget {
                       'Prices, backups, Google Sheets and help',
                     ),
                   ),
+                  _PlanSlot(),
                   _PricesSection(),
                   SizedBox(height: Space.lg),
                   _ProfileSection(),
@@ -64,6 +67,24 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The plan card with the space after it, or nothing when the app has no
+/// server.
+class _PlanSlot extends StatelessWidget {
+  const _PlanSlot();
+
+  @override
+  Widget build(BuildContext context) =>
+      context.watch<AccountController>().isConfigured
+      ? const Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            PlanSection(),
+            SizedBox(height: Space.lg),
+          ],
+        )
+      : const SizedBox.shrink();
 }
 
 /// A titled settings card with an icon.
