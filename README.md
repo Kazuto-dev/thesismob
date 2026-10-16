@@ -36,6 +36,7 @@ light or dark mode.
 - [Translations](docs/translations.md)
 - [Usability test kit](docs/usability-test.md)
 - [Validating the estimates](docs/validation.md)
+- [Backend: accounts, plans, codes and the server](docs/backend.md)
 
 - **Structural:** concrete hollow blocks (adjustable rebar spacing),
   concrete slabs, footings, columns and beams (concrete, bars, ties, forms),
@@ -136,6 +137,10 @@ lib/
                            projects, settings, price book, help, shell
 assets/                    images and the Plus Jakarta Sans font (OFL)
 docs/                      calculations, design system, design QA
+server/                    the API (Dart): accounts, plans, codes,
+                           cloud projects, companies; its own tests
+deploy/                    Docker Compose, Caddy and scripts for the
+                           Ubuntu server
 tool/smoke/                Playwright smoke test
 test/                      unit, widget and golden tests
 ```
