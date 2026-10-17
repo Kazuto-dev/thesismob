@@ -18,6 +18,7 @@ import '../../router.dart';
 import '../../state/account_controller.dart';
 import '../../state/experience.dart';
 import '../../state/appearance_controller.dart';
+import '../../state/cloud_sync.dart';
 import '../../state/estimates_controller.dart';
 import '../../state/google_account_controller.dart';
 import '../../state/install_controller.dart';
@@ -471,7 +472,9 @@ class _GoogleSection extends StatelessWidget {
     );
 
     Future<void> signIn() async {
-      final result = await google.signIn();
+      final result = await google.signIn(
+        alsoWith: context.read<AccountController>().joinGoogleSignIn,
+      );
       if (context.mounted) showMessage(context, result.message);
     }
 
@@ -753,16 +756,7 @@ class _BackupSection extends StatelessWidget {
       icon: Icons.backup_outlined,
       title: context.tr('Backup and restore'),
       children: [
-        Text(
-          context.tr(
-            'Your projects, prices and history are saved in this browser only. '
-            'Download a backup to keep them safe or to move them to another '
-            'device.',
-          ),
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
+        const _SavedTo(),
         const SizedBox(height: Space.lg),
         Wrap(
           spacing: Space.sm,
@@ -831,6 +825,112 @@ class _BackupSection extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ],
+    );
+  }
+}
+
+/// Where the user's projects, prices and history are kept: in their
+/// account when signed in, otherwise in this browser.
+class _SavedTo extends StatelessWidget {
+  const _SavedTo();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = theme.textTheme.bodyMedium?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    final account = context.watch<AccountController>();
+    final sync = context.watch<CloudSync>();
+    final google = context.watch<GoogleAccountController>();
+    if (!account.isConfigured) {
+      return Text(
+        context.tr(
+          'Your projects, prices and history are saved in this browser only. '
+          'Download a backup to keep them safe or to move them to another '
+          'device.',
+        ),
+        style: muted,
+      );
+    }
+    final email = account.status?.email;
+    if (!sync.isOn || email == null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.tr(
+              'Your projects, prices and history are only in this browser '
+              'for now. Sign in to save them to your account, so they are '
+              'safe and open on any device.',
+            ),
+            style: muted,
+          ),
+          if (google.isConfigured && account.offer.signInEnabled) ...[
+            const SizedBox(height: Space.md),
+            FilledButton.icon(
+              onPressed: account.isBusy || google.isBusy
+                  ? null
+                  : () => signInToAccount(context),
+              icon: const Icon(Icons.cloud_upload_outlined),
+              label: Text(context.tr('Save to your account')),
+            ),
+          ],
+        ],
+      );
+    }
+    final String status = switch (sync.state) {
+      SyncState.syncing => context.tr('Saving to your account…'),
+      SyncState.offline => context.tr(
+        "Can't reach the server. Changes are kept in this browser and saved "
+        'to your account when you are back online.',
+      ),
+      SyncState.failed => context.tr(sync.message ?? 'Saving failed.'),
+      _ when sync.savedAt != null => context.tr('Saved to your account {at}.', {
+        'at': formatDateTime(sync.savedAt!),
+      }),
+      _ => context.tr('Saved to your account.'),
+    };
+    final deviceOnly = sync.deviceOnlyProjects;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          context.tr(
+            'Your projects, prices and history are saved to your account, '
+            '{email}, and open on any device you sign in on. This browser '
+            'keeps a copy so the app works offline.',
+            {'email': email},
+          ),
+          style: muted,
+        ),
+        const SizedBox(height: Space.sm),
+        Row(
+          children: [
+            Expanded(child: Text(status, style: theme.textTheme.bodyMedium)),
+            TextButton(
+              onPressed: sync.state == SyncState.syncing ? null : sync.syncNow,
+              child: Text(context.tr('Sync now')),
+            ),
+          ],
+        ),
+        if (deviceOnly > 0) ...[
+          const SizedBox(height: Space.xs),
+          Text(
+            context.tr(
+              '{n} of your projects are in this browser only: your plan '
+              'keeps {limit} projects in your account. Upgrade to Business '
+              'to save them all.',
+              {
+                'n': deviceOnly,
+                'limit':
+                    account.status?.projectLimit ?? account.offer.freeProjects,
+              },
+            ),
+            style: muted,
+          ),
         ],
       ],
     );

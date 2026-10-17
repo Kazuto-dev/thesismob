@@ -100,4 +100,34 @@ void main() {
     await pumpApp(tester, location: '/settings');
     expect(find.text('Compare plans'), findsNothing);
   });
+
+  testWidgets('Backup and restore says where the data is, and saves it to '
+      'the account', (tester) async {
+    final server = await open(tester);
+    expect(find.textContaining('only in this browser for now'), findsOneWidget);
+
+    await tap(tester, 'Save to your account');
+    expect(
+      find.textContaining('saved to your account, maria@example.com'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Saved to your account'), findsOneWidget);
+    expect(server.calls, contains('GET /v1/projects'));
+  });
+
+  testWidgets('signing in on the welcome screen signs in to the account too', (
+    tester,
+  ) async {
+    final server = FakeServer();
+    await pumpApp(
+      tester,
+      googleAuth: FakeGoogleAuth(),
+      sheetsClient: GoogleSheetsClient(client: FakeGoogleApi().client),
+      apiClient: ApiClient(baseUrl: 'https://api.test', client: server.client),
+    );
+    await tester.tap(find.text('Sign in with Google'));
+    await tester.pumpAndSettle();
+    expect(server.calls, contains('POST /v1/auth/google'));
+    expect(server.calls, contains('GET /v1/projects'));
+  });
 }

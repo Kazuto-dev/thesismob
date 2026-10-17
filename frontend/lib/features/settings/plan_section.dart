@@ -15,6 +15,23 @@ String _date(DateTime d) => DateFormat('MMM d, y', 'en_US').format(d.toLocal());
 String _money(int usd, int php) =>
     '\$$usd (₱${NumberFormat('#,##0').format(php)})';
 
+/// Signs in to the BuildQuantify account with Google. Call it straight
+/// from a button press.
+Future<void> signInToAccount(BuildContext context) async {
+  final account = context.read<AccountController>();
+  final result = await context.read<GoogleAccountController>().withToken((
+    token,
+  ) async {
+    final error = await account.signInWithGoogle(token);
+    return (
+      ok: error == null,
+      message: error ?? 'Signed in to your account.',
+      sheet: null,
+    );
+  });
+  if (context.mounted) showMessage(context, context.tr(result.message));
+}
+
 /// The user's plan: what they have, a free trial, a code from an email,
 /// the plans compared and a way to ask about Enterprise. Shown only when
 /// the app was built with a server address.
@@ -123,7 +140,7 @@ class PlanSection extends StatelessWidget {
                             !google.isConfigured ||
                             !offer.signInEnabled
                         ? null
-                        : () => _signIn(context),
+                        : () => signInToAccount(context),
                     icon: const Icon(Icons.login),
                     label: Text(context.tr('Sign in to your account')),
                   ),
@@ -174,21 +191,6 @@ class PlanSection extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Future<void> _signIn(BuildContext context) async {
-    final account = context.read<AccountController>();
-    final result = await context.read<GoogleAccountController>().withToken((
-      token,
-    ) async {
-      final error = await account.signInWithGoogle(token);
-      return (
-        ok: error == null,
-        message: error ?? 'Signed in to your account.',
-        sheet: null,
-      );
-    });
-    if (context.mounted) showMessage(context, context.tr(result.message));
   }
 
   Future<void> _trial(BuildContext context) async {
