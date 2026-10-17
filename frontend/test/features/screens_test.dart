@@ -8,6 +8,7 @@ import 'package:thesismob/materials/catalog.dart';
 import 'package:thesismob/data/estimate.dart';
 import 'package:thesismob/features/common/tiles.dart';
 import 'package:thesismob/features/projects/boq_grid.dart';
+import 'package:thesismob/state/appearance_controller.dart';
 import 'package:thesismob/state/google_account_controller.dart';
 
 import '../google_fake.dart';
@@ -60,6 +61,10 @@ void main() {
     tester,
   ) async {
     await pumpApp(tester);
+    // The experience question comes first, then the first-visit card.
+    expect(find.text('Get started'), findsNothing);
+    await tester.tap(find.text('I know construction'));
+    await tester.pumpAndSettle();
     expect(find.text('Get started'), findsOneWidget);
     await tester.tap(find.text('Plan a house'));
     await tester.pumpAndSettle();
@@ -84,7 +89,10 @@ void main() {
   });
 
   testWidgets('"Not now" hides the first-visit card for good', (tester) async {
-    await pumpApp(tester);
+    await pumpApp(
+      tester,
+      prefs: {AppearanceController.experienceKey: 'experienced'},
+    );
     await tester.tap(find.text('Not now'));
     await tester.pumpAndSettle();
     expect(find.text('Get started'), findsNothing);

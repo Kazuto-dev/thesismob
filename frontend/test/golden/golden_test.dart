@@ -131,6 +131,29 @@ void main() {
     });
   }
 
+  testWidgets('home for someone new to construction', skip: _skip != null, (
+    tester,
+  ) async {
+    await pumpApp(
+      tester,
+      prefs: {AppearanceController.experienceKey: 'beginner'},
+    );
+    await _snapshot(tester, 'home_phone_beginner');
+  });
+
+  testWidgets(
+    'calculator for someone new to construction',
+    skip: _skip != null,
+    (tester) async {
+      await pumpApp(
+        tester,
+        location: '/category/structural/chb',
+        prefs: {AppearanceController.experienceKey: 'beginner'},
+      );
+      await _snapshot(tester, 'calculator_phone_beginner');
+    },
+  );
+
   testWidgets('calculator in dark mode', skip: _skip != null, (tester) async {
     await pumpApp(
       tester,

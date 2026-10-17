@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' show IconData;
 
+import 'plain_language.dart';
+
 /// The four groups shown on the home screen.
 enum MaterialCategory {
   structural('Structural', 'Walls, panels and insulation'),
@@ -463,16 +465,19 @@ class MaterialSpec {
       if (f.isVisible(selected)) f,
   ];
 
-  /// Whether [query] matches this material's name, blurb, category or
-  /// keywords, ignoring case.
+  /// Whether [query] matches this material's name, blurb, category,
+  /// keywords or everyday words, ignoring case.
   bool matches(String query) {
     final q = query.trim().toLowerCase();
     if (q.isEmpty) return true;
+    final plain = plainMaterialWords[id];
     return [
       name,
       blurb,
       category.label,
       ...keywords,
+      ?plain?.$1,
+      ?plain?.$2,
     ].any((text) => text.toLowerCase().contains(q));
   }
 

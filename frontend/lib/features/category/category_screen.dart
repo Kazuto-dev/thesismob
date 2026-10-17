@@ -6,6 +6,7 @@ import '../../core/theme.dart';
 import '../../core/widgets.dart';
 import '../../materials/catalog.dart';
 import '../../materials/material_spec.dart';
+import '../../state/experience.dart';
 import '../common/tiles.dart';
 
 class CategoryScreen extends StatelessWidget {
@@ -19,12 +20,12 @@ class CategoryScreen extends StatelessWidget {
     final materials = materialsIn(category);
     final colors = AppPalette.of(context).category(category);
     return PageTitle(
-      title: context.tr(category.label),
+      title: context.categoryLabel(category),
       child: Scaffold(
         appBar: AppBar(
           title: Text(
             context.tr('{category} materials', {
-              'category': context.tr(category.label),
+              'category': context.categoryLabel(category),
             }),
           ),
         ),
@@ -55,7 +56,7 @@ class CategoryScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                context.tr(category.tagline),
+                                context.categoryTagline(category),
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   color: colors.onContainer,
                                 ),
