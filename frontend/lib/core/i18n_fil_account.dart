@@ -28,6 +28,11 @@ const filipinoAccount = <String, String>{
   'Compare plans': 'Ihambing ang mga plano',
   'Ask about Enterprise': 'Magtanong tungkol sa Enterprise',
   'Sign out of your account': 'Mag-sign out sa inyong account',
+  'Log out': 'Mag-log out',
+  'Log out?': 'Mag-log out?',
+  'You will be signed out of Google and your account on this device. Your projects stay saved here.':
+      'Masa-sign out kayo sa Google at sa inyong account sa device na ito. '
+      'Nananatiling naka-save dito ang inyong mga proyekto.',
   "Google sign-in isn't set up in this version.":
       'Hindi pa naka-set up ang Google sign-in sa bersiyong ito.',
   'Your Business trial has started.': 'Nagsimula na ang inyong Business trial.',

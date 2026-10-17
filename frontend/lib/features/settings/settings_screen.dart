@@ -65,6 +65,7 @@ class SettingsScreen extends StatelessWidget {
                   _AppearanceSection(),
                   SizedBox(height: Space.lg),
                   _AboutSection(),
+                  _LogOutSlot(),
                 ],
               ),
             ),
@@ -1018,5 +1019,67 @@ class _AboutSection extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// Logs out of Google and the BuildQuantify account together, after the
+/// user confirms, and returns to the login screen. Nothing when signed out.
+class _LogOutSlot extends StatelessWidget {
+  const _LogOutSlot();
+
+  @override
+  Widget build(BuildContext context) {
+    final google = context.watch<GoogleAccountController>();
+    final account = context.watch<AccountController>();
+    if (!google.isSignedIn && !account.isSignedIn) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: Space.lg),
+      child: Card(
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: Space.xl,
+            vertical: Space.sm,
+          ),
+          leading: const Icon(Icons.logout),
+          title: Text(context.tr('Log out')),
+          onTap: google.isBusy || account.isBusy
+              ? null
+              : () => _logOut(context),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _logOut(BuildContext context) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.tr('Log out?')),
+        content: Text(
+          context.tr(
+            'You will be signed out of Google and your account on this '
+            'device. Your projects stay saved here.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(context.tr('Cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(context.tr('Log out')),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+    final router = GoRouter.of(context);
+    final account = context.read<AccountController>();
+    final google = context.read<GoogleAccountController>();
+    await Future.wait([account.signOut(), google.signOut()]);
+    router.go(Routes.login);
   }
 }
