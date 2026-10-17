@@ -10,6 +10,8 @@ import '../../core/format.dart';
 import '../../core/layout.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
+import '../../data/account.dart';
+import '../../data/api_client.dart';
 import '../../export/files.dart';
 import '../../export/project_documents.dart';
 import '../../router.dart';
@@ -23,6 +25,7 @@ import '../../state/price_book_controller.dart';
 import '../../state/profile_controller.dart';
 import '../../state/projects_controller.dart';
 import '../common/google_button.dart';
+import '../common/plan_lock.dart';
 import '../shell/install_offer.dart';
 import 'plan_section.dart';
 
@@ -85,9 +88,141 @@ class _PlanSlot extends StatelessWidget {
           children: [
             PlanSection(),
             SizedBox(height: Space.lg),
+            _CompanySection(),
+            SizedBox(height: Space.lg),
           ],
         )
       : const SizedBox.shrink();
+}
+
+/// The user's company on Enterprise: its members and their roles. On
+/// other plans it is locked and says what Enterprise adds.
+class _CompanySection extends StatelessWidget {
+  const _CompanySection();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final locked = watchPlanLocked(context, AppPlan.enterprise);
+    final status = context.watch<AccountController>().status;
+    return _Section(
+      icon: Icons.groups_outlined,
+      title: context.tr('Company'),
+      children: [
+        Text(
+          locked
+              ? context.tr(
+                  'Shared projects, one company price book and roles for '
+                  'your team come with Enterprise.',
+                )
+              : context.tr('{org}, as {role}.', {
+                  'org': status?.organization ?? '',
+                  'role': context.tr(status?.orgRole ?? 'member'),
+                }),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: Space.lg),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: FilledButton.tonalIcon(
+            onPressed: () {
+              if (unlockOrAsk(context, AppPlan.enterprise, 'Team members')) {
+                showDialog<void>(
+                  context: context,
+                  builder: (_) => const _MembersDialog(),
+                );
+              }
+            },
+            icon: locked
+                ? const PlanLockIcon(AppPlan.enterprise)
+                : const Icon(Icons.badge_outlined),
+            label: Text(context.tr('Team members')),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The company's members and invitations, with their roles.
+class _MembersDialog extends StatefulWidget {
+  const _MembersDialog();
+
+  @override
+  State<_MembersDialog> createState() => _MembersDialogState();
+}
+
+class _MembersDialogState extends State<_MembersDialog> {
+  late final _company = context.read<AccountController>().company();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AlertDialog(
+      title: Text(context.tr('Team members')),
+      scrollable: true,
+      content: SizedBox(
+        width: 420,
+        child: FutureBuilder(
+          future: _company,
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              final e = snapshot.error;
+              return Text(
+                e is ApiException
+                    ? e.message
+                    : context.tr("Couldn't load the team."),
+              );
+            }
+            final company = snapshot.data;
+            if (company == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            String text(Object? v) => v is String ? v : '';
+            final people = <(String, String, String)>[
+              for (final m in company['members'] as List? ?? const [])
+                if (m is Map)
+                  (text(m['name']), text(m['email']), text(m['role'])),
+              for (final i in company['invitations'] as List? ?? const [])
+                if (i is Map) ('', text(i['email']), text(i['role'])),
+            ];
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  context.tr('{n} of {seats} seats used', {
+                    'n': people.length,
+                    'seats': company['seats'] is int
+                        ? company['seats'] as int
+                        : people.length,
+                  }),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                for (final (name, email, role) in people)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(name.isEmpty ? email : name),
+                    subtitle: name.isEmpty ? null : Text(email),
+                    trailing: Text(context.tr(role.isEmpty ? 'member' : role)),
+                  ),
+              ],
+            );
+          },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(context.tr('Close')),
+        ),
+      ],
+    );
+  }
 }
 
 /// Installing the app on the home screen, on phones and tablets that have

@@ -79,4 +79,24 @@ const filipinoAccount = <String, String>{
   'admin': 'admin',
   'estimator': 'estimator',
   'viewer': 'viewer',
+  'member': 'miyembro',
+  'Needs {plan}': 'Kailangan ang {plan}',
+  '{feature} is for {plan}': 'Para sa {plan} ang {feature}',
+  'Enterprise gives your whole team Business, with shared projects, one company price book and roles.':
+      'Binibigyan ng Enterprise ang buong team ninyo ng Business, may '
+      'magkakasamang proyekto, iisang price book ng kompanya at mga role.',
+  'Business adds contractor and DPWH pricing, the contract, Excel and Google Sheets exports and revisions.':
+      'Dagdag ng Business ang presyong pang-kontratista at DPWH, ang '
+      'kontrata, pag-export sa Excel at Google Sheets at mga rebisyon.',
+  'Your plan: {plan}': 'Inyong plano: {plan}',
+  'See plans': 'Tingnan ang mga plano',
+  'Excel export': 'Pag-export sa Excel',
+  'Contractor and DPWH pricing': 'Presyong pang-kontratista at DPWH',
+  'Shared projects, one company price book and roles for your team come with Enterprise.':
+      'Kasama sa Enterprise ang magkakasamang proyekto, iisang price book '
+      'ng kompanya at mga role para sa team ninyo.',
+  '{org}, as {role}.': '{org}, bilang {role}.',
+  'Team members': 'Mga miyembro ng team',
+  "Couldn't load the team.": 'Hindi ma-load ang team.',
+  '{n} of {seats} seats used': '{n} sa {seats} na upuan ang gamit',
 };

@@ -139,6 +139,14 @@ class AccountController extends ChangeNotifier {
     );
   });
 
+  /// The company the Enterprise plan comes from, with its members and
+  /// invitations, as `GET /v1/orgs/{id}` answers.
+  Future<Map<String, dynamic>> company() async {
+    final id = (_status?.raw['plan'] as Map?)?['organization']?['id'];
+    if (id == null) throw ApiException(404, 'not_found', 'No company.');
+    return _api.get('/v1/orgs/$id', token: _token);
+  }
+
   /// Sends an Enterprise inquiry; no account needed.
   Future<String?> sendInquiry({
     required String name,

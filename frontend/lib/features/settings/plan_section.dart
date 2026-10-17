@@ -150,7 +150,7 @@ class PlanSection extends StatelessWidget {
                   child: Text(context.tr('Compare plans')),
                 ),
                 TextButton(
-                  onPressed: () => _contact(context),
+                  onPressed: () => askAboutEnterprise(context),
                   child: Text(context.tr('Ask about Enterprise')),
                 ),
                 if (status != null)
@@ -207,19 +207,6 @@ class PlanSection extends StatelessWidget {
       builder: (_) => const _CodeDialog(),
     );
     if (message != null && context.mounted) showMessage(context, message);
-  }
-
-  Future<void> _contact(BuildContext context) async {
-    final sent = await showDialog<bool>(
-      context: context,
-      builder: (_) => const _ContactDialog(),
-    );
-    if (sent == true && context.mounted) {
-      showMessage(
-        context,
-        context.tr('Thank you. We will reply by email within a working day.'),
-      );
-    }
   }
 
   void _compare(BuildContext context, PlanOffer offer) => showDialog<void>(
@@ -316,6 +303,21 @@ class PlanSection extends StatelessWidget {
       );
     },
   );
+}
+
+/// The form for asking sales about Enterprise, then a thank-you once
+/// it is sent.
+Future<void> askAboutEnterprise(BuildContext context) async {
+  final sent = await showDialog<bool>(
+    context: context,
+    builder: (_) => const _ContactDialog(),
+  );
+  if (sent == true && context.mounted) {
+    showMessage(
+      context,
+      context.tr('Thank you. We will reply by email within a working day.'),
+    );
+  }
 }
 
 class _CodeDialog extends StatefulWidget {
