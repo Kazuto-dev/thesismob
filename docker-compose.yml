@@ -1,12 +1,17 @@
 # BuildQuantify on one server: the database, the backend (the API) and
-# the frontend (nginx serving the web app and passing /api/ to the
-# backend), with certbot keeping the HTTPS certificate renewed.
-# Settings come from .env next to this file (see .env.example).
+# the frontend (nginx serving the web app on port 80 and passing /api/ to
+# the backend). Cloudflare, in front, gives visitors HTTPS.
 #
-#   docker compose up -d --build        start, or rebuild after an update
-#   docker compose logs -f backend      watch the API
-#   docker compose exec backend admin   the admin tool: codes, accounts
-#   ./deploy/get-certificate.sh         HTTPS, once the domain points here
+# Nothing is built here. The containers run stock images on the code in
+# this folder, so after `git pull` a restart runs the new code:
+#
+#   ./deploy/update.sh                 start, or apply what git pulled
+#   docker compose logs -f backend     watch the API
+#   ./deploy/admin.sh stats            the admin tool: codes, accounts
+#
+# The web app is compiled by the pipeline, which uploads it to
+# frontend/build/web (see .github/workflows/ci.yml). Settings come from
+# .env next to this file (see .env.example).
 
 services:
   db:
@@ -26,9 +31,7 @@ services:
     # No published port: only the backend reaches the database.
 
   backend:
-    build:
-      context: .
-      target: backend
+    image: dart:3.13.5
     restart: unless-stopped
     env_file: .env
     environment:
@@ -39,44 +42,47 @@ services:
       # cross-origin permission; this is for a copy hosted elsewhere.
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://${DOMAIN:-localhost}}
       APP_URL: ${APP_URL:-https://${DOMAIN:-localhost}}
+      PUB_CACHE: /pub-cache
+    volumes:
+      # The code, read-only, straight from the checkout.
+      - ./backend:/src:ro
+      # Downloaded packages, kept between restarts.
+      - pub-cache:/pub-cache
+    working_dir: /app
+    # Copies the code, gets the package versions pubspec.lock pins (from
+    # the cache when it has them, so a restart does not need pub.dev) and
+    # runs the API as an unprivileged user. Takes about 20 seconds; the
+    # API brings the database schema up to date as it starts.
+    command:
+      - sh
+      - -ec
+      - |
+        find /app -mindepth 1 -delete
+        cp -r /src/. /app/
+        dart --disable-analytics >/dev/null
+        dart pub get --enforce-lockfile --offline >/dev/null 2>&1 \
+          || dart pub get --enforce-lockfile
+        chown -R 10001:10001 /app
+        exec setpriv --reuid=10001 --regid=10001 --clear-groups \
+          env HOME=/app dart run bin/server.dart
     depends_on:
       db:
         condition: service_healthy
     # Not published either: nginx reaches it at backend:8080.
 
   frontend:
-    build:
-      context: .
-      target: frontend
-      args:
-        API_URL: /api
-        GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    image: nginx:1.27-alpine
     restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"
-    environment:
-      DOMAIN: ${DOMAIN:-}
     volumes:
-      - certbot-certs:/etc/letsencrypt:ro
-      - certbot-webroot:/var/www/certbot:ro
+      # The compiled web app, uploaded by the pipeline.
+      - ./frontend/build/web:/usr/share/nginx/html:ro
+      # The site's settings; deploy/update.sh reloads nginx after a pull.
+      - ./deploy/nginx:/etc/nginx/conf.d:ro
     depends_on:
       - backend
 
-  certbot:
-    image: certbot/certbot:latest
-    restart: unless-stopped
-    volumes:
-      - certbot-certs:/etc/letsencrypt
-      - certbot-webroot:/var/www/certbot
-    # Tries to renew twice a day; Let's Encrypt renews when fewer than
-    # 30 days are left, and nginx reloads every 6 hours to use it.
-    entrypoint: >-
-      /bin/sh -c 'trap exit TERM;
-      while :; do certbot renew --webroot -w /var/www/certbot --quiet;
-      sleep 12h & wait $${!}; done'
-
 volumes:
   db-data:
-  certbot-certs:
-  certbot-webroot:
+  pub-cache:

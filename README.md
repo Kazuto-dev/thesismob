@@ -11,10 +11,11 @@ The repository has two halves:
 - [`backend/`](backend): the server, in Dart with PostgreSQL, for accounts,
   plans, the free trial, activation codes, cloud projects and companies.
 
-At the root are the [`Dockerfile`](Dockerfile) that builds both,
-[`docker-compose.yml`](docker-compose.yml) that runs them with nginx and
-PostgreSQL, the CI pipeline in [`.github/workflows`](.github/workflows),
-[`deploy/`](deploy) (nginx settings and server scripts) and [`docs/`](docs).
+At the root are [`docker-compose.yml`](docker-compose.yml), which runs
+both on the server with nginx and PostgreSQL, the pipeline in
+[`.github/workflows`](.github/workflows) that tests every push and deploys
+`main` to the server, [`deploy/`](deploy) (nginx settings and server
+scripts) and [`docs/`](docs).
 
 Each estimate prices every material the job needs (cement, sand, bars, tie
 wire, forms, fittings…) from a built-in price book of 2026 Metro Manila
@@ -80,9 +81,11 @@ flutter run -d chrome
 ```
 
 To run everything together as on the server (app, API, database and
-nginx), from the repository root: `cp .env.example .env`, set
-`POSTGRES_PASSWORD`, then `docker compose up -d --build` and open
-<http://localhost/>. See [docs/backend.md](docs/backend.md).
+nginx): in `frontend/`, `flutter build web --release
+--no-web-resources-cdn --dart-define=API_URL=/api`; then at the
+repository root, `cp .env.example .env`, set `POSTGRES_PASSWORD`, run
+`./deploy/update.sh` and open <http://localhost/>. See
+[docs/backend.md](docs/backend.md).
 
 ## Build for the web
 
@@ -155,18 +158,19 @@ TEST_DATABASE_URL=postgres://user:pass@localhost:5432/test dart test -j 1
 ```
 
 CI runs all of the above on every push (`.github/workflows/ci.yml`), then
-builds the Docker images and checks that nginx serves the app and reaches
-the API.
+starts `docker-compose.yml` the way the server does and checks that nginx
+serves the app and reaches the API. Pushes to `main` then deploy to the
+server; see [docs/backend.md](docs/backend.md#deploying-to-the-server).
 
 ## Project layout
 
 ```
-Dockerfile                 builds the backend and the frontend images
-docker-compose.yml         database, backend, frontend (nginx), certbot
+docker-compose.yml         database, backend, frontend (nginx), run on the
+                           code in this folder: nothing is built on the server
 .env.example               the server's settings
-.github/workflows/         CI: tests, builds and a run of the images
-deploy/                    nginx settings; setup, certificate, backup,
-                           restore and update scripts for the server
+.github/workflows/         CI: tests, a run of the server's setup, deploys
+deploy/                    nginx settings; setup, checkout, update, admin,
+                           backup and restore scripts for the server
 docs/                      calculations, prices, backend, design
 backend/                   the API (Dart)
   bin/                     server.dart, and admin.dart (codes, accounts)

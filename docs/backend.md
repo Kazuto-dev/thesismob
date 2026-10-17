@@ -9,10 +9,11 @@ do alone.
   and tests.
 - [`frontend/`](../frontend): the app, which nginx serves from the same
   server.
-- At the repository root, [`Dockerfile`](../Dockerfile) builds both and
-  [`docker-compose.yml`](../docker-compose.yml) runs them on an Ubuntu
-  24.04 server: PostgreSQL, the backend, nginx (the frontend) and certbot
-  for HTTPS. [`deploy/`](../deploy) holds the nginx settings and the
+- At the repository root, [`docker-compose.yml`](../docker-compose.yml)
+  runs them on an Ubuntu 24.04 server: PostgreSQL, the backend and nginx
+  (the frontend), behind Cloudflare. The pipeline in
+  [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) tests and
+  deploys, and [`deploy/`](../deploy) holds the nginx settings and the
   server scripts.
 
 ## What needs the server
@@ -35,15 +36,15 @@ do alone.
 ## How it fits together
 
 ```
- Browser                      Your Ubuntu server (docker compose)
- ───────                      ──────────────────────────────────────────────────
- https://yourdomain ────────► frontend: nginx :80/:443
-                                ├─ /        the web app (built into the image)
-                                └─ /api/ ──► backend: the API :8080 ──► db: PostgreSQL 16
-                                                │
-                              certbot: renews   ├─► Google: checks sign-in tokens
-                              the certificate   └─► Gmail (SMTP 587): codes,
-                                                    invitations, inquiries
+ Browser         Cloudflare        Your Ubuntu server (docker compose)
+ ───────         ──────────        ──────────────────────────────────────────────
+ https://app… ─► HTTPS ends ─────► frontend: nginx :80
+                 here; HTTP          ├─ /        the web app (frontend/build/web)
+                 to the server       └─ /api/ ──► backend: the API :8080 ──► db: PostgreSQL 16
+                                                     │      (runs backend/ as is)
+                                                     ├─► Google: checks sign-in tokens
+                                                     └─► Gmail (SMTP 587): codes,
+                                                         invitations, inquiries
 ```
 
 nginx serves the app and the API from one address, so the browser needs
@@ -121,62 +122,101 @@ status. The app shows the message and acts on the code.
 
 Admins are the Google accounts listed in `ADMIN_EMAILS`.
 
-## Running it on the Oracle server
+## Deploying to the server
 
-You need the server (Ubuntu 24.04, ARM or Intel) with SSH access. A
-domain comes later; until then the app runs on the server's IP address.
+Every push to `main` deploys to the server once all the tests pass. The
+`deploy` job in [`ci.yml`](../.github/workflows/ci.yml):
 
-1. **Open the ports in Oracle Cloud.** In the console, go to the
-   instance's VCN, then its subnet's security list, and add ingress rules
-   for TCP 80 and TCP 443 from `0.0.0.0/0`.
-2. **Get the code onto the server and prepare it:**
+1. Takes the web app that the `frontend` job compiled for the server
+   (the API at `/api`, Google sign-in on).
+2. Logs in to the server over SSH and runs
+   [`deploy/checkout.sh`](../deploy/checkout.sh), which brings the
+   server's copy of the repository (`~/buildquantify`) to that commit. The
+   first time, it clones the repository with the server's own GitHub key
+   and runs [`setup-ubuntu.sh`](../deploy/setup-ubuntu.sh): Docker, port
+   80 in the firewall, automatic security updates, `.env` with a random
+   database password, and a backup every night at 02:30.
+3. Copies the app to `frontend/build/web` with rsync.
+4. Runs [`deploy/update.sh`](../deploy/update.sh), which backs up the
+   database, starts or restarts the containers on the new code, reloads
+   nginx and waits until the API answers. The job fails if it does not.
+
+Nothing is built on the server. `docker-compose.yml` runs stock images on
+the code in that folder: the backend runs `backend/` as it is with Dart
+(a restart picks up new code), and nginx serves `frontend/build/web` with
+the settings in `deploy/nginx/`. So on the server, `git pull` and then
+`./deploy/update.sh` apply changes to the backend and to nginx. The web
+app is the exception: it has to be compiled, so it arrives only through
+the pipeline.
+
+### Setting it up, once
+
+1. **Open port 80 in Oracle Cloud.** In the console, go to the
+   instance's VCN, then its subnet's security list, and add an ingress
+   rule for TCP 80 from `0.0.0.0/0`. Port 443 is not needed: Cloudflare
+   handles HTTPS.
+2. **Give the pipeline a key to the server.** This is a second key, apart
+   from the one the server uses to reach GitHub. On your own computer:
    ```sh
-   git clone https://github.com/kazuto-dev/thesismob.git buildquantify
-   cd buildquantify
-   sudo ./deploy/setup-ubuntu.sh
+   ssh-keygen -t ed25519 -N "" -C github-deploy -f bq_deploy
    ```
-   This installs Docker and opens ports 80 and 443 in the server's own
-   firewall. It also turns on automatic security updates, creates `.env`
-   with a random database password, and schedules a backup every night
-   at 02:30.
-3. **Fill in `.env`** at the repository root: `ADMIN_EMAILS` and the
-   Gmail settings (next section). Add `DOMAIN`, `CERTBOT_EMAIL` and
-   `GOOGLE_CLIENT_ID` when you have them.
-4. **Start it:** log out and in again first, so your user can run Docker,
-   then:
-   ```sh
-   cd buildquantify
-   docker compose up -d --build
-   docker compose logs -f backend
-   ```
-   The first build takes 10–15 minutes on a 2-CPU server, because it
-   downloads Flutter and compiles the app; later builds reuse most of it.
-   The app is then at `http://<the server's IP>/`, and
-   `curl http://<the server's IP>/api/health` answers
-   `{"ok":true,…}`.
-5. **Add the domain and HTTPS.** Point the domain's DNS `A` record (such
-   as `app.yourdomain.com`) at the server's public IP, set `DOMAIN` and
-   `CERTBOT_EMAIL` in `.env`, then:
-   ```sh
-   ./deploy/get-certificate.sh
-   ```
-   It checks the domain reaches the server, gets a Let's Encrypt
-   certificate and switches nginx to HTTPS, with HTTP redirecting to it.
-   certbot renews the certificate by itself, and nginx picks up the new
-   one within six hours.
-6. **Turn on Google sign-in.** In Google Cloud Console, add
-   `https://app.yourdomain.com` to the OAuth client's authorized
-   JavaScript origins. `.env` already holds BuildQuantify's
-   `GOOGLE_CLIENT_ID` (from `.env.example`); if your `.env` predates it,
-   add the line, then rebuild with `docker compose up -d --build`. Google
-   sign-in works only over HTTPS (or on `localhost`), so it needs step 5
-   first. Settings then shows the
-   Plan card: sign in, start the trial, enter a code, compare the plans
-   and ask about Enterprise.
+   Add the contents of `bq_deploy.pub` as a new line in
+   `~/.ssh/authorized_keys` on the server (as `ubuntu`).
+3. **Add the secrets on GitHub,** under the repository's Settings →
+   Secrets and variables → Actions → New repository secret:
+   - `DEPLOY_HOST`: the server's public IP address.
+   - `DEPLOY_SSH_KEY`: the whole private key file `bq_deploy`, from
+     `-----BEGIN` to `END … KEY-----`. Then delete the file from your
+     computer, or keep it somewhere safe.
+   - `DEPLOY_KNOWN_HOSTS` (optional, recommended): the server's identity,
+     the output of `ssh-keyscan -t ed25519 <the server's IP>`. Without it,
+     each deploy accepts whatever key the server presents.
+
+   The repository is public and so are its workflow logs; GitHub hides
+   secrets in them, which is why the address is a secret too. Under the
+   Variables tab, `DEPLOY_USER` (default `ubuntu`), `DEPLOY_PATH`
+   (default `buildquantify`, in that user's home) and `DEPLOY_BRANCH`
+   (default `main`) change the defaults.
+4. **The server's GitHub key.** The server clones
+   `git@github.com:Kazuto-dev/thesismob.git` with its own SSH key, added
+   to GitHub as a deploy key (repository Settings → Deploy keys) or to
+   your account. If the server already has a copy elsewhere, set
+   `DEPLOY_PATH` to it.
+5. **sudo.** On Oracle's Ubuntu, `ubuntu` uses sudo without a password, so
+   the first deploy prepares the server by itself. Elsewhere, run
+   `sudo ./deploy/setup-ubuntu.sh` in the repository once.
+6. **Deploy:** push to `main` (or merge into it). Then, on the server,
+   fill in `~/buildquantify/.env`: `DOMAIN`, `ADMIN_EMAILS` and the Gmail
+   settings (below), and apply them with `./deploy/update.sh`.
 7. **Keep the free server from being reclaimed.** Oracle reclaims Always
    Free instances that stay mostly idle for a week. Upgrading the account
    to Pay As You Go stops that; the Always Free resources still cost
    nothing.
+
+### Cloudflare
+
+1. Add the domain to Cloudflare, and at the registrar change its
+   nameservers to the two Cloudflare gives.
+2. **DNS:** an `A` record, such as `app`, pointing at the server's IP,
+   with the proxy on (orange cloud).
+3. **SSL/TLS → Overview:** Flexible. Cloudflare gives visitors HTTPS and
+   reaches the server over HTTP on port 80. **SSL/TLS → Edge
+   Certificates:** turn on Always Use HTTPS.
+4. In `.env` on the server, set `DOMAIN` (such as `app.yourdomain.com`),
+   and in Google Cloud Console add `https://app.yourdomain.com` to the
+   OAuth client's authorized JavaScript origins. Google sign-in works only
+   over HTTPS, so it needs Cloudflare in front.
+
+nginx takes each visitor's address from Cloudflare's `CF-Connecting-IP`
+header, believed only from [Cloudflare's addresses](https://www.cloudflare.com/ips/),
+so the API's rate limits count visitors, not Cloudflare. CI warns if
+Cloudflare's list changes. The app's files are sent with
+`Cache-Control: no-cache`, so a new release reaches visitors at once
+instead of after Cloudflare's cache expires.
+
+With Flexible, the stretch between Cloudflare and the server is plain
+HTTP. To encrypt it later, install a Cloudflare Origin Certificate in
+nginx on port 443 and switch to Full (strict).
 
 ### Gmail for sending codes
 
@@ -192,7 +232,7 @@ Gmail on port 587.
    - `SMTP_USERNAME=` the account
    - `SMTP_PASSWORD=` the 16-letter app password, without spaces
    - `MAIL_FROM=BuildQuantify <the account>`
-4. Restart with `docker compose up -d`.
+4. Apply it with `./deploy/update.sh`.
 
 A personal Gmail account sends up to about 500 emails a day, which is
 plenty for codes. Without `SMTP_HOST`, emails are written to the API's
@@ -204,7 +244,7 @@ On the server:
 
 ```sh
 cd buildquantify
-docker compose exec backend admin issue-code --plan business --months 1 \
+./deploy/admin.sh issue-code --plan business --months 1 \
   --email customer@gmail.com --send
 ```
 
@@ -216,19 +256,18 @@ docker compose exec backend admin issue-code --plan business --months 1 \
   "Company name"`.
 - **Expiry:** a code must be used within 30 days (`CODE_VALID_DAYS`).
 
-Other commands:
-
-Each runs as `docker compose exec backend admin …`:
+Other commands, each run as `./deploy/admin.sh …` (with nothing after
+it, it lists them all):
 
 | Command | What it does |
 | --- | --- |
-| `admin codes` | Lists the open codes |
-| `admin revoke-code <id>` | Cancels an unused code |
-| `admin users ana` | Finds accounts and shows their plans |
-| `admin extend --email ana@gmail.com --months 1` | Adds time by hand; negative months take it back |
-| `admin org --id <id> --seats 15` | Changes a company's seats |
-| `admin inquiries` | Lists Enterprise inquiries |
-| `admin stats` | Counts of users, trials and paying accounts |
+| `codes` | Lists the open codes |
+| `revoke-code <id>` | Cancels an unused code |
+| `users ana` | Finds accounts and shows their plans |
+| `extend --email ana@gmail.com --months 1` | Adds time by hand; negative months take it back |
+| `org --id <id> --seats 15` | Changes a company's seats |
+| `inquiries` | Lists Enterprise inquiries |
+| `stats` | Counts of users, trials and paying accounts |
 
 The same actions are in the API for an admin screen in the app.
 
@@ -241,19 +280,25 @@ The same actions are in the API for an admin screen in the app.
 - **Restoring:**
   `./deploy/restore.sh deploy/backups/buildquantify-YYYYMMDD-HHMM.dump`
   replaces the database with a backup; it asks first.
-- **Updating:** `./deploy/update.sh` backs up, pulls the latest code and
-  rebuilds both images. The API brings the database schema up to date
-  when it starts.
+- **Updating:** push to `main` and the pipeline deploys. By hand on the
+  server, `git pull` then `./deploy/update.sh` updates the backend and
+  nginx (not the web app, which the pipeline compiles). Each update backs
+  up first, and the API brings the database schema up to date when it
+  starts.
 
 ## Security
 
-- **Only nginx is reachable,** on ports 80 and 443. The backend and the
-  database have no published port, and the API runs as an unprivileged
-  user. nginx sends the real client address to the API and replaces any
-  `X-Forwarded-For` a client sends, so rate limits cannot be dodged.
-- **HTTPS** uses TLS 1.2 and 1.3 with HSTS once the certificate is in
-  place; the security headers (`nosniff`, `SAMEORIGIN` framing, a strict
+- **Only nginx is reachable,** on port 80. The backend and the database
+  have no published port. The API runs as an unprivileged user, on a
+  read-only copy of the code.
+- **Visitors' addresses:** nginx believes `CF-Connecting-IP` only from
+  Cloudflare's addresses and replaces any `X-Forwarded-For` a client
+  sends, so rate limits cannot be dodged by forging either.
+- **HTTPS** is Cloudflare's: visitors get it, and nginx adds HSTS for
+  them. The security headers (`nosniff`, `SAMEORIGIN` framing, a strict
   referrer policy) are set on every response.
+- **Deploys** log in with a key used only by the pipeline, kept in a
+  GitHub secret, and run only after every test has passed.
 - **Codes and session tokens are stored only as SHA-256 hashes,** so a
   copy of the database does not hand out working codes. Codes have
   80 random bits and are limited to 10 tries per 15 minutes per account
@@ -275,7 +320,7 @@ The same actions are in the API for an admin screen in the app.
 ## In the app
 
 - [`frontend/lib/data/api_client.dart`](../frontend/lib/data/api_client.dart)
-  talks to the API, at `API_URL`: `/api` in the Docker image, or a full
+  talks to the API, at `API_URL`: `/api` in the server build, or a full
   address for a copy hosted elsewhere.
 - [`frontend/lib/state/account_controller.dart`](../frontend/lib/state/account_controller.dart)
   keeps the session and the last plan on the device, so the plan holds
@@ -300,8 +345,9 @@ DATABASE_URL=postgres://bq:bq@localhost:5432/bq_dev ADMIN_EMAILS=you@gmail.com \
 ```
 
 The API tests empty the test database before each test. CI runs them
-against PostgreSQL 16, then builds both images and checks that nginx
-serves the app and reaches the API.
+against PostgreSQL 16 with the server's Dart, then starts
+`docker-compose.yml` with `deploy/update.sh` and the server build of the
+app, and checks that nginx serves the app and reaches the API.
 
 Schema changes go in a new entry at the end of `migrations` in
 [`backend/lib/src/db.dart`](../backend/lib/src/db.dart). Never edit one

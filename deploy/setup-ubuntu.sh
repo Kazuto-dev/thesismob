@@ -4,10 +4,11 @@
 #
 #   sudo ./deploy/setup-ubuntu.sh
 #
-# It installs Docker, opens ports 80 and 443, turns on automatic security
-# updates and schedules a nightly database backup. It is safe to run
-# again.
+# The pipeline runs it by itself on the first deploy. It installs
+# Docker, opens port 80, turns on automatic security updates, creates
+# .env and schedules a nightly database backup. It is safe to run again.
 set -euo pipefail
+export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a
 
 if [[ $EUID -ne 0 ]]; then
   echo "Run with sudo: sudo ./deploy/setup-ubuntu.sh" >&2
@@ -18,9 +19,9 @@ OWNER="${SUDO_USER:-root}"
 
 echo "== Updating the system"
 apt-get update -y
-DEBIAN_FRONTEND=noninteractive apt-get upgrade -y
-DEBIAN_FRONTEND=noninteractive apt-get install -y \
-  ca-certificates curl unattended-upgrades netfilter-persistent \
+apt-get upgrade -y
+apt-get install -y \
+  ca-certificates curl git rsync unattended-upgrades netfilter-persistent \
   iptables-persistent
 
 echo "== Automatic security updates"
@@ -42,14 +43,13 @@ fi
 systemctl enable --now docker
 if [[ "$OWNER" != root ]]; then usermod -aG docker "$OWNER"; fi
 
-echo "== Firewall: ports 80 and 443"
+echo "== Firewall: port 80"
 # Oracle's Ubuntu images reject everything but SSH in iptables. Accept
-# web traffic ahead of that rule and keep it across reboots.
-for port in 80 443; do
-  if ! iptables -C INPUT -p tcp --dport "$port" -m state --state NEW -j ACCEPT 2>/dev/null; then
-    iptables -I INPUT 5 -p tcp --dport "$port" -m state --state NEW -j ACCEPT
-  fi
-done
+# web traffic ahead of that rule and keep it across reboots. Cloudflare
+# serves HTTPS to visitors and reaches this server on port 80.
+if ! iptables -C INPUT -p tcp --dport 80 -m state --state NEW -j ACCEPT 2>/dev/null; then
+  iptables -I INPUT 5 -p tcp --dport 80 -m state --state NEW -j ACCEPT
+fi
 netfilter-persistent save
 
 echo "== Settings file"
@@ -70,13 +70,10 @@ CRON="30 2 * * * $ROOT/deploy/backup.sh >> $ROOT/deploy/backups/backup.log 2>&1"
 cat <<DONE
 
 Done. Next:
-  1. In the Oracle Cloud console, add ingress rules for TCP 80 and 443
-     to the instance's subnet security list.
-  2. Edit $ROOT/.env: ADMIN_EMAILS, the Gmail settings and, when you
-     have them, DOMAIN, CERTBOT_EMAIL and GOOGLE_CLIENT_ID.
-  3. Log out and in again (for the docker group), then:
-       cd $ROOT && docker compose up -d --build
-     The app is then at http://<this server's IP>/.
-  4. When the domain's DNS A record points here:
-       ./deploy/get-certificate.sh
+  1. In the Oracle Cloud console, add an ingress rule for TCP 80 to the
+     instance's subnet security list.
+  2. Edit $ROOT/.env: DOMAIN, ADMIN_EMAILS and the Gmail settings.
+  3. Start it, or apply the changes to .env:
+       cd $ROOT && ./deploy/update.sh
+     (log out and in again first if docker says permission denied).
 DONE
