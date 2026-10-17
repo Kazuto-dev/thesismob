@@ -15,6 +15,7 @@ import '../../materials/items.dart';
 import '../../materials/material_spec.dart';
 import '../../router.dart';
 import '../../state/appearance_controller.dart';
+import '../../state/experience.dart';
 import '../../state/estimates_controller.dart';
 import '../../state/price_book_controller.dart';
 import '../../state/projects_controller.dart';
@@ -544,15 +545,15 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     );
 
     return PageTitle(
-      title: context.tr(spec.name),
+      title: context.materialName(spec),
       child: Scaffold(
         appBar: AppBar(
           title: Text(
             editing
                 ? context.tr('Edit {material}', {
-                    'material': context.tr(spec.name),
+                    'material': context.materialName(spec),
                   })
-                : context.tr(spec.name),
+                : context.materialName(spec),
           ),
         ),
         body: SingleChildScrollView(
@@ -715,11 +716,28 @@ class _CalculatorFormState extends State<_CalculatorForm> {
             IconTile.material(spec, size: 56),
             const SizedBox(width: Space.lg),
             Expanded(
-              child: Text(
-                context.tr(spec.blurb),
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.materialBlurb(spec),
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  // The trade name too, as stores and builders call it.
+                  if (context.plainWords) ...[
+                    const SizedBox(height: Space.xs),
+                    Text(
+                      context.tr('Builders and stores call this: {name}', {
+                        'name': context.tr(spec.name),
+                      }),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],

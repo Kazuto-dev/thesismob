@@ -1,7 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../core/i18n.dart';
 import '../../core/format.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
@@ -10,6 +9,7 @@ import '../../data/estimate.dart';
 import '../../materials/catalog.dart';
 import '../../materials/material_spec.dart';
 import '../../router.dart';
+import '../../state/experience.dart';
 
 /// A calculator in a list: its icon, name and what it estimates.
 class MaterialTile extends StatelessWidget {
@@ -45,15 +45,15 @@ class MaterialTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    context.tr(spec.name),
+                    context.materialName(spec),
                     style: theme.textTheme.titleMedium,
                   ),
                   const SizedBox(height: 2),
                   Text(
                     showCategory
-                        ? '${context.tr(spec.category.label)} · '
-                              '${context.tr(spec.blurb)}'
-                        : context.tr(spec.blurb),
+                        ? '${context.categoryLabel(spec.category)} · '
+                              '${context.materialBlurb(spec)}'
+                        : context.materialBlurb(spec),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

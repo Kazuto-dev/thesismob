@@ -11,6 +11,8 @@ import '../../data/estimate.dart';
 import '../../materials/catalog.dart';
 import '../../materials/material_spec.dart';
 import '../../router.dart';
+import '../../state/appearance_controller.dart';
+import '../../state/experience.dart';
 import '../../state/estimates_controller.dart';
 import '../../data/checklists.dart';
 import '../../state/projects_controller.dart';
@@ -65,10 +67,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (searching)
                     _SearchResults(query: _query)
                   else ...[
+                    const _ExperienceQuestion(),
                     const _GetStarted(),
                     SectionHeader(context.tr('Categories')),
                     const _CategoryGrid(),
-                    SectionHeader(context.tr('Popular calculators')),
+                    SectionHeader(
+                      context.tr(
+                        context.plainWords
+                            ? 'Common jobs around the house'
+                            : 'Popular calculators',
+                      ),
+                    ),
                     _MaterialGrid(
                       specs: [for (final id in _popular) materialById(id)!],
                     ),
@@ -307,9 +316,10 @@ class _CategoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final count = materialsIn(category).length;
+    final label = context.categoryLabel(category);
     return Semantics(
       button: true,
-      label: '${category.label}, $count calculators',
+      label: '$label, $count calculators',
       excludeSemantics: true,
       child: TapCard(
         padding: const EdgeInsets.all(Space.lg),
@@ -319,13 +329,10 @@ class _CategoryCard extends StatelessWidget {
           children: [
             IconTile.category(category, size: 52),
             const SizedBox(height: Space.lg),
-            Text(
-              context.tr(category.label),
-              style: theme.textTheme.titleMedium,
-            ),
+            Text(label, style: theme.textTheme.titleMedium),
             const SizedBox(height: 2),
             Text(
-              context.tr(category.tagline),
+              context.categoryTagline(category),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -415,6 +422,74 @@ class _Recent extends StatelessWidget {
   }
 }
 
+/// Asks once, on the Homeowners Edition, whether the user knows
+/// construction, so calculators can be named in everyday words for
+/// beginners. Settings can change the answer later.
+class _ExperienceQuestion extends StatelessWidget {
+  const _ExperienceQuestion();
+
+  @override
+  Widget build(BuildContext context) {
+    final answered = context.select<AppearanceController, bool>(
+      (a) => a.experience != null,
+    );
+    if (answered || !context.asksExperience) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    void answer(Experience e) =>
+        context.read<AppearanceController>().setExperience(e);
+    return Padding(
+      padding: const EdgeInsets.only(top: Space.xl),
+      child: Card(
+        color: scheme.secondaryContainer,
+        child: Padding(
+          padding: const EdgeInsets.all(Space.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Semantics(
+                header: true,
+                child: Text(
+                  context.tr('Do you know construction?'),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: scheme.onSecondaryContainer,
+                  ),
+                ),
+              ),
+              const SizedBox(height: Space.xs),
+              Text(
+                context.tr(
+                  "If you're new to it, calculators are named by the job, "
+                  'such as "Build a block wall", with a line on what each '
+                  'one works out. You can change this in Settings.',
+                ),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSecondaryContainer,
+                ),
+              ),
+              const SizedBox(height: Space.md),
+              Wrap(
+                spacing: Space.sm,
+                runSpacing: Space.sm,
+                children: [
+                  FilledButton(
+                    onPressed: () => answer(Experience.beginner),
+                    child: Text(context.tr("I'm new to this")),
+                  ),
+                  OutlinedButton(
+                    onPressed: () => answer(Experience.experienced),
+                    child: Text(context.tr('I know construction')),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Three steps for someone who has not estimated anything yet, and a
 /// quick way into a house project with its checklist.
 class _GetStarted extends StatelessWidget {
@@ -437,7 +512,13 @@ class _GetStarted extends StatelessWidget {
     final dismissed = context.select<TipsController, bool>(
       (c) => c.isDismissed(TipsController.getStarted),
     );
-    if (!fresh || !empty || dismissed) return const SizedBox.shrink();
+    // One card at a time: the experience question comes first.
+    final asking =
+        context.asksExperience &&
+        context.select<AppearanceController, bool>((a) => a.experience == null);
+    if (!fresh || !empty || dismissed || asking) {
+      return const SizedBox.shrink();
+    }
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Padding(

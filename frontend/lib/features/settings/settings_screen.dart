@@ -14,6 +14,7 @@ import '../../export/files.dart';
 import '../../export/project_documents.dart';
 import '../../router.dart';
 import '../../state/account_controller.dart';
+import '../../state/experience.dart';
 import '../../state/appearance_controller.dart';
 import '../../state/estimates_controller.dart';
 import '../../state/google_account_controller.dart';
@@ -763,6 +764,45 @@ class _AppearanceSection extends StatelessWidget {
           style: Theme.of(context).textTheme.bodySmall
               ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
+        if (context.asksExperience) ...[
+          const SizedBox(height: Space.lg),
+          Text(
+            context.tr('Calculator names'),
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          const SizedBox(height: Space.sm),
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<Experience>(
+              showSelectedIcon: false,
+              emptySelectionAllowed: true,
+              segments: [
+                ButtonSegment(
+                  value: Experience.beginner,
+                  label: Text(context.tr('Everyday words')),
+                ),
+                ButtonSegment(
+                  value: Experience.experienced,
+                  label: Text(context.tr('Trade names')),
+                ),
+              ],
+              selected: {?appearance.experience},
+              onSelectionChanged: (s) {
+                if (s.isNotEmpty) appearance.setExperience(s.first);
+              },
+            ),
+          ),
+          const SizedBox(height: Space.sm),
+          Text(
+            context.tr(
+              'Everyday words name calculators by the job, for people new to '
+              'construction. Trade names are what builders and stores use.',
+            ),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
         const SizedBox(height: Space.lg),
         Text(
           context.tr('Measure lengths in'),

@@ -1,8 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:thesismob/core/i18n.dart';
+import 'package:thesismob/core/i18n_fil_beginner.dart';
 import 'package:thesismob/core/i18n_fil_materials.dart';
 import 'package:thesismob/materials/catalog.dart';
 import 'package:thesismob/materials/material_spec.dart';
+import 'package:thesismob/materials/plain_language.dart';
 
 void main() {
   test('translations keep their placeholders', () {
@@ -40,6 +42,22 @@ void main() {
         isTrue,
         reason: key,
       );
+    }
+  });
+
+  test('every calculator and group has everyday words, in Filipino too', () {
+    for (final m in allMaterials) {
+      expect(plainMaterialWords, contains(m.id), reason: m.id);
+    }
+    for (final c in MaterialCategory.values) {
+      expect(plainCategoryWords, contains(c.name), reason: c.name);
+    }
+    for (final (a, b) in [
+      ...plainMaterialWords.values,
+      ...plainCategoryWords.values,
+    ]) {
+      expect(filipinoBeginner, contains(a));
+      expect(filipinoBeginner, contains(b));
     }
   });
 
