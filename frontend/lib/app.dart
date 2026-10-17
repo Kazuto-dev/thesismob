@@ -93,6 +93,8 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
     _projects.addListener(_scheduleBackup);
     _prices.addListener(_scheduleBackup);
     _google.addListener(_googleChanged);
+    // Saving to Sheets or Drive signs in to the account too.
+    _google.onToken = _account.joinGoogleSignIn;
     _sync; // Starts syncing when an account is signed in.
     unawaited(_account.refresh());
   }
