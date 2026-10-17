@@ -1,0 +1,218 @@
+name: CI
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  # The Flutter web app in frontend/.
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.7
+          cache: true
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test
+      # Linux is case-sensitive, so a mis-cased import fails here.
+      - run: flutter analyze
+      # Unit, widget and golden tests (goldens are generated on Linux).
+      - run: flutter test
+      # The same pure-Dart tests compiled to JavaScript, where integers
+      # behave differently than on the VM.
+      - run: flutter test --platform chrome test/data test/materials test/state test/export
+      - run: flutter build web --release --no-web-resources-cdn
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/tool/smoke/package-lock.json
+      - name: Browser smoke test
+        working-directory: frontend/tool/smoke
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          python3 -m http.server 8090 --directory ../../build/web &
+          sleep 2
+          BASE_URL=http://127.0.0.1:8090/ node smoke.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: frontend/build/web
+          retention-days: 7
+      # The build the server runs: the API at /api on the app's own
+      # address, and Google sign-in with the client ID in .env.example.
+      - name: Build for the server
+        run: |
+          client_id="$(sed -n 's/^GOOGLE_CLIENT_ID=//p' ../.env.example)"
+          flutter build web --release --no-web-resources-cdn \
+            --dart-define=API_URL=/api \
+            --dart-define=GOOGLE_CLIENT_ID="$client_id" \
+            --output build/web-server
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-server
+          path: frontend/build/web-server
+          retention-days: 7
+
+  # The Dart API in backend/, tested against a real PostgreSQL.
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: bq
+          POSTGRES_PASSWORD: bq
+          POSTGRES_DB: bq_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bq"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          # The same Dart as the server's image in docker-compose.yml.
+          sdk: 3.13.5
+      - run: dart pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: dart analyze --fatal-infos
+      - run: dart test -j 1
+        env:
+          TEST_DATABASE_URL: postgres://bq:bq@localhost:5432/bq_test
+
+  # docker-compose.yml with the server build of the app, started by the
+  # same script the server uses: nginx must serve the app and reach the
+  # API.
+  server:
+    runs-on: ubuntu-latest
+    needs: [frontend, backend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-server
+          path: frontend/build/web
+      - name: Settings for the test run
+        run: |
+          cp .env.example .env
+          sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=ci$(openssl rand -hex 12)/" .env
+          sed -i "s/^SMTP_HOST=.*/SMTP_HOST=/" .env
+      - name: Start
+        run: ./deploy/update.sh
+      - name: The app and the API answer through nginx
+        run: |
+          curl -fsS http://localhost/ | grep -q 'BuildQuantify'
+          curl -fsS http://localhost/api/v1/plans | grep -q '"business"'
+          curl -fsS -o /dev/null http://localhost/main.dart.js
+          # Pages of the app fall back to index.html.
+          curl -fsS http://localhost/settings | grep -q 'BuildQuantify'
+          headers() { curl -fsS -o /dev/null -D - "$@"; }
+          # App files are checked for a newer copy on every visit; the
+          # API keeps its own header, and nothing is sent twice.
+          headers http://localhost/main.dart.js | grep -qi '^cache-control: no-cache'
+          [ "$(headers http://localhost/api/health | grep -ci '^cache-control:')" = 1 ]
+          headers http://localhost/api/health | grep -qi '^cache-control: no-store'
+          [ "$(headers http://localhost/api/health | grep -ci '^x-frame-options:')" = 1 ]
+          # HSTS for visitors who reached Cloudflare over HTTPS only.
+          headers -H 'X-Forwarded-Proto: https' http://localhost/ \
+            | grep -qi '^strict-transport-security: max-age'
+          if headers http://localhost/ | grep -qi '^strict-transport-security'; then
+            echo "HSTS was sent over plain HTTP"; exit 1
+          fi
+      - name: A second update restarts on the code and backs up first
+        run: |
+          ./deploy/update.sh
+          ls deploy/backups/buildquantify-*.dump
+      - name: The admin tool works in the backend
+        run: ./deploy/admin.sh stats
+      - name: Cloudflare's addresses in nginx are current
+        run: |
+          if ! live="$( { curl -fsS https://www.cloudflare.com/ips-v4; echo; \
+                          curl -fsS https://www.cloudflare.com/ips-v6; } | tr -d '\r')"; then
+            echo "::warning::Could not fetch Cloudflare's addresses to compare."
+            exit 0
+          fi
+          if ! diff <(grep . <<<"$live" | sort) \
+                    <(sed -n 's/^set_real_ip_from \(.*\);$/\1/p' deploy/nginx/default.conf | sort); then
+            echo "::warning file=deploy/nginx/default.conf::Cloudflare's addresses changed: update set_real_ip_from from https://www.cloudflare.com/ips/"
+          fi
+      - name: Logs
+        if: failure()
+        run: docker compose logs
+
+  # Deploys to the server over SSH once everything above passed, on each
+  # push to main (or to the branch in the DEPLOY_BRANCH variable). The
+  # server needs nothing built: the code arrives with git and the app is
+  # uploaded. Setup: docs/backend.md, "Deploying to the server".
+  deploy:
+    runs-on: ubuntu-latest
+    needs: server
+    if: github.event_name == 'push' && github.ref_name == (vars.DEPLOY_BRANCH || 'main')
+    environment: production
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    env:
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH || 'buildquantify' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-server
+          path: frontend/build/web
+      - name: Connect to the server
+        env:
+          SSH_HOST: ${{ secrets.DEPLOY_HOST }}
+          SSH_USER: ${{ vars.DEPLOY_USER || 'ubuntu' }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          if [ -z "$SSH_HOST" ] || [ -z "$SSH_KEY" ]; then
+            echo "::error::Add the DEPLOY_HOST and DEPLOY_SSH_KEY secrets in Settings > Secrets and variables > Actions (see docs/backend.md)."
+            exit 1
+          fi
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # The server's host key: pinned by DEPLOY_KNOWN_HOSTS when set,
+          # otherwise read from the server now.
+          if [ -n "$KNOWN_HOSTS" ]; then
+            printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            ssh-keyscan -T 20 "$SSH_HOST" > ~/.ssh/known_hosts 2>/dev/null
+          fi
+          cat > ~/.ssh/config <<EOF
+          Host server
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+            ServerAliveInterval 30
+          EOF
+      - name: Bring the server's code to this commit
+        run: >-
+          ssh server bash -s --
+          "$DEPLOY_PATH" "$GITHUB_REF_NAME" "$GITHUB_SHA"
+          "git@github.com:$GITHUB_REPOSITORY.git"
+          < deploy/checkout.sh
+      - name: Upload the web app
+        run: >-
+          rsync -az --delete-after --delay-updates
+          frontend/build/web/ "server:$DEPLOY_PATH/frontend/build/web/"
+      - name: Start the new version
+        run: ssh server "cd '$DEPLOY_PATH' && ./deploy/update.sh"

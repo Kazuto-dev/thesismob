@@ -29,7 +29,7 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
+/frontend/build/
 
 # Symbolication related
 app.*.symbols
@@ -38,6 +38,11 @@ app.*.symbols
 app.*.map.json
 
 # Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+/frontend/android/app/debug
+/frontend/android/app/profile
+/frontend/android/app/release
+/frontend/test/golden/failures/
+
+# Server settings and database backups (see deploy/)
+.env
+/deploy/backups/

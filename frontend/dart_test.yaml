@@ -1,0 +1,3 @@
+tags:
+  # Screenshot comparisons in test/golden; compared on Linux only.
+  golden:

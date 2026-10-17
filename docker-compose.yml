@@ -1,0 +1,88 @@
+# BuildQuantify on one server: the database, the backend (the API) and
+# the frontend (nginx serving the web app on port 80 and passing /api/ to
+# the backend). Cloudflare, in front, gives visitors HTTPS.
+#
+# Nothing is built here. The containers run stock images on the code in
+# this folder, so after `git pull` a restart runs the new code:
+#
+#   ./deploy/update.sh                 start, or apply what git pulled
+#   docker compose logs -f backend     watch the API
+#   ./deploy/admin.sh stats            the admin tool: codes, accounts
+#
+# The web app is compiled by the pipeline, which uploads it to
+# frontend/build/web (see .github/workflows/ci.yml). Settings come from
+# .env next to this file (see .env.example).
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: buildquantify
+      POSTGRES_USER: buildquantify
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U buildquantify -d buildquantify"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    # No published port: only the backend reaches the database.
+
+  backend:
+    image: dart:3.13.5
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://buildquantify:${POSTGRES_PASSWORD}@db:5432/buildquantify
+      PORT: "8080"
+      GOOGLE_CLIENT_IDS: ${GOOGLE_CLIENT_ID:-}
+      # The app is served from the same address, so browsers need no
+      # cross-origin permission; this is for a copy hosted elsewhere.
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://${DOMAIN:-localhost}}
+      APP_URL: ${APP_URL:-https://${DOMAIN:-localhost}}
+      PUB_CACHE: /pub-cache
+    volumes:
+      # The code, read-only, straight from the checkout.
+      - ./backend:/src:ro
+      # Downloaded packages, kept between restarts.
+      - pub-cache:/pub-cache
+    working_dir: /app
+    # Copies the code, gets the package versions pubspec.lock pins (from
+    # the cache when it has them, so a restart does not need pub.dev) and
+    # runs the API as an unprivileged user. Takes about 20 seconds; the
+    # API brings the database schema up to date as it starts.
+    command:
+      - sh
+      - -ec
+      - |
+        find /app -mindepth 1 -delete
+        cp -r /src/. /app/
+        dart --disable-analytics >/dev/null
+        dart pub get --enforce-lockfile --offline >/dev/null 2>&1 \
+          || dart pub get --enforce-lockfile
+        chown -R 10001:10001 /app
+        exec setpriv --reuid=10001 --regid=10001 --clear-groups \
+          env HOME=/app dart run bin/server.dart
+    depends_on:
+      db:
+        condition: service_healthy
+    # Not published either: nginx reaches it at backend:8080.
+
+  frontend:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      # The compiled web app, uploaded by the pipeline.
+      - ./frontend/build/web:/usr/share/nginx/html:ro
+      # The site's settings; deploy/update.sh reloads nginx after a pull.
+      - ./deploy/nginx:/etc/nginx/conf.d:ro
+    depends_on:
+      - backend
+
+volumes:
+  db-data:
+  pub-cache:
