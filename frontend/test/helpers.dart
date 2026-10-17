@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thesismob/app.dart';
 import 'package:thesismob/data/api_client.dart';
+import 'package:thesismob/data/app_install.dart';
 import 'package:thesismob/data/estimate.dart';
 import 'package:thesismob/data/google_auth.dart';
 import 'package:thesismob/data/google_sheets_client.dart';
@@ -28,6 +29,7 @@ Future<void> pumpApp(
   GoogleAuth? googleAuth,
   GoogleSheetsClient? sheetsClient,
   ApiClient? apiClient,
+  AppInstaller? appInstaller,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -41,9 +43,50 @@ Future<void> pumpApp(
       googleAuth: googleAuth ?? FakeGoogleAuth(configured: false),
       sheetsClient: sheetsClient ?? GoogleSheetsClient(client: _offline),
       apiClient: apiClient ?? ApiClient(baseUrl: ''),
+      appInstaller: appInstaller,
     ),
   );
   await tester.pumpAndSettle();
+}
+
+/// A browser that can install the app as [platform] says, without any
+/// real dialog: [install] answers [accept].
+class FakeAppInstaller implements AppInstaller {
+  FakeAppInstaller({
+    this.platform = InstallPlatform.ios,
+    this.isInstalled = false,
+    this.inAppBrowser = false,
+    this.canInstall = false,
+    this.accept = true,
+  });
+
+  @override
+  final InstallPlatform platform;
+  @override
+  final bool isInstalled;
+  @override
+  final bool inAppBrowser;
+  @override
+  bool canInstall;
+  bool accept;
+  int prompts = 0;
+  void Function()? _onChanged;
+
+  /// Chrome offering to install, as it does a little after the page loads.
+  void offer() {
+    canInstall = true;
+    _onChanged?.call();
+  }
+
+  @override
+  set onChanged(void Function()? callback) => _onChanged = callback;
+
+  @override
+  Future<bool> install() async {
+    prompts++;
+    canInstall = false;
+    return accept;
+  }
 }
 
 /// Google sign-in that never opens a window: it hands out [token], or

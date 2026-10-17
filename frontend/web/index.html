@@ -70,6 +70,22 @@
       });
     }
   </script>
+  <script>
+    // Installing on the home screen. Chrome offers it with an event that
+    // can come before the app has loaded, so keep the offer here for the
+    // app's own Install button (lib/data/app_install_web.dart).
+    window.bqInstall = { prompt: null, installed: false };
+    window.addEventListener('beforeinstallprompt', function (event) {
+      event.preventDefault();
+      window.bqInstall.prompt = event;
+      window.dispatchEvent(new Event('bq-install-changed'));
+    });
+    window.addEventListener('appinstalled', function () {
+      window.bqInstall.prompt = null;
+      window.bqInstall.installed = true;
+      window.dispatchEvent(new Event('bq-install-changed'));
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

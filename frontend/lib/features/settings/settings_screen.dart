@@ -17,13 +17,16 @@ import '../../state/account_controller.dart';
 import '../../state/appearance_controller.dart';
 import '../../state/estimates_controller.dart';
 import '../../state/google_account_controller.dart';
+import '../../state/install_controller.dart';
 import '../../state/price_book_controller.dart';
 import '../../state/profile_controller.dart';
 import '../../state/projects_controller.dart';
 import '../common/google_button.dart';
+import '../shell/install_offer.dart';
 import 'plan_section.dart';
 
-/// Google Sheets connection, appearance, help and app information.
+/// The plan, business profile, backups, Google Sheets, appearance and help.
+/// Prices have their own tab.
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -44,12 +47,11 @@ class SettingsScreen extends StatelessWidget {
                   PageHeader(
                     title: context.tr('Settings'),
                     subtitle: context.tr(
-                      'Prices, backups, Google Sheets and help',
+                      'Your plan, backups, Google Sheets and help',
                     ),
                   ),
                   _PlanSlot(),
-                  _PricesSection(),
-                  SizedBox(height: Space.lg),
+                  _InstallSlot(),
                   _ProfileSection(),
                   SizedBox(height: Space.lg),
                   _BackupSection(),
@@ -85,6 +87,51 @@ class _PlanSlot extends StatelessWidget {
           ],
         )
       : const SizedBox.shrink();
+}
+
+/// Installing the app on the home screen, on phones and tablets that have
+/// not yet, with the space after it.
+class _InstallSlot extends StatelessWidget {
+  const _InstallSlot();
+
+  @override
+  Widget build(BuildContext context) {
+    final install = context.watch<InstallController>();
+    if (!install.isAvailable) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Section(
+          icon: Icons.install_mobile,
+          title: context.tr('Install the app'),
+          children: [
+            Text(
+              context.tr(
+                'Put BuildQuantify on your home screen so it opens like an '
+                'app, without the browser, and works offline.',
+              ),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: Space.lg),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton.tonalIcon(
+                onPressed: () => showInstallSheet(context),
+                icon: const Icon(Icons.add_to_home_screen),
+                label: Text(
+                  context.tr(install.canInstall ? 'Install' : 'How to install'),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: Space.lg),
+      ],
+    );
+  }
 }
 
 /// A titled settings card with an icon.
@@ -450,39 +497,6 @@ class _StatusChip extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _PricesSection extends StatelessWidget {
-  const _PricesSection();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final book = context.watch<PriceBookController>();
-    final mine = book.custom.length;
-    return _Section(
-      icon: Icons.sell_outlined,
-      title: context.tr('Price book'),
-      children: [
-        Text(
-          'Suggested prices for ${book.region.label}. '
-          '${mine == 0 ? 'You have not set any prices of your own.' : 'You set $mine ${mine == 1 ? 'price' : 'prices'} of your own.'}',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: Space.lg),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: FilledButton.tonalIcon(
-            onPressed: () => context.go(Routes.prices),
-            icon: const Icon(Icons.edit_note),
-            label: Text(context.tr('Open price book')),
-          ),
-        ),
-      ],
     );
   }
 }

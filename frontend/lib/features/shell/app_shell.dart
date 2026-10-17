@@ -9,6 +9,7 @@ import '../../core/theme.dart';
 import '../../core/widgets.dart';
 import '../../router.dart';
 import '../../state/projects_controller.dart';
+import 'install_offer.dart';
 
 class _Destination {
   const _Destination(this.label, this.icon, this.selectedIcon);
@@ -22,12 +23,14 @@ const _destinations = [
   _Destination('Estimate', Icons.calculate_outlined, Icons.calculate),
   _Destination('History', Icons.history, Icons.history),
   _Destination('Project', Icons.request_quote_outlined, Icons.request_quote),
+  _Destination('Prices', Icons.sell_outlined, Icons.sell),
   _Destination('Settings', Icons.settings_outlined, Icons.settings),
 ];
 
 /// Top-level layout: a bottom navigation bar on phones, a labelled rail on
 /// tablets and an extended rail with the project total on desktops. Each
-/// tab keeps its own navigation state.
+/// tab keeps its own navigation state. On phones and tablets it offers to
+/// install the app on the home screen.
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.shell});
 
@@ -53,69 +56,73 @@ class AppShell extends StatelessWidget {
         : Icon(data);
 
     if (size == WindowSize.compact) {
-      return Scaffold(
-        body: shell,
-        bottomNavigationBar: DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: scheme.outlineVariant)),
-          ),
-          child: NavigationBar(
-            selectedIndex: shell.currentIndex,
-            onDestinationSelected: _select,
-            destinations: [
-              for (final d in _destinations)
-                NavigationDestination(
-                  icon: icon(d, d.icon),
-                  selectedIcon: icon(d, d.selectedIcon),
-                  label: context.tr(d.label),
-                ),
-            ],
+      return InstallOffer(
+        child: Scaffold(
+          body: shell,
+          bottomNavigationBar: DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: scheme.outlineVariant)),
+            ),
+            child: NavigationBar(
+              selectedIndex: shell.currentIndex,
+              onDestinationSelected: _select,
+              destinations: [
+                for (final d in _destinations)
+                  NavigationDestination(
+                    icon: icon(d, d.icon),
+                    selectedIcon: icon(d, d.selectedIcon),
+                    label: context.tr(d.label),
+                  ),
+              ],
+            ),
           ),
         ),
       );
     }
 
     final extended = size == WindowSize.expanded;
-    return Scaffold(
-      body: Row(
-        children: [
-          NavigationRail(
-            selectedIndex: shell.currentIndex,
-            onDestinationSelected: _select,
-            extended: extended,
-            labelType: extended ? null : NavigationRailLabelType.all,
-            minExtendedWidth: 248,
-            groupAlignment: -1,
-            trailingAtBottom: true,
-            leading: Padding(
-              padding: EdgeInsets.fromLTRB(
-                extended ? Space.lg : 0,
-                Space.lg,
-                extended ? Space.lg : 0,
-                Space.xl,
-              ),
-              child: extended
-                  ? const BrandLockup(size: 36)
-                  : const BrandMark(size: 40),
-            ),
-            trailing: extended
-                ? const Padding(
-                    padding: EdgeInsets.all(Space.lg),
-                    child: SizedBox(width: 216, child: _ProjectTotal()),
-                  )
-                : null,
-            destinations: [
-              for (final d in _destinations)
-                NavigationRailDestination(
-                  icon: icon(d, d.icon),
-                  selectedIcon: icon(d, d.selectedIcon),
-                  label: Text(context.tr(d.label)),
+    return InstallOffer(
+      child: Scaffold(
+        body: Row(
+          children: [
+            NavigationRail(
+              selectedIndex: shell.currentIndex,
+              onDestinationSelected: _select,
+              extended: extended,
+              labelType: extended ? null : NavigationRailLabelType.all,
+              minExtendedWidth: 248,
+              groupAlignment: -1,
+              trailingAtBottom: true,
+              leading: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  extended ? Space.lg : 0,
+                  Space.lg,
+                  extended ? Space.lg : 0,
+                  Space.xl,
                 ),
-            ],
-          ),
-          VerticalDivider(width: 1, color: scheme.outlineVariant),
-          Expanded(child: shell),
-        ],
+                child: extended
+                    ? const BrandLockup(size: 36)
+                    : const BrandMark(size: 40),
+              ),
+              trailing: extended
+                  ? const Padding(
+                      padding: EdgeInsets.all(Space.lg),
+                      child: SizedBox(width: 216, child: _ProjectTotal()),
+                    )
+                  : null,
+              destinations: [
+                for (final d in _destinations)
+                  NavigationRailDestination(
+                    icon: icon(d, d.icon),
+                    selectedIcon: icon(d, d.selectedIcon),
+                    label: Text(context.tr(d.label)),
+                  ),
+              ],
+            ),
+            VerticalDivider(width: 1, color: scheme.outlineVariant),
+            Expanded(child: shell),
+          ],
+        ),
       ),
     );
   }

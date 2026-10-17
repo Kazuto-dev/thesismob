@@ -21,8 +21,9 @@ echo "== Updating the system"
 apt-get update -y
 apt-get upgrade -y
 apt-get install -y \
-  ca-certificates curl git rsync unattended-upgrades netfilter-persistent \
-  iptables-persistent
+  ca-certificates cron curl git rsync unattended-upgrades \
+  netfilter-persistent iptables-persistent
+systemctl enable --now cron
 
 echo "== Automatic security updates"
 dpkg-reconfigure -f noninteractive unattended-upgrades
@@ -39,6 +40,15 @@ if ! command -v docker >/dev/null; then
   apt-get update -y
   apt-get install -y docker-ce docker-ce-cli containerd.io \
     docker-buildx-plugin docker-compose-plugin
+fi
+# Docker installed some other way may lack Compose: add the package that
+# matches where Docker came from.
+if ! docker compose version >/dev/null 2>&1; then
+  if dpkg -s docker-ce >/dev/null 2>&1; then
+    apt-get install -y docker-compose-plugin
+  else
+    apt-get install -y docker-compose-v2
+  fi
 fi
 systemctl enable --now docker
 if [[ "$OWNER" != root ]]; then usermod -aG docker "$OWNER"; fi
@@ -65,7 +75,13 @@ echo "== Nightly backup at 02:30"
 mkdir -p "$ROOT/deploy/backups"
 chown "$OWNER": "$ROOT/deploy/backups"
 CRON="30 2 * * * $ROOT/deploy/backup.sh >> $ROOT/deploy/backups/backup.log 2>&1"
-( crontab -u "$OWNER" -l 2>/dev/null | grep -v 'backup.sh' ; echo "$CRON" ) | crontab -u "$OWNER" -
+{ crontab -u "$OWNER" -l 2>/dev/null | grep -v 'backup.sh' || true; echo "$CRON"; } \
+  | crontab -u "$OWNER" -
+
+# Marks this version of the script as done; deploy/checkout.sh runs it
+# again when the script changes.
+mkdir -p /var/lib/buildquantify
+sha256sum "$0" | cut -d' ' -f1 > /var/lib/buildquantify/setup-done
 
 cat <<DONE
 

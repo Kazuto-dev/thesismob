@@ -5,7 +5,7 @@ import '../helpers.dart';
 
 void main() {
   testWidgets('a price in the price book records its supplier', (tester) async {
-    await pumpApp(tester, location: '/settings/prices');
+    await pumpApp(tester, location: '/prices');
     await tester.ensureVisible(find.text('Portland cement, 40 kg'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Portland cement, 40 kg'));

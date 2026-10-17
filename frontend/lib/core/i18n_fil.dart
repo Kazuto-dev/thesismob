@@ -7,6 +7,7 @@ const filipino = <String, String>{
   'Estimate': 'Estimate',
   'History': 'Kasaysayan',
   'Project': 'Proyekto',
+  'Prices': 'Presyo',
   'Settings': 'Settings',
 
   // Login
@@ -284,9 +285,8 @@ const filipino = <String, String>{
       'tubo ayon sa laki ng proyekto.',
 
   // Settings
-  'Prices, backups, Google Sheets and help':
-      'Presyo, backup, Google Sheets at tulong',
-  'Price book': 'Price book',
+  'Your plan, backups, Google Sheets and help':
+      'Inyong plan, backup, Google Sheets at tulong',
   'Your prices were cleared.': 'Nabura ang inyong mga presyo.',
   'Clear my prices': 'Burahin ang aking mga presyo',
   'Calculators fill in these prices and use them for the materials each job also needs. Set your supplier\'s price to use it everywhere.':
@@ -299,7 +299,6 @@ const filipino = <String, String>{
       'materyales',
   'Search materials': 'Maghanap ng materyales',
   'Use the suggested price': 'Gamitin ang mungkahing presyo',
-  'Open price book': 'Buksan ang price book',
   'Google Sheets': 'Google Sheets',
   'Sign in with Google to save projects as spreadsheets in your own Google Drive: the bill of quantities, the materials to buy and the budget, each on its own tab.':
       'Mag-sign in sa Google para i-save ang mga proyekto bilang spreadsheet '

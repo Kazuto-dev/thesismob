@@ -35,7 +35,9 @@ projects. A project builds:
 Projects export to PDF, Excel (CSV) or plain text, save to Google Sheets
 after signing in with Google on the login screen, and can be backed up to a
 file. After the first visit the app works fully offline, in
-light or dark mode.
+light or dark mode. On phones it offers to install itself on the home
+screen: with Chrome's install dialog on Android, and with the Share →
+Add to Home Screen steps on iPhone, where only the user can add it.
 
 | Login | Project on a phone | Project on a desktop |
 | --- | --- | --- |
@@ -189,7 +191,8 @@ frontend/                  the app (Flutter)
                            price-book items and shared estimating factors
     export/                bill of quantities as PDF, CSV, text; backups
     features/              screens: home, category, calculator, history,
-                           projects, settings, price book, help, shell
+                           projects, prices (the price book), settings,
+                           help, shell
   assets/                  images and the Plus Jakarta Sans font (OFL)
   web/                     index.html, service worker, icons
   tool/smoke/              Playwright smoke test

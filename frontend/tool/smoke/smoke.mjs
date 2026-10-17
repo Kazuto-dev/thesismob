@@ -98,7 +98,7 @@ try {
       '#/project/all',
       '#/history',
       '#/settings',
-      '#/settings/prices',
+      '#/prices',
       '#/settings/help',
     ]) {
       const { context, page, errors } = await open(browser, viewport, hash);
