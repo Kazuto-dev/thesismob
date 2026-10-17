@@ -35,7 +35,9 @@ projects. A project builds:
 Projects export to PDF, Excel (CSV) or plain text, save to Google Sheets
 after signing in with Google on the login screen, and can be backed up to a
 file. After the first visit the app works fully offline, in
-light or dark mode.
+light or dark mode. On phones it offers to install itself on the home
+screen: with Chrome's install dialog on Android, and with the Share →
+Add to Home Screen steps on iPhone, where only the user can add it.
 
 | Login | Project on a phone | Project on a desktop |
 | --- | --- | --- |

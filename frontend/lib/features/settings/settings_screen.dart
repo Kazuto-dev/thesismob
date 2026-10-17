@@ -17,10 +17,12 @@ import '../../state/account_controller.dart';
 import '../../state/appearance_controller.dart';
 import '../../state/estimates_controller.dart';
 import '../../state/google_account_controller.dart';
+import '../../state/install_controller.dart';
 import '../../state/price_book_controller.dart';
 import '../../state/profile_controller.dart';
 import '../../state/projects_controller.dart';
 import '../common/google_button.dart';
+import '../shell/install_offer.dart';
 import 'plan_section.dart';
 
 /// The plan, business profile, backups, Google Sheets, appearance and help.
@@ -49,6 +51,7 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                   _PlanSlot(),
+                  _InstallSlot(),
                   _ProfileSection(),
                   SizedBox(height: Space.lg),
                   _BackupSection(),
@@ -84,6 +87,51 @@ class _PlanSlot extends StatelessWidget {
           ],
         )
       : const SizedBox.shrink();
+}
+
+/// Installing the app on the home screen, on phones and tablets that have
+/// not yet, with the space after it.
+class _InstallSlot extends StatelessWidget {
+  const _InstallSlot();
+
+  @override
+  Widget build(BuildContext context) {
+    final install = context.watch<InstallController>();
+    if (!install.isAvailable) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Section(
+          icon: Icons.install_mobile,
+          title: context.tr('Install the app'),
+          children: [
+            Text(
+              context.tr(
+                'Put BuildQuantify on your home screen so it opens like an '
+                'app, without the browser, and works offline.',
+              ),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: Space.lg),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton.tonalIcon(
+                onPressed: () => showInstallSheet(context),
+                icon: const Icon(Icons.add_to_home_screen),
+                label: Text(
+                  context.tr(install.canInstall ? 'Install' : 'How to install'),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: Space.lg),
+      ],
+    );
+  }
 }
 
 /// A titled settings card with an icon.

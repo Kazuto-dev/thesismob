@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/i18n.dart';
 import 'core/theme.dart';
 import 'data/api_client.dart';
+import 'data/app_install.dart';
 import 'data/estimate_repository.dart';
 import 'data/google_auth.dart';
 import 'data/google_sheets_client.dart';
@@ -17,6 +18,7 @@ import 'export/project_documents.dart';
 import 'state/account_controller.dart';
 import 'state/appearance_controller.dart';
 import 'state/estimates_controller.dart';
+import 'state/install_controller.dart';
 import 'state/price_book_controller.dart';
 import 'state/profile_controller.dart';
 import 'state/projects_controller.dart';
@@ -30,6 +32,7 @@ class BuildQuantifyApp extends StatefulWidget {
     this.googleAuth,
     this.sheetsClient,
     this.apiClient,
+    this.appInstaller,
     this.initialLocation = Routes.home,
   });
 
@@ -42,6 +45,9 @@ class BuildQuantifyApp extends StatefulWidget {
 
   /// The BuildQuantify server; by default the one set at build time.
   final ApiClient? apiClient;
+
+  /// Installing on the home screen; by default what the browser offers.
+  final AppInstaller? appInstaller;
   final String initialLocation;
 
   @override
@@ -124,6 +130,12 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
         ChangeNotifierProvider(create: (_) => ProfileController(widget.prefs)),
         ChangeNotifierProvider.value(value: _google),
         ChangeNotifierProvider.value(value: _account),
+        ChangeNotifierProvider(
+          create: (_) => InstallController(
+            widget.prefs,
+            widget.appInstaller ?? createAppInstaller(),
+          ),
+        ),
       ],
       child: Builder(
         builder: (context) => MaterialApp.router(
