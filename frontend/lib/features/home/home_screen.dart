@@ -509,14 +509,18 @@ class _GetStarted extends StatelessWidget {
     final empty = context.select<ProjectsController, bool>(
       (c) => c.projects.every((p) => p.items.isEmpty && p.checklist.isEmpty),
     );
-    final dismissed = context.select<TipsController, bool>(
-      (c) => c.isDismissed(TipsController.getStarted),
+    final (dismissed, pinned) = context.select<TipsController, (bool, bool)>(
+      (c) => (
+        c.isDismissed(TipsController.getStarted),
+        c.isPinned(TipsController.getStarted),
+      ),
     );
     // One card at a time: the experience question comes first.
     final asking =
         context.asksExperience &&
         context.select<AppearanceController, bool>((a) => a.experience == null);
-    if (!fresh || !empty || dismissed || asking) {
+    // Reopened from Settings, it shows even once the steps are done.
+    if (dismissed || asking || !(pinned || fresh && empty)) {
       return const SizedBox.shrink();
     }
     final theme = Theme.of(context);

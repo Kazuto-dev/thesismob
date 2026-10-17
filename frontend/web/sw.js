@@ -6,7 +6,7 @@
 // so a new release shows up on the next visit; other files are served from
 // the cache and refreshed in the background.
 
-const CACHE = 'buildquantify-v5';
+const CACHE = 'buildquantify-v6';
 
 const SHELL = [
   './',

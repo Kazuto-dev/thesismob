@@ -199,9 +199,18 @@ try {
     await page.evaluate(() => navigator.serviceWorker.ready);
     // Reload under the worker so everything the app loads is cached, and
     // give the icon warm-up time to run.
+    let loads = 0;
+    page.on('domcontentloaded', () => loads++);
     await page.reload();
     await page.waitForSelector('flutter-view', { state: 'attached', timeout: 60000 });
     await page.waitForTimeout(6000);
+    // Flutter's own service worker used to replace sw.js and reload the
+    // page on return visits, restarting the app under the user.
+    check(loads === 1, `a return visit loads the page once (loaded ${loads} times)`);
+    check(
+      await page.evaluate(() => navigator.serviceWorker.controller?.scriptURL.endsWith('/sw.js')),
+      'a return visit stays under sw.js',
+    );
     await context.setOffline(true);
     await page.goto(BASE + '?offline#/category/structural/slab');
     await page.waitForSelector('flutter-view', { state: 'attached', timeout: 60000 });

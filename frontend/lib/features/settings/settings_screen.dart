@@ -25,6 +25,7 @@ import '../../state/install_controller.dart';
 import '../../state/price_book_controller.dart';
 import '../../state/profile_controller.dart';
 import '../../state/projects_controller.dart';
+import '../../state/tips_controller.dart';
 import '../common/google_button.dart';
 import '../common/plan_lock.dart';
 import '../shell/install_offer.dart';
@@ -1100,6 +1101,10 @@ class _AboutSection extends StatelessWidget {
           'How to use BuildQuantify',
           () => context.go(Routes.help),
         ),
+        link(Icons.flag_outlined, context.tr('Show Get started again'), () {
+          context.read<TipsController>().show(TipsController.getStarted);
+          context.go(Routes.home);
+        }),
         link(
           Icons.gavel_outlined,
           'Open-source licenses',
