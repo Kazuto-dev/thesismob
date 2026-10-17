@@ -107,6 +107,21 @@ class FakeServer {
         return _json(me);
       case ('POST', '/v1/auth/logout'):
         return _json({'ok': true});
+      case ('GET', final p) when p == '/v1/orgs/${organization?['id']}':
+        return _json({
+          ...?organization,
+          'members': [
+            {
+              'userId': 'u1',
+              'email': 'maria@example.com',
+              'name': 'Maria Santos',
+              'role': organization!['role'],
+            },
+          ],
+          'invitations': [
+            {'email': 'jose@example.com', 'role': 'estimator'},
+          ],
+        });
     }
     return _error(404, 'not_found', 'Not found.');
   });

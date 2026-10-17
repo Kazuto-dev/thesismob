@@ -8,6 +8,7 @@ import '../../core/format.dart';
 import '../../core/layout.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
+import '../../data/account.dart';
 import '../../data/checklists.dart';
 import '../../data/project.dart';
 import '../../export/project_documents.dart';
@@ -18,6 +19,7 @@ import '../../router.dart';
 import '../../state/price_book_controller.dart';
 import '../../state/projects_controller.dart';
 import '../../state/google_account_controller.dart';
+import '../common/plan_lock.dart';
 import '../common/price_dialog.dart';
 import '../common/tiles.dart';
 import 'bid_actions.dart';
@@ -158,6 +160,7 @@ class _ProjectScreenState extends State<ProjectScreen> {
     }
 
     final hero = _BudgetHero(project: project);
+    final contractLocked = watchPlanLocked(context, AppPlan.business);
     final tabs = SegmentedButton<_Tab>(
       showSelectedIcon: false,
       segments: [
@@ -175,12 +178,29 @@ class _ProjectScreenState extends State<ProjectScreen> {
           ButtonSegment(value: _Tab.budget, label: Text(context.tr('Budget'))),
         ButtonSegment(
           value: _Tab.contract,
-          label: Text(context.tr('Contract')),
-          icon: wide ? const Icon(Icons.handshake_outlined) : null,
+          // On phones the lock sits on the label's corner: there is no
+          // room for a segment icon.
+          label: contractLocked && !wide
+              ? LockBadge(
+                  plan: AppPlan.business,
+                  child: Text(context.tr('Contract')),
+                )
+              : Text(context.tr('Contract')),
+          icon: contractLocked && wide
+              ? const PlanLockIcon(AppPlan.business)
+              : wide
+              ? const Icon(Icons.handshake_outlined)
+              : null,
         ),
       ],
       selected: {wide && _tab == _Tab.budget ? _Tab.items : _tab},
-      onSelectionChanged: (s) => setState(() => _tab = s.first),
+      onSelectionChanged: (s) {
+        if (s.first == _Tab.contract &&
+            !unlockOrAsk(context, AppPlan.business, 'Contract')) {
+          return;
+        }
+        setState(() => _tab = s.first);
+      },
     );
     final tab = wide && _tab == _Tab.budget ? _Tab.items : _tab;
     final body = switch (tab) {
@@ -355,6 +375,8 @@ class _ProjectMenu extends StatelessWidget {
     final saving = context.select<GoogleAccountController, bool>(
       (c) => c.isBusy,
     );
+    final locked = watchPlanLocked(context, AppPlan.business);
+    const lock = PlanLockIcon(AppPlan.business);
     return MenuAnchor(
       builder: (context, controller, _) => IconButton(
         tooltip: context.tr('Project actions'),
@@ -416,8 +438,13 @@ class _ProjectMenu extends StatelessWidget {
         ),
         MenuItemButton(
           leadingIcon: const Icon(Icons.grid_on_outlined),
+          trailingIcon: locked ? lock : null,
           onPressed: hasItems
-              ? () => downloadProjectCsv(context, project)
+              ? () {
+                  if (unlockOrAsk(context, AppPlan.business, 'Excel export')) {
+                    downloadProjectCsv(context, project);
+                  }
+                }
               : null,
           child: Text(context.tr('Download for Excel (CSV)')),
         ),
@@ -428,8 +455,13 @@ class _ProjectMenu extends StatelessWidget {
         ),
         MenuItemButton(
           leadingIcon: const Icon(Icons.table_chart_outlined),
+          trailingIcon: locked ? lock : null,
           onPressed: hasItems && !saving
-              ? () => saveProjectToSheets(context, project)
+              ? () {
+                  if (unlockOrAsk(context, AppPlan.business, 'Google Sheets')) {
+                    saveProjectToSheets(context, project);
+                  }
+                }
               : null,
           child: Text(
             project.sheetId == null
@@ -473,6 +505,7 @@ class _BudgetHero extends StatelessWidget {
     final count = project.items.length;
     final markups = b.contingency + b.overhead + b.profit + b.vat;
     final google = context.watch<GoogleAccountController>();
+    final locked = watchPlanLocked(context, AppPlan.business);
     return InkPanel(
       child: Builder(
         builder: (context) {
@@ -564,20 +597,40 @@ class _BudgetHero extends StatelessWidget {
                     label: Text(context.tr('Download PDF')),
                   ),
                   OutlinedButton.icon(
-                    onPressed: () => downloadProjectCsv(context, project),
-                    icon: const Icon(Icons.grid_on_outlined),
+                    onPressed: () {
+                      if (unlockOrAsk(
+                        context,
+                        AppPlan.business,
+                        'Excel export',
+                      )) {
+                        downloadProjectCsv(context, project);
+                      }
+                    },
+                    icon: locked
+                        ? const PlanLockIcon(AppPlan.business)
+                        : const Icon(Icons.grid_on_outlined),
                     label: Text(context.tr('Excel')),
                   ),
                   if (google.isConfigured)
                     OutlinedButton.icon(
                       onPressed: google.isBusy
                           ? null
-                          : () => saveProjectToSheets(context, project),
+                          : () {
+                              if (unlockOrAsk(
+                                context,
+                                AppPlan.business,
+                                'Google Sheets',
+                              )) {
+                                saveProjectToSheets(context, project);
+                              }
+                            },
                       icon: google.isBusy
                           ? const SizedBox.square(
                               dimension: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
+                          : locked
+                          ? const PlanLockIcon(AppPlan.business)
                           : const Icon(Icons.table_chart_outlined),
                       label: Text(
                         project.sheetId == null
@@ -861,6 +914,7 @@ class _BudgetEditor extends StatelessWidget {
     void update(CostSettings costs) =>
         controller.updateCosts(project.id, costs);
     final preset = _presetOf(c, b.materials + b.labour + b.hauling);
+    final locked = watchPlanLocked(context, AppPlan.business);
 
     return Card(
       child: Padding(
@@ -889,6 +943,7 @@ class _BudgetEditor extends StatelessWidget {
             SizedBox(height: Space.md),
             SegmentedButton<_Preset>(
               showSelectedIcon: false,
+              style: locked ? lockedSegmentStyle : null,
               emptySelectionAllowed: true,
               segments: [
                 ButtonSegment(
@@ -897,16 +952,28 @@ class _BudgetEditor extends StatelessWidget {
                 ),
                 ButtonSegment(
                   value: _Preset.contractor,
-                  label: Text(context.tr('Contractor')),
+                  label: locked
+                      ? LockedLabel(context.tr('Contractor'), AppPlan.business)
+                      : Text(context.tr('Contractor')),
                 ),
                 ButtonSegment(
                   value: _Preset.dpwh,
-                  label: Text(context.tr('DPWH')),
+                  label: locked
+                      ? LockedLabel(context.tr('DPWH'), AppPlan.business)
+                      : Text(context.tr('DPWH')),
                 ),
               ],
               selected: {if (preset != _Preset.custom) preset},
               onSelectionChanged: (s) {
                 if (s.isEmpty) return;
+                if (s.first != _Preset.owner &&
+                    !unlockOrAsk(
+                      context,
+                      AppPlan.business,
+                      'Contractor and DPWH pricing',
+                    )) {
+                  return;
+                }
                 switch (s.first) {
                   case _Preset.owner:
                     update(CostSettings.owner.keepingJobCosts(c));

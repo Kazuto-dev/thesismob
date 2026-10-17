@@ -6,12 +6,14 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/i18n.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
+import '../../data/account.dart';
 import '../../data/project.dart';
 import '../../data/quotes.dart';
 import '../../export/bid_documents.dart';
 import '../../export/files.dart';
 // Loaded on first use, like the bill of quantities PDF.
 import '../../export/bid_pdf.dart' deferred as bid_pdf;
+import '../common/plan_lock.dart';
 import 'quotes_screen.dart';
 import 'revisions_screen.dart';
 
@@ -21,7 +23,14 @@ List<Widget> bidMenuItems(BuildContext context, Project project) => [
   const Divider(),
   MenuItemButton(
     leadingIcon: const Icon(Icons.history),
-    onPressed: () => openRevisions(context, project),
+    trailingIcon: watchPlanLocked(context, AppPlan.business)
+        ? const PlanLockIcon(AppPlan.business)
+        : null,
+    onPressed: () {
+      if (unlockOrAsk(context, AppPlan.business, 'Estimate revisions')) {
+        openRevisions(context, project);
+      }
+    },
     child: Text(context.tr('Estimate revisions')),
   ),
   MenuItemButton(
