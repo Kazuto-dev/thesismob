@@ -89,6 +89,41 @@ void main() {
     expect(find.text('Welcome'), findsOneWidget);
   });
 
+  testWidgets('logging out asks first, then returns to the login screen', (
+    tester,
+  ) async {
+    await pumpApp(
+      tester,
+      location: '/settings',
+      googleAuth: FakeGoogleAuth(),
+      sheetsClient: sheets(),
+      prefs: {
+        GoogleAccountController.key:
+            '{"email":"maria@example.com","name":"Maria Santos"}',
+      },
+    );
+    await tester.ensureVisible(find.text('Log out'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Log out'));
+    await tester.pumpAndSettle();
+    expect(find.text('Log out?'), findsOneWidget);
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Maria Santos'), findsOneWidget, reason: 'still in');
+
+    await tester.tap(find.text('Log out'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Log out').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Welcome'), findsOneWidget);
+  });
+
+  testWidgets('there is nothing to log out of when signed out', (tester) async {
+    await pumpApp(tester, location: '/settings');
+    expect(find.text('Log out'), findsNothing);
+  });
+
   testWidgets('desktops show the introduction beside the sign-in', (
     tester,
   ) async {
