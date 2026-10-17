@@ -24,6 +24,9 @@ class _PriceBookScreenState extends State<PriceBookScreen> {
   final _search = TextEditingController();
   bool _onlyMine = false;
 
+  /// The kinds the user opened; every kind starts closed.
+  final _open = <ItemGroup>{};
+
   @override
   void dispose() {
     _search.dispose();
@@ -82,6 +85,7 @@ class _PriceBookScreenState extends State<PriceBookScreen> {
             i.step > 0)
           i,
     ];
+    final filtering = query.isNotEmpty || _onlyMine;
     final groups = <ItemGroup, List<Item>>{};
     for (final i in items) {
       groups.putIfAbsent(i.group, () => []).add(i);
@@ -166,13 +170,32 @@ class _PriceBookScreenState extends State<PriceBookScreen> {
                     onChanged: (_) => setState(() {}),
                   ),
                   const SizedBox(height: Space.sm),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: FilterChip(
-                      label: Text('My prices (${book.custom.length})'),
-                      selected: _onlyMine,
-                      onSelected: (v) => setState(() => _onlyMine = v),
-                    ),
+                  Row(
+                    children: [
+                      FilterChip(
+                        label: Text('My prices (${book.custom.length})'),
+                        selected: _onlyMine,
+                        onSelected: (v) => setState(() => _onlyMine = v),
+                      ),
+                      const Spacer(),
+                      if (!filtering && groups.isNotEmpty)
+                        TextButton(
+                          onPressed: () => setState(() {
+                            if (_open.length == groups.length) {
+                              _open.clear();
+                            } else {
+                              _open.addAll(groups.keys);
+                            }
+                          }),
+                          child: Text(
+                            context.tr(
+                              _open.length == groups.length
+                                  ? 'Close all'
+                                  : 'Open all',
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   if (items.isEmpty)
                     Padding(
@@ -186,19 +209,21 @@ class _PriceBookScreenState extends State<PriceBookScreen> {
                       ),
                     ),
                   for (final MapEntry(key: group, value: members)
-                      in groups.entries) ...[
-                    SectionHeader(
-                      group.label,
-                      padding: const EdgeInsets.fromLTRB(
-                        0,
-                        Space.xl,
-                        0,
-                        Space.sm,
-                      ),
-                    ),
-                    Card(
-                      clipBehavior: Clip.antiAlias,
-                      child: Column(
+                      in groups.entries)
+                    Padding(
+                      padding: const EdgeInsets.only(top: Space.md),
+                      child: _GroupCard(
+                        group: group,
+                        count: members.length,
+                        mine: members.where((i) => book.isCustom(i.key)).length,
+                        // A search or the My prices filter shows its
+                        // matches without another tap.
+                        open: filtering || _open.contains(group),
+                        onToggle: filtering
+                            ? null
+                            : () => setState(() {
+                                if (!_open.remove(group)) _open.add(group);
+                              }),
                         children: [
                           for (final (i, item) in members.indexed) ...[
                             if (i > 0)
@@ -215,12 +240,96 @@ class _PriceBookScreenState extends State<PriceBookScreen> {
                         ],
                       ),
                     ),
-                  ],
                 ],
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// One kind of material, as a card whose header opens and closes its list.
+class _GroupCard extends StatelessWidget {
+  const _GroupCard({
+    required this.group,
+    required this.count,
+    required this.mine,
+    required this.open,
+    required this.onToggle,
+    required this.children,
+  });
+
+  final ItemGroup group;
+  final int count;
+
+  /// How many of [count] carry the user's own price.
+  final int mine;
+  final bool open;
+
+  /// Null while a search keeps every kind open.
+  final VoidCallback? onToggle;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final summary = [
+      count == 1 ? context.tr('1 item') : context.tr('{n} items', {'n': count}),
+      if (mine > 0) context.tr('{n} yours', {'n': mine}),
+    ].join(' · ');
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            header: true,
+            expanded: open,
+            child: InkWell(
+              onTap: onToggle,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Space.lg,
+                  vertical: Space.md,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.tr(group.label),
+                            style: theme.textTheme.titleMedium,
+                          ),
+                          Text(
+                            summary,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (onToggle != null)
+                      AnimatedRotation(
+                        turns: open ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 200),
+                        child: Icon(
+                          Icons.expand_more,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (open) ...[const Divider(height: 1), ...children],
+        ],
       ),
     );
   }

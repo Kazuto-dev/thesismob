@@ -393,6 +393,28 @@ void main() {
     expect(find.text('₱240.00'), findsOneWidget);
   });
 
+  testWidgets('the price book opens one kind of material at a time', (
+    tester,
+  ) async {
+    await pumpApp(tester, location: '/prices');
+    expect(find.text('Cement and aggregates'), findsOneWidget);
+    expect(find.text('Portland cement, 40 kg'), findsNothing);
+
+    await tester.tap(find.text('Cement and aggregates'));
+    await tester.pumpAndSettle();
+    expect(find.text('Portland cement, 40 kg'), findsOneWidget);
+    expect(find.text('Masonry'), findsOneWidget);
+
+    await tester.tap(find.text('Cement and aggregates'));
+    await tester.pumpAndSettle();
+    expect(find.text('Portland cement, 40 kg'), findsNothing);
+
+    await tester.tap(find.text('Open all'));
+    await tester.pumpAndSettle();
+    expect(find.text('Portland cement, 40 kg'), findsOneWidget);
+    expect(find.text('Close all'), findsOneWidget);
+  });
+
   testWidgets('history explains the empty state', (tester) async {
     await pumpApp(tester, location: '/history');
     expect(find.text('No calculations yet'), findsOneWidget);

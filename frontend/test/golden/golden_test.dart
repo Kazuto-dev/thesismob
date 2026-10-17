@@ -181,6 +181,15 @@ void main() {
   });
 
   for (final (label, size) in [('phone', phone), ('desktop', desktop)]) {
+    testWidgets('prices on $label', skip: _skip != null, (tester) async {
+      await pumpApp(tester, size: size, location: '/prices');
+      await tester.tap(find.text('Cement and aggregates'));
+      await tester.pumpAndSettle();
+      await _snapshot(tester, 'prices_$label');
+    });
+  }
+
+  for (final (label, size) in [('phone', phone), ('desktop', desktop)]) {
     testWidgets('plans on $label', skip: _skip != null, (tester) async {
       await pumpApp(
         tester,

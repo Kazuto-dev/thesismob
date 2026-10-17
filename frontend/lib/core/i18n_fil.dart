@@ -298,6 +298,9 @@ const filipino = <String, String>{
       'Mas mataas ang mungkahing presyo sa mga rehiyong mas mahal ang '
       'materyales',
   'Search materials': 'Maghanap ng materyales',
+  '{n} yours': '{n} sa inyo',
+  'Open all': 'Buksan lahat',
+  'Close all': 'Isara lahat',
   'Use the suggested price': 'Gamitin ang mungkahing presyo',
   'Google Sheets': 'Google Sheets',
   'Sign in with Google to save projects as spreadsheets in your own Google Drive: the bill of quantities, the materials to buy and the budget, each on its own tab.':
