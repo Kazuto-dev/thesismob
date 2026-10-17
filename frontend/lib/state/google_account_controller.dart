@@ -198,6 +198,10 @@ class GoogleAccountController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Called with each new access token, such as to sign in to the
+  /// BuildQuantify account along with any Google action.
+  Future<void> Function(String token)? onToken;
+
   /// True while talking to Google.
   bool get isBusy => _busy;
 
@@ -296,6 +300,7 @@ class GoogleAccountController extends ChangeNotifier {
       token = await _auth.authorize();
       _token = token;
       _tokenAt = _now();
+      await onToken?.call(token);
       return await action(token);
     } on GoogleAuthException catch (e) {
       return (ok: false, message: _authMessage(e.failure), sheet: null);

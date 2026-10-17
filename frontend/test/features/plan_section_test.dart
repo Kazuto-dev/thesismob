@@ -161,4 +161,28 @@ void main() {
     expect(server.calls, contains('POST /v1/auth/google'));
     expect(server.calls, contains('GET /v1/projects'));
   });
+
+  testWidgets('signed in with Google from before, one tap turns on saving '
+      'to the account', (tester) async {
+    final server = FakeServer();
+    await pumpApp(
+      tester,
+      googleAuth: FakeGoogleAuth(),
+      sheetsClient: GoogleSheetsClient(client: FakeGoogleApi().client),
+      apiClient: ApiClient(baseUrl: 'https://api.test', client: server.client),
+      prefs: {
+        GoogleAccountController.key:
+            '{"email":"maria@example.com","name":"Maria Santos"}',
+      },
+    );
+    expect(find.textContaining('Turn on saving'), findsOneWidget);
+    await tester.tap(find.text('Turn on'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Turn on saving'), findsNothing);
+    expect(
+      server.calls.where((c) => c == 'POST /v1/auth/google'),
+      hasLength(1),
+    );
+    expect(server.calls, contains('GET /v1/projects'));
+  });
 }

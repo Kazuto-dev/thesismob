@@ -123,6 +123,10 @@ const filipinoAccount = <String, String>{
   'Saved to your account {at}.': 'Na-save sa inyong account noong {at}.',
   'Saved to your account.': 'Na-save sa inyong account.',
   'Sync now': 'I-sync ngayon',
+  'Turn on saving to your account, so your projects and prices are kept safe on every device.':
+      'I-on ang pag-save sa inyong account, para ligtas ang inyong mga '
+      'proyekto at presyo sa bawat device.',
+  'Turn on': 'I-on',
   'Save to your account': 'I-save sa inyong account',
   '{n} of your projects are in this browser only: your plan keeps {limit} projects in your account. Upgrade to Business to save them all.':
       '{n} sa inyong mga proyekto ang nasa browser na ito lang: {limit} '

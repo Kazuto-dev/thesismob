@@ -22,7 +22,10 @@ Future<void> signInToAccount(BuildContext context) async {
   final result = await context.read<GoogleAccountController>().withToken((
     token,
   ) async {
-    final error = await account.signInWithGoogle(token);
+    // Usually signed in already, along with the Google sign-in.
+    final error = account.isSignedIn
+        ? null
+        : await account.signInWithGoogle(token);
     return (
       ok: error == null,
       message: error ?? 'Signed in to your account.',

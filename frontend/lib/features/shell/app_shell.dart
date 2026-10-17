@@ -10,6 +10,7 @@ import '../../core/widgets.dart';
 import '../../router.dart';
 import '../../state/projects_controller.dart';
 import 'install_offer.dart';
+import 'save_offer.dart';
 
 class _Destination {
   const _Destination(this.label, this.icon, this.selectedIcon);
@@ -58,7 +59,7 @@ class AppShell extends StatelessWidget {
     if (size == WindowSize.compact) {
       return InstallOffer(
         child: Scaffold(
-          body: shell,
+          body: SaveOffer(child: shell),
           bottomNavigationBar: DecoratedBox(
             decoration: BoxDecoration(
               border: Border(top: BorderSide(color: scheme.outlineVariant)),
@@ -120,7 +121,7 @@ class AppShell extends StatelessWidget {
               ],
             ),
             VerticalDivider(width: 1, color: scheme.outlineVariant),
-            Expanded(child: shell),
+            Expanded(child: SaveOffer(child: shell)),
           ],
         ),
       ),
