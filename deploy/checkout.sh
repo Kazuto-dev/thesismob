@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Run by the pipeline on the server, over SSH, at the start of each
 # deploy: brings the repository to the commit being deployed. The first
-# time, it clones the repository and prepares the server (Docker, the
-# firewall, .env) with setup-ubuntu.sh.
+# time, it clones the repository. Then, and whenever setup-ubuntu.sh
+# changes, it prepares the server with it (Docker, the firewall, .env,
+# backups).
 #
 #   ssh server bash -s -- <folder> <branch> <commit> <repository> < deploy/checkout.sh
 set -euo pipefail
@@ -40,8 +41,11 @@ git log -1 --format='   %h %s'
 # Made here, not by Docker, so the pipeline can upload the app into it.
 mkdir -p frontend/build/web
 
-if ! command -v docker >/dev/null || ! command -v rsync >/dev/null || [[ ! -f .env ]]; then
-  echo "== Preparing the server (first deploy)"
+# setup-ubuntu.sh records which version of itself last ran; run it on
+# the first deploy and whenever it has changed since.
+if [[ "$(cat /var/lib/buildquantify/setup-done 2>/dev/null)" \
+      != "$(sha256sum deploy/setup-ubuntu.sh | cut -d' ' -f1)" || ! -f .env ]]; then
+  echo "== Preparing the server (setup-ubuntu.sh is new here or changed)"
   if ! sudo -n true 2>/dev/null; then
     echo "sudo asks for a password here. On the server, run once:" >&2
     echo "  cd $dir && sudo ./deploy/setup-ubuntu.sh" >&2

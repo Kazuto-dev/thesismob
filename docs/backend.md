@@ -132,10 +132,11 @@ Every push to `main` deploys to the server once all the tests pass. The
 2. Logs in to the server over SSH and runs
    [`deploy/checkout.sh`](../deploy/checkout.sh), which brings the
    server's copy of the repository (`~/buildquantify`) to that commit. The
-   first time, it clones the repository with the server's own GitHub key
-   and runs [`setup-ubuntu.sh`](../deploy/setup-ubuntu.sh): Docker, port
-   80 in the firewall, automatic security updates, `.env` with a random
-   database password, and a backup every night at 02:30.
+   first time, it clones the repository with the server's own GitHub key.
+   Then, and again whenever the script changes, it runs
+   [`setup-ubuntu.sh`](../deploy/setup-ubuntu.sh): Docker with Compose,
+   port 80 in the firewall, automatic security updates, `.env` with a
+   random database password, and a backup every night at 02:30.
 3. Copies the app to `frontend/build/web` with rsync.
 4. Runs [`deploy/update.sh`](../deploy/update.sh), which backs up the
    database, starts or restarts the containers on the new code, reloads
