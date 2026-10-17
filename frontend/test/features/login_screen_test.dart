@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:thesismob/data/google_auth.dart';
 import 'package:thesismob/data/google_sheets_client.dart';
+import 'package:thesismob/state/appearance_controller.dart';
 import 'package:thesismob/state/google_account_controller.dart';
 
 import '../google_fake.dart';
@@ -117,6 +118,38 @@ void main() {
     await tester.tap(find.text('Log out').last);
     await tester.pumpAndSettle();
     expect(find.text('Welcome'), findsOneWidget);
+  });
+
+  testWidgets('Get started put off with "Not now" is back after signing in', (
+    tester,
+  ) async {
+    await pumpApp(
+      tester,
+      googleAuth: FakeGoogleAuth(),
+      sheetsClient: sheets(),
+      prefs: {
+        GoogleAccountController.key:
+            '{"email":"maria@example.com","name":"Maria Santos"}',
+        AppearanceController.experienceKey: 'experienced',
+      },
+    );
+    await tester.tap(find.text('Not now'));
+    await tester.pumpAndSettle();
+    expect(find.text('Get started'), findsNothing);
+
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Log out'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Log out'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Log out').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sign in with Google'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Estimate'));
+    await tester.pumpAndSettle();
+    expect(find.text('Get started'), findsOneWidget);
   });
 
   testWidgets('there is nothing to log out of when signed out', (tester) async {

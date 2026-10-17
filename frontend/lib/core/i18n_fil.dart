@@ -65,6 +65,7 @@ const filipino = <String, String>{
       'Mag-download ng PDF o i-save sa Google Sheets',
   'Plan a house': 'Magplano ng bahay',
   'Not now': 'Mamaya na',
+  'Show Get started again': 'Ipakita ulit ang Magsimula',
   'New here?': 'Bago rito?',
   'See how estimates work and how to send them to Google Sheets.':
       'Alamin kung paano gumagana ang estimate at paano ito ipadala sa '

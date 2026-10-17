@@ -64,6 +64,7 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
   late final _estimates = EstimatesController(EstimateRepository(widget.prefs));
   late final _projects = ProjectsController(ProjectRepository(widget.prefs));
   late final _prices = PriceBookController(widget.prefs);
+  late final _tips = TipsController(widget.prefs);
   late final _profile = ProfileController(widget.prefs);
   late final _api = widget.apiClient ?? ApiClient();
   late final _account = AccountController(widget.prefs, _api);
@@ -106,6 +107,9 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
     if (_wasSignedInToGoogle && !signedIn && _account.isSignedIn) {
       unawaited(_account.signOut());
     }
+    // Tips put off with "Not now", such as Get started, come back when
+    // the user signs in or out.
+    if (signedIn != _wasSignedInToGoogle) _tips.wake();
     _wasSignedInToGoogle = signedIn;
   }
 
@@ -142,6 +146,7 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
     _prices.dispose();
     _account.dispose();
     _profile.dispose();
+    _tips.dispose();
     super.dispose();
   }
 
@@ -155,7 +160,7 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
         ChangeNotifierProvider(
           create: (_) => AppearanceController(widget.prefs),
         ),
-        ChangeNotifierProvider(create: (_) => TipsController(widget.prefs)),
+        ChangeNotifierProvider.value(value: _tips),
         ChangeNotifierProvider.value(value: _profile),
         ChangeNotifierProvider.value(value: _google),
         ChangeNotifierProvider.value(value: _account),

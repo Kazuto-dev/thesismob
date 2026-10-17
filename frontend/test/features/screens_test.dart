@@ -88,7 +88,9 @@ void main() {
     expect(projectsOf(tester).active.name, 'Reyes house');
   });
 
-  testWidgets('"Not now" hides the first-visit card for good', (tester) async {
+  testWidgets('"Not now" hides the first-visit card; Settings brings it back', (
+    tester,
+  ) async {
     await pumpApp(
       tester,
       prefs: {AppearanceController.experienceKey: 'experienced'},
@@ -96,6 +98,14 @@ void main() {
     await tester.tap(find.text('Not now'));
     await tester.pumpAndSettle();
     expect(find.text('Get started'), findsNothing);
+
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Show Get started again'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Show Get started again'));
+    await tester.pumpAndSettle();
+    expect(find.text('Get started'), findsOneWidget);
   });
 
   testWidgets('a quick budget gives a range from the floor area', (
