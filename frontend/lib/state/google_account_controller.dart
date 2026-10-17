@@ -202,9 +202,14 @@ class GoogleAccountController extends ChangeNotifier {
   bool get isBusy => _busy;
 
   /// Asks the user to choose a Google account and allow access. Call it
-  /// straight from a button press.
-  Future<GoogleResult> signIn() => _run((token) async {
+  /// straight from a button press. [alsoWith] gets the access token, such
+  /// as to sign in to the BuildQuantify account too; its failure does not
+  /// undo the Google sign-in.
+  Future<GoogleResult> signIn({
+    Future<void> Function(String token)? alsoWith,
+  }) => _run((token) async {
     await _identify(token, force: true);
+    await alsoWith?.call(token);
     return (ok: true, message: 'Signed in as ${_account!.email}.', sheet: null);
   });
 

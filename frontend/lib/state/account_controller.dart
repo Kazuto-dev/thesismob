@@ -46,6 +46,14 @@ class AccountController extends ChangeNotifier {
 
   bool get isSignedIn => _token != null && _status != null;
 
+  /// The session token, for other parts of the app that call the server
+  /// as this account, such as saving projects.
+  String? get token => _token;
+
+  /// Tasks to finish before signing out, such as saving the last changes
+  /// to the account. Each is given a few seconds.
+  final List<Future<void> Function()> beforeSignOut = [];
+
   AccountStatus? get status => _status;
 
   PlanOffer get offer => _offer;
@@ -123,6 +131,15 @@ class AccountController extends ChangeNotifier {
     _store(answer);
   });
 
+  /// Signs in to the account along with a Google sign-in, when this build
+  /// has a server that takes sign-ins and no account is signed in yet. A
+  /// failure leaves the app signed out of the account, to try again from
+  /// Settings.
+  Future<void> joinGoogleSignIn(String accessToken) async {
+    if (!isConfigured || isSignedIn || !_offer.signInEnabled) return;
+    await signInWithGoogle(accessToken);
+  }
+
   /// Starts the one free trial of Business.
   Future<String?> startTrial() => _guard(() async {
     _store(await _api.post('/v1/trial', token: _token));
@@ -169,8 +186,16 @@ class AccountController extends ChangeNotifier {
     );
   });
 
-  /// Signs out of the account on this device.
+  /// Signs out of the account on this device. What the account saved
+  /// stays on the server, ready for the next sign-in.
   Future<void> signOut() async {
+    for (final task in List.of(beforeSignOut)) {
+      try {
+        await task().timeout(const Duration(seconds: 5));
+      } on Object {
+        // Whatever was not saved stays on this device.
+      }
+    }
     final token = _token;
     _clear();
     if (token == null) return;

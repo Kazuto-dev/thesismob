@@ -5,6 +5,7 @@ import '../../core/i18n.dart';
 import '../../core/layout.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
+import '../../state/account_controller.dart';
 import '../../state/google_account_controller.dart';
 import '../common/google_button.dart';
 
@@ -233,7 +234,9 @@ class _SignInState extends State<_SignIn> {
   Future<void> _signIn() async {
     setState(() => _error = null);
     // Called straight from the tap, so Google's window may open.
-    final result = await context.read<GoogleAccountController>().signIn();
+    final result = await context.read<GoogleAccountController>().signIn(
+      alsoWith: context.read<AccountController>().joinGoogleSignIn,
+    );
     if (mounted && !result.ok) setState(() => _error = result.message);
   }
 

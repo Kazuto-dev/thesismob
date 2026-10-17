@@ -19,6 +19,11 @@ class FakeServer {
   /// The company giving the Enterprise plan, as `{id, name, role, seats}`.
   Map<String, Object?>? organization;
   final inquiries = <Map<String, dynamic>>[];
+
+  /// The account's projects, as `{data, version}`, and its documents.
+  final projects = <String, Map<String, dynamic>>{};
+  final documents = <String, Map<String, dynamic>>{};
+  var _saves = 0;
   final calls = <String>[];
 
   /// Valid codes; each gives 31 days of Business.
@@ -107,6 +112,51 @@ class FakeServer {
         return _json(me);
       case ('POST', '/v1/auth/logout'):
         return _json({'ok': true});
+      case ('GET', '/v1/projects'):
+        return _json({
+          'projects': [
+            for (final MapEntry(:key, :value) in projects.entries)
+              {'id': key, 'version': value['version'], 'readOnly': false},
+          ],
+        });
+      case ('GET', final p) when p.startsWith('/v1/projects/'):
+        final id = p.substring('/v1/projects/'.length);
+        final project = projects[id];
+        if (project == null) {
+          return _error(404, 'not_found', 'No such project.');
+        }
+        return _json({'id': id, ...project});
+      case ('PUT', final p) when p.startsWith('/v1/projects/'):
+        final id = p.substring('/v1/projects/'.length);
+        final existing = projects[id];
+        if (existing == null) {
+          if (plan == 'free' && projects.length >= 2) {
+            return _error(402, 'plan_limit', 'The free plan keeps 2 projects.');
+          }
+        } else if (body['baseVersion'] != null &&
+            body['baseVersion'] != existing['version']) {
+          return _error(409, 'conflict', 'Changed on another device.');
+        }
+        final version = (existing?['version'] as int? ?? 0) + 1;
+        // Saved as the database gives it back: keys in another order.
+        projects[id] = {'data': _reorder(body['data']), 'version': version};
+        return _json({'id': id, 'version': version});
+      case ('DELETE', final p) when p.startsWith('/v1/projects/'):
+        if (projects.remove(p.substring('/v1/projects/'.length)) == null) {
+          return _error(404, 'not_found', 'No such project.');
+        }
+        return _json({'ok': true});
+      case ('GET', final p) when p.startsWith('/v1/documents/'):
+        final doc = documents[p.substring('/v1/documents/'.length)];
+        if (doc == null) return _error(404, 'not_found', 'Not saved yet.');
+        return _json(doc);
+      case ('PUT', final p) when p.startsWith('/v1/documents/'):
+        final at = 'save-${++_saves}';
+        documents[p.substring('/v1/documents/'.length)] = {
+          'data': _reorder(body['data']),
+          'updatedAt': at,
+        };
+        return _json({'updatedAt': at});
       case ('GET', final p) when p == '/v1/orgs/${organization?['id']}':
         return _json({
           ...?organization,
@@ -126,3 +176,12 @@ class FakeServer {
     return _error(404, 'not_found', 'Not found.');
   });
 }
+
+/// [json] with every object's keys reversed, as a database may return
+/// them, and whole numbers written without a decimal point.
+Object? _reorder(Object? json) => switch (json) {
+  Map() => {for (final k in json.keys.toList().reversed) k: _reorder(json[k])},
+  List() => [for (final v in json) _reorder(v)],
+  double() when json == json.truncateToDouble() => json.toInt(),
+  _ => json,
+};

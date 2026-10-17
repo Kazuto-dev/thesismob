@@ -27,6 +27,7 @@ do alone.
 | Activation codes | Yes | Each works once, for one account, and can be cancelled. |
 | The free plan's two projects | Yes, for cloud projects | The server refuses a third; the app also checks on the device. |
 | Projects on several devices | Yes | Projects are kept with the account, with versions so two devices do not overwrite each other. |
+| Saving projects, prices, history and the business profile to the account | Yes | Once signed in, everything is kept in the database (`projects`, and `documents` keys `price_book`, `history`, `profile`). The browser keeps a copy only to open fast and work offline; see `frontend/lib/state/cloud_sync.dart`. |
 | A company's shared projects and price book (Enterprise) | Yes | Shared between the company's members. |
 | Members, roles and invitations (Enterprise) | Yes | Who may see and change what. |
 | "Contact us" for Enterprise | Yes | Stored and emailed to sales. |

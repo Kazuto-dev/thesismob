@@ -105,4 +105,27 @@ const filipinoAccount = <String, String>{
   'Team members': 'Mga miyembro ng team',
   "Couldn't load the team.": 'Hindi ma-load ang team.',
   '{n} of {seats} seats used': '{n} sa {seats} na upuan ang gamit',
+  // Saving to the account.
+  'Your projects, prices and history are only in this browser for now. Sign in to save them to your account, so they are safe and open on any device.':
+      'Sa browser na ito lang muna ang inyong mga proyekto, presyo at '
+      'kasaysayan. Mag-sign in para ma-save ang mga ito sa inyong account, '
+      'para ligtas at mabuksan sa kahit anong device.',
+  'Your projects, prices and history are saved to your account, {email}, and open on any device you sign in on. This browser keeps a copy so the app works offline.':
+      'Naka-save sa inyong account, {email}, ang inyong mga proyekto, presyo '
+      'at kasaysayan, at mabubuksan sa kahit anong device na pag-sign-in-an '
+      'ninyo. May kopya rin sa browser na ito para gumana ang app kahit '
+      'offline.',
+  'Saving to your account…': 'Sine-save sa inyong account…',
+  "Can't reach the server. Changes are kept in this browser and saved to your account when you are back online.":
+      'Hindi maabot ang server. Nasa browser na ito muna ang mga pagbabago at '
+      'mase-save sa inyong account pagbalik ng internet.',
+  'Saving failed.': 'Hindi na-save.',
+  'Saved to your account {at}.': 'Na-save sa inyong account noong {at}.',
+  'Saved to your account.': 'Na-save sa inyong account.',
+  'Sync now': 'I-sync ngayon',
+  'Save to your account': 'I-save sa inyong account',
+  '{n} of your projects are in this browser only: your plan keeps {limit} projects in your account. Upgrade to Business to save them all.':
+      '{n} sa inyong mga proyekto ang nasa browser na ito lang: {limit} '
+      'proyekto lang ang naitatabi ng inyong plano sa account. Mag-upgrade sa '
+      'Business para ma-save lahat.',
 };

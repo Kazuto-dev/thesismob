@@ -409,6 +409,48 @@ class ProjectsController extends ChangeNotifier {
     return added;
   }
 
+  // Changes made to the account on the server, applied here as they are,
+  // without touching the dates.
+
+  /// Adds [project], or replaces the one with its id.
+  void putFromCloud(Project project) {
+    final index = _indexOf(project.id);
+    if (index < 0) {
+      _projects.add(project);
+    } else {
+      _projects[index] = project;
+    }
+    _persist();
+  }
+
+  /// Removes the project [id], deleted on another device.
+  void removeFromCloud(String id) {
+    final index = _indexOf(id);
+    if (index < 0) return;
+    _projects.removeAt(index);
+    _afterRemoval();
+    _persist();
+  }
+
+  /// Replaces every project, e.g. with another account's.
+  void replaceAll(List<Project> projects) {
+    _projects
+      ..clear()
+      ..addAll(projects);
+    _afterRemoval();
+    _persist();
+  }
+
+  void _afterRemoval() {
+    if (_projects.isEmpty) {
+      _projects.add(Project.create(ProjectRepository.defaultName));
+    }
+    if (_indexOf(_activeId!) < 0) {
+      _activeId = projects.first.id;
+      unawaited(_repository.saveActiveId(_activeId!));
+    }
+  }
+
   void _update(String id, Project Function(Project) change) {
     final index = _indexOf(id);
     if (index < 0) return;

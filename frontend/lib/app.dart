@@ -17,6 +17,7 @@ import 'data/project_repository.dart';
 import 'export/project_documents.dart';
 import 'state/account_controller.dart';
 import 'state/appearance_controller.dart';
+import 'state/cloud_sync.dart';
 import 'state/estimates_controller.dart';
 import 'state/install_controller.dart';
 import 'state/price_book_controller.dart';
@@ -63,10 +64,21 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
   late final _estimates = EstimatesController(EstimateRepository(widget.prefs));
   late final _projects = ProjectsController(ProjectRepository(widget.prefs));
   late final _prices = PriceBookController(widget.prefs);
-  late final _account = AccountController(
-    widget.prefs,
-    widget.apiClient ?? ApiClient(),
+  late final _profile = ProfileController(widget.prefs);
+  late final _api = widget.apiClient ?? ApiClient();
+  late final _account = AccountController(widget.prefs, _api);
+
+  /// Keeps the signed-in account's data in the server's database.
+  late final _sync = CloudSync(
+    prefs: widget.prefs,
+    api: _api,
+    account: _account,
+    projects: _projects,
+    prices: _prices,
+    history: _estimates,
+    profile: _profile,
   );
+  late bool _wasSignedInToGoogle = _google.isSignedIn;
   late final GoRouter _router = createRouter(
     initialLocation: widget.initialLocation,
     account: _google,
@@ -80,7 +92,19 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
     super.initState();
     _projects.addListener(_scheduleBackup);
     _prices.addListener(_scheduleBackup);
+    _google.addListener(_googleChanged);
+    _sync; // Starts syncing when an account is signed in.
     unawaited(_account.refresh());
+  }
+
+  /// Signing out of Google signs out of the account it signed in to. The
+  /// account's data stays on the server.
+  void _googleChanged() {
+    final signedIn = _google.isSignedIn;
+    if (_wasSignedInToGoogle && !signedIn && _account.isSignedIn) {
+      unawaited(_account.signOut());
+    }
+    _wasSignedInToGoogle = signedIn;
   }
 
   /// Backs up to Google Drive a little after the user stops changing
@@ -107,12 +131,15 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
     _backupTimer?.cancel();
     _projects.removeListener(_scheduleBackup);
     _prices.removeListener(_scheduleBackup);
+    _google.removeListener(_googleChanged);
+    _sync.dispose();
     _router.dispose();
     _google.dispose();
     _estimates.dispose();
     _projects.dispose();
     _prices.dispose();
     _account.dispose();
+    _profile.dispose();
     super.dispose();
   }
 
@@ -127,9 +154,10 @@ class _BuildQuantifyAppState extends State<BuildQuantifyApp> {
           create: (_) => AppearanceController(widget.prefs),
         ),
         ChangeNotifierProvider(create: (_) => TipsController(widget.prefs)),
-        ChangeNotifierProvider(create: (_) => ProfileController(widget.prefs)),
+        ChangeNotifierProvider.value(value: _profile),
         ChangeNotifierProvider.value(value: _google),
         ChangeNotifierProvider.value(value: _account),
+        ChangeNotifierProvider.value(value: _sync),
         ChangeNotifierProvider(
           create: (_) => InstallController(
             widget.prefs,
