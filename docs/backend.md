@@ -166,9 +166,11 @@ domain comes later; until then the app runs on the server's IP address.
    one within six hours.
 6. **Turn on Google sign-in.** In Google Cloud Console, add
    `https://app.yourdomain.com` to the OAuth client's authorized
-   JavaScript origins, set `GOOGLE_CLIENT_ID` in `.env` and rebuild with
-   `docker compose up -d --build`. Google sign-in works only over HTTPS
-   (or on `localhost`), so it needs step 5 first. Settings then shows the
+   JavaScript origins. `.env` already holds BuildQuantify's
+   `GOOGLE_CLIENT_ID` (from `.env.example`); if your `.env` predates it,
+   add the line, then rebuild with `docker compose up -d --build`. Google
+   sign-in works only over HTTPS (or on `localhost`), so it needs step 5
+   first. Settings then shows the
    Plan card: sign in, start the trial, enter a code, compare the plans
    and ask about Enterprise.
 7. **Keep the free server from being reclaimed.** Oracle reclaims Always
