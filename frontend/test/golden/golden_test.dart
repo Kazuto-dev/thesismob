@@ -16,6 +16,9 @@ import 'package:material_ui/material_ui.dart';
 import 'package:thesismob/data/estimate.dart';
 import 'package:thesismob/materials/material_spec.dart';
 
+import 'package:thesismob/data/api_client.dart';
+
+import '../fake_server.dart';
 import '../helpers.dart';
 
 final _skip = Platform.isLinux ? null : 'Goldens are compared on Linux only';
@@ -176,4 +179,24 @@ void main() {
     );
     await _snapshot(tester, 'calculator_phone_filipino');
   });
+
+  for (final (label, size) in [('phone', phone), ('desktop', desktop)]) {
+    testWidgets('plans on $label', skip: _skip != null, (tester) async {
+      await pumpApp(
+        tester,
+        location: '/settings',
+        size: size,
+        apiClient: ApiClient(
+          baseUrl: 'https://api.test',
+          client: FakeServer().client,
+        ),
+        prefs: {AppearanceController.key: 'dark'},
+      );
+      await tester.ensureVisible(find.text('Compare plans'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Compare plans'));
+      await tester.pumpAndSettle();
+      await _snapshot(tester, 'plans_$label');
+    });
+  }
 }

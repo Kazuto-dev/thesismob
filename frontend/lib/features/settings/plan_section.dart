@@ -211,98 +211,245 @@ class PlanSection extends StatelessWidget {
 
   void _compare(BuildContext context, PlanOffer offer) => showDialog<void>(
     context: context,
-    builder: (context) {
-      final theme = Theme.of(context);
-      Widget plan(String name, String price, List<String> points) => Padding(
-        padding: const EdgeInsets.only(bottom: Space.lg),
+    builder: (_) => _PlansDialog(
+      offer: offer,
+      current: context.read<AccountController>().plan,
+    ),
+  );
+}
+
+/// The plans as cards: side by side on a wide screen, one under another on
+/// a phone. The user's own plan is outlined.
+class _PlansDialog extends StatelessWidget {
+  const _PlansDialog({required this.offer, required this.current});
+
+  final PlanOffer offer;
+  final AppPlan current;
+
+  /// Below this width the cards are stacked.
+  static const _sideBySide = 720.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cards = [
+      _PlanCard(
+        name: AppPlan.free.label,
+        price: context.tr('Free'),
+        current: current == AppPlan.free,
+        points: [
+          context.tr('All 51 calculators, in English or Filipino'),
+          context.tr('Up to {n} projects', {'n': offer.freeProjects}),
+          context.tr('Bill of quantities PDF and shopping list'),
+          context.tr('Room schedule, house checklist and quick budget'),
+          context.tr('Bill of quantities for bidders and quote comparison'),
+        ],
+      ),
+      _PlanCard(
+        name: AppPlan.business.label,
+        price: context.tr('{price} a month', {
+          'price': _money(offer.businessUsd, offer.businessPhp),
+        }),
+        current: current == AppPlan.business,
+        points: [
+          context.tr('Unlimited projects'),
+          context.tr(
+            'Contractor and DPWH pricing: crews, daily rates, general '
+            'requirements, markups and VAT',
+          ),
+          context.tr(
+            'Quotations, schedule, cash flow, progress billing and '
+            'actual costs',
+          ),
+          context.tr('Excel, CSV and Google Sheets exports, and revisions'),
+          context.tr('Your company name on every document'),
+          context.tr('Try it free for {days} days', {'days': offer.trialDays}),
+        ],
+      ),
+      _PlanCard(
+        name: AppPlan.enterprise.label,
+        price: context.tr('Contact us'),
+        current: current == AppPlan.enterprise,
+        points: [
+          context.tr('Business for your whole team, with seats'),
+          context.tr('Shared projects and one company price book'),
+          context.tr('Roles for owners, admins, estimators and viewers'),
+          context.tr('Onboarding, training and priority support'),
+        ],
+      ),
+    ];
+    return Dialog(
+      insetPadding: const EdgeInsets.all(Space.lg),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1000),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Space.xl,
+                Space.xl,
+                Space.xl,
+                Space.lg,
+              ),
+              child: Semantics(
+                header: true,
+                child: Text(
+                  context.tr('Plans'),
+                  style: theme.textTheme.headlineSmall,
+                ),
+              ),
+            ),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: Space.xl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    LayoutBuilder(
+                      builder: (context, constraints) =>
+                          constraints.maxWidth >= _sideBySide
+                          ? IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  for (final (i, card) in cards.indexed) ...[
+                                    if (i > 0) const SizedBox(width: Space.lg),
+                                    Expanded(child: card),
+                                  ],
+                                ],
+                              ),
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                for (final (i, card) in cards.indexed) ...[
+                                  if (i > 0) const SizedBox(height: Space.md),
+                                  card,
+                                ],
+                              ],
+                            ),
+                    ),
+                    const SizedBox(height: Space.lg),
+                    Text(
+                      context.tr(
+                        'Pay by bank transfer or GCash and we email you a '
+                        'code. Enter it here to switch your plan on.',
+                      ),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(Space.lg),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(context.tr('Close')),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One plan: its name, price and what it includes.
+class _PlanCard extends StatelessWidget {
+  const _PlanCard({
+    required this.name,
+    required this.price,
+    required this.points,
+    required this.current,
+  });
+
+  final String name;
+  final String price;
+  final List<String> points;
+
+  /// Whether this is the user's plan, which gets an outline and a label.
+  final bool current;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(Radii.lg),
+        border: Border.all(
+          color: current ? scheme.primary : scheme.outlineVariant,
+          width: current ? 2 : 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(Space.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(context.tr(name), style: theme.textTheme.titleMedium),
+            if (current) ...[
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: scheme.primary,
+                  borderRadius: BorderRadius.circular(Radii.sm),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: Space.sm,
+                    vertical: 2,
+                  ),
+                  child: Text(
+                    context.tr('Your plan'),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: scheme.onPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: Space.sm),
+            ],
+            Text(context.tr(name), style: theme.textTheme.titleLarge),
+            const SizedBox(height: Space.xs),
             Text(
               price,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: scheme.primary,
+                fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: Space.xs),
+            const SizedBox(height: Space.md),
+            Divider(height: 1, color: scheme.outlineVariant),
+            const SizedBox(height: Space.md),
             for (final p in points)
               Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Text('• $p'),
+                padding: const EdgeInsets.only(bottom: Space.sm),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Icon(Icons.check, size: 18, color: scheme.primary),
+                    ),
+                    const SizedBox(width: Space.sm),
+                    Expanded(child: Text(p)),
+                  ],
+                ),
               ),
           ],
         ),
-      );
-      return AlertDialog(
-        title: Text(context.tr('Plans')),
-        scrollable: true,
-        content: SizedBox(
-          width: 460,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              plan(AppPlan.free.label, context.tr('Free'), [
-                context.tr('All 51 calculators, in English or Filipino'),
-                context.tr('Up to {n} projects', {'n': offer.freeProjects}),
-                context.tr('Bill of quantities PDF and shopping list'),
-                context.tr('Room schedule, house checklist and quick budget'),
-                context.tr(
-                  'Bill of quantities for bidders and quote comparison',
-                ),
-              ]),
-              plan(
-                AppPlan.business.label,
-                context.tr('{price} a month', {
-                  'price': _money(offer.businessUsd, offer.businessPhp),
-                }),
-                [
-                  context.tr('Unlimited projects'),
-                  context.tr(
-                    'Contractor and DPWH pricing: crews, daily rates, general '
-                    'requirements, markups and VAT',
-                  ),
-                  context.tr(
-                    'Quotations, schedule, cash flow, progress billing and '
-                    'actual costs',
-                  ),
-                  context.tr(
-                    'Excel, CSV and Google Sheets exports, and revisions',
-                  ),
-                  context.tr('Your company name on every document'),
-                  context.tr('Try it free for {days} days', {
-                    'days': offer.trialDays,
-                  }),
-                ],
-              ),
-              plan(AppPlan.enterprise.label, context.tr('Contact us'), [
-                context.tr('Business for your whole team, with seats'),
-                context.tr('Shared projects and one company price book'),
-                context.tr('Roles for owners, admins, estimators and viewers'),
-                context.tr('Onboarding, training and priority support'),
-              ]),
-              Text(
-                context.tr(
-                  'Pay by bank transfer or GCash and we email you a code. '
-                  'Enter it here to switch your plan on.',
-                ),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(context.tr('Close')),
-          ),
-        ],
-      );
-    },
-  );
+      ),
+    );
+  }
 }
 
 /// The form for asking sales about Enterprise, then a thank-you once

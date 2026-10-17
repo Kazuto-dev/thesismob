@@ -4,6 +4,7 @@
 const filipinoAccount = <String, String>{
   'Plan': 'Plano',
   'Plans': 'Mga plano',
+  'Your plan': 'Ang plano ninyo',
   'Sign in to start a {days}-day free trial of Business or to enter a code from your email.':
       'Mag-sign in para simulan ang {days} araw na libreng trial ng Business '
       'o para ilagay ang code mula sa inyong email.',

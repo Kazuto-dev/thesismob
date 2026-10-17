@@ -9,12 +9,15 @@ import '../google_fake.dart';
 import '../helpers.dart';
 
 void main() {
-  Future<FakeServer> open(WidgetTester tester) async {
+  Future<FakeServer> open(
+    WidgetTester tester, {
+    Size size = const Size(400, 1400),
+  }) async {
     final server = FakeServer();
     await pumpApp(
       tester,
       location: '/settings',
-      size: const Size(400, 1400),
+      size: size,
       googleAuth: FakeGoogleAuth(),
       sheetsClient: GoogleSheetsClient(client: FakeGoogleApi().client),
       apiClient: ApiClient(baseUrl: 'https://api.test', client: server.client),
@@ -70,12 +73,40 @@ void main() {
     expect(find.text('Sign in to your account'), findsOneWidget);
   });
 
+  for (final (label, size, sideBySide) in [
+    ('a phone', const Size(400, 1400), false),
+    ('a wide screen', const Size(1440, 900), true),
+  ]) {
+    testWidgets('plans are cards, side by side only on $label', (tester) async {
+      await open(tester, size: size);
+      await tap(tester, 'Compare plans');
+      Offset at(String name) => tester.getTopLeft(
+        find.descendant(of: find.byType(Dialog), matching: find.text(name)),
+      );
+      final free = at('Homeowners Edition');
+      final business = at('Business Edition');
+      final enterprise = at('Enterprise Edition');
+      if (sideBySide) {
+        // The free card is the user's, so its label pushes its name down.
+        expect((business.dy - free.dy).abs(), lessThan(40));
+        expect(enterprise.dy, business.dy);
+        expect(business.dx, greaterThan(free.dx));
+        expect(enterprise.dx, greaterThan(business.dx));
+      } else {
+        expect(business.dx, free.dx);
+        expect(business.dy, greaterThan(free.dy));
+        expect(enterprise.dy, greaterThan(business.dy));
+      }
+      expect(find.text('Your plan'), findsOneWidget);
+    });
+  }
+
   testWidgets('plans are compared with peso prices, and Enterprise is asked '
       'about', (tester) async {
     final server = await open(tester);
     await tap(tester, 'Compare plans');
     expect(find.text('\$20 (₱1,150) a month'), findsOneWidget);
-    expect(find.text('• Up to 2 projects'), findsOneWidget);
+    expect(find.text('Up to 2 projects'), findsOneWidget);
     await tap(tester, 'Close');
 
     await tap(tester, 'Ask about Enterprise');
