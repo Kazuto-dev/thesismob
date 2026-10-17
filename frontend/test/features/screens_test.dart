@@ -359,7 +359,7 @@ void main() {
   });
 
   testWidgets('the price book edits and resets prices', (tester) async {
-    await pumpApp(tester, location: '/settings/prices');
+    await pumpApp(tester, location: '/prices');
     await tester.enterText(find.byType(TextField).first, 'portland');
     await tester.pumpAndSettle();
     expect(find.text('Portland cement, 40 kg'), findsOneWidget);

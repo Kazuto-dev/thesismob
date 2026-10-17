@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:thesismob/app.dart';
@@ -32,6 +33,15 @@ void main() {
   testWidgets('the old Sheet link opens Settings', (tester) async {
     await pumpAt(tester, '/sheet');
     expect(find.text('Google Sheets'), findsOneWidget);
+  });
+
+  testWidgets('the old price book address opens the Prices tab', (
+    tester,
+  ) async {
+    await pumpAt(tester, '/settings/prices');
+    expect(find.text('Search materials'), findsOneWidget);
+    final router = GoRouter.of(tester.element(find.text('Search materials')));
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/prices');
   });
 
   testWidgets('the old Help link opens the guide', (tester) async {

@@ -22,6 +22,7 @@ const _destinations = [
   _Destination('Estimate', Icons.calculate_outlined, Icons.calculate),
   _Destination('History', Icons.history, Icons.history),
   _Destination('Project', Icons.request_quote_outlined, Icons.request_quote),
+  _Destination('Prices', Icons.sell_outlined, Icons.sell),
   _Destination('Settings', Icons.settings_outlined, Icons.settings),
 ];
 

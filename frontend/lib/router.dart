@@ -12,7 +12,7 @@ import 'features/settings/settings_screen.dart';
 import 'features/projects/project_screen.dart';
 import 'features/projects/projects_screen.dart';
 import 'features/projects/rooms_screen.dart';
-import 'features/settings/price_book_screen.dart';
+import 'features/prices/price_book_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/home/quick_budget_screen.dart';
 import 'materials/catalog.dart';
@@ -27,6 +27,8 @@ const _legacyRedirects = {
   '/help': '/settings/help',
   '/sheetform': '/settings',
   '/sheet': '/settings',
+  // The price book had its place in Settings before it got its own tab.
+  '/settings/prices': '/prices',
   '/history': '/history',
   '/summary': '/project',
   '/strucPages': '/category/structural',
@@ -85,7 +87,7 @@ abstract final class Routes {
   static const projects = '/project/all';
   static const settings = '/settings';
   static const help = '/settings/help';
-  static const prices = '/settings/prices';
+  static const prices = '/prices';
   static const login = '/login';
   static const quickBudget = '/quick-budget';
 
@@ -255,16 +257,20 @@ GoRouter createRouter({
         StatefulShellBranch(
           routes: [
             GoRoute(
+              path: Routes.prices,
+              builder: (context, state) => const PriceBookScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
               path: Routes.settings,
               builder: (context, state) => const SettingsScreen(),
               routes: [
                 GoRoute(
                   path: 'help',
                   builder: (context, state) => const HelpScreen(),
-                ),
-                GoRoute(
-                  path: 'prices',
-                  builder: (context, state) => const PriceBookScreen(),
                 ),
               ],
             ),

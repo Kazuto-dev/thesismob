@@ -189,7 +189,8 @@ frontend/                  the app (Flutter)
                            price-book items and shared estimating factors
     export/                bill of quantities as PDF, CSV, text; backups
     features/              screens: home, category, calculator, history,
-                           projects, settings, price book, help, shell
+                           projects, prices (the price book), settings,
+                           help, shell
   assets/                  images and the Plus Jakarta Sans font (OFL)
   web/                     index.html, service worker, icons
   tool/smoke/              Playwright smoke test

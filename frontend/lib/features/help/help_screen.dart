@@ -92,8 +92,8 @@ class HelpScreen extends StatelessWidget {
                   'Keep each house, renovation or bid as its own project and '
                   'switch between them from the Project tab. History keeps '
                   'the latest result from each visit to a calculator, up to '
-                  '100. Settings → Price book holds the suggested prices; '
-                  'set your own and choose your region there.',
+                  '100. The Prices tab holds the suggested prices; set your '
+                  'own and choose your region there.',
                 ),
                 const SectionHeader('Your data'),
                 paragraph(

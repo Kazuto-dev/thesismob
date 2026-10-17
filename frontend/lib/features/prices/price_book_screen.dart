@@ -11,8 +11,8 @@ import '../../materials/items.dart';
 import '../../state/price_book_controller.dart';
 import '../common/price_dialog.dart';
 
-/// Every material the calculators can price, with the suggested price and
-/// the user's own where they set one.
+/// The Prices tab: every material the calculators can price, with the
+/// suggested price and the user's own where they set one.
 class PriceBookScreen extends StatefulWidget {
   const PriceBookScreen({super.key});
 
@@ -88,141 +88,136 @@ class _PriceBookScreenState extends State<PriceBookScreen> {
     }
 
     return PageTitle(
-      title: context.tr('Price book'),
+      title: context.tr('Prices'),
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(context.tr('Price book')),
-          actions: [
-            if (book.custom.isNotEmpty)
-              TextButton(
-                onPressed: _resetAll,
-                child: Text(context.tr('Clear my prices')),
-              ),
-          ],
-        ),
-        body: SingleChildScrollView(
-          padding: EdgeInsets.only(
-            top: Space.sm,
-            bottom: bottomClearance(context),
-          ),
-          child: ContentWidth(
-            maxWidth: 760,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  context.tr(
-                    'Calculators fill in these prices and use them for the '
-                    'materials each job also needs. Set your supplier\'s price '
-                    'to use it everywhere.',
-                  ),
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: Space.lg),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(Space.lg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        DropdownButtonFormField<PriceRegion>(
-                          initialValue: book.region,
-                          isExpanded: true,
-                          decoration: InputDecoration(
-                            labelText: context.tr('Where is the project?'),
-                            helperText: context.tr(
-                              'Suggested prices are raised for regions '
-                              'where materials cost more',
-                            ),
-                          ),
-                          items: [
-                            for (final r in PriceRegion.values)
-                              DropdownMenuItem(
-                                value: r,
-                                child: Text(
-                                  r.factor == 1
-                                      ? r.label
-                                      : '${r.label} (+${formatNumber((r.factor - 1) * 100)}%)',
-                                ),
-                              ),
-                          ],
-                          onChanged: (r) {
-                            if (r != null) book.region = r;
-                          },
+        body: SafeArea(
+          bottom: false,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(bottom: bottomClearance(context)),
+            child: ContentWidth(
+              maxWidth: 760,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  PageHeader(
+                    title: context.tr('Prices'),
+                    subtitle: context.tr(
+                      'Calculators fill in these prices and use them for the '
+                      'materials each job also needs. Set your supplier\'s price '
+                      'to use it everywhere.',
+                    ),
+                    actions: [
+                      if (book.custom.isNotEmpty)
+                        TextButton(
+                          onPressed: _resetAll,
+                          child: Text(context.tr('Clear my prices')),
                         ),
-                        const SizedBox(height: Space.md),
-                        Text(
-                          '$priceListLabel. $priceListSources',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: Space.lg),
-                TextField(
-                  controller: _search,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.search),
-                    hintText: context.tr('Search materials'),
-                  ),
-                  onChanged: (_) => setState(() {}),
-                ),
-                const SizedBox(height: Space.sm),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: FilterChip(
-                    label: Text('My prices (${book.custom.length})'),
-                    selected: _onlyMine,
-                    onSelected: (v) => setState(() => _onlyMine = v),
-                  ),
-                ),
-                if (items.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: Space.xxl),
-                    child: Text(
-                      _onlyMine
-                          ? 'You have not set any prices yet.'
-                          : 'No materials match "${_search.text}".',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                  ),
-                for (final MapEntry(key: group, value: members)
-                    in groups.entries) ...[
-                  SectionHeader(
-                    group.label,
-                    padding: const EdgeInsets.fromLTRB(
-                      0,
-                      Space.xl,
-                      0,
-                      Space.sm,
-                    ),
+                    ],
                   ),
                   Card(
-                    clipBehavior: Clip.antiAlias,
-                    child: Column(
-                      children: [
-                        for (final (i, item) in members.indexed) ...[
-                          if (i > 0) const Divider(height: 1, indent: Space.lg),
-                          _PriceRow(
-                            item: item,
-                            price: book.priceOf(item.key),
-                            custom: book.isCustom(item.key),
-                            quote: book.quoteOf(item.key),
-                            onTap: () => _edit(item),
-                            onReset: () => book.reset(item.key),
+                    child: Padding(
+                      padding: const EdgeInsets.all(Space.lg),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          DropdownButtonFormField<PriceRegion>(
+                            initialValue: book.region,
+                            isExpanded: true,
+                            decoration: InputDecoration(
+                              labelText: context.tr('Where is the project?'),
+                              helperText: context.tr(
+                                'Suggested prices are raised for regions '
+                                'where materials cost more',
+                              ),
+                            ),
+                            items: [
+                              for (final r in PriceRegion.values)
+                                DropdownMenuItem(
+                                  value: r,
+                                  child: Text(
+                                    r.factor == 1
+                                        ? r.label
+                                        : '${r.label} (+${formatNumber((r.factor - 1) * 100)}%)',
+                                  ),
+                                ),
+                            ],
+                            onChanged: (r) {
+                              if (r != null) book.region = r;
+                            },
+                          ),
+                          const SizedBox(height: Space.md),
+                          Text(
+                            '$priceListLabel. $priceListSources',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
                           ),
                         ],
-                      ],
+                      ),
                     ),
                   ),
+                  const SizedBox(height: Space.lg),
+                  TextField(
+                    controller: _search,
+                    decoration: InputDecoration(
+                      prefixIcon: Icon(Icons.search),
+                      hintText: context.tr('Search materials'),
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  const SizedBox(height: Space.sm),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: FilterChip(
+                      label: Text('My prices (${book.custom.length})'),
+                      selected: _onlyMine,
+                      onSelected: (v) => setState(() => _onlyMine = v),
+                    ),
+                  ),
+                  if (items.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: Space.xxl),
+                      child: Text(
+                        _onlyMine
+                            ? 'You have not set any prices yet.'
+                            : 'No materials match "${_search.text}".',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyLarge,
+                      ),
+                    ),
+                  for (final MapEntry(key: group, value: members)
+                      in groups.entries) ...[
+                    SectionHeader(
+                      group.label,
+                      padding: const EdgeInsets.fromLTRB(
+                        0,
+                        Space.xl,
+                        0,
+                        Space.sm,
+                      ),
+                    ),
+                    Card(
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        children: [
+                          for (final (i, item) in members.indexed) ...[
+                            if (i > 0)
+                              const Divider(height: 1, indent: Space.lg),
+                            _PriceRow(
+                              item: item,
+                              price: book.priceOf(item.key),
+                              custom: book.isCustom(item.key),
+                              quote: book.quoteOf(item.key),
+                              onTap: () => _edit(item),
+                              onReset: () => book.reset(item.key),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
